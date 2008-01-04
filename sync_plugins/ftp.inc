@@ -3,7 +3,7 @@
 
 /**
  * @file
- * The ftp module allows you to
+ * FTP synchronization plugin for the CDN integration module.
  */
 
 
@@ -22,6 +22,9 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
 
   $files = cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $exclude_pattern);
   cdn_log("List of files (". count($files). ") that should be synced has been created.");
+  
+  // Get the unique filenames.
+  $files_unique = cdn_cron_get_unique_filenames($files);
 
   // Connect.
   $fs = ftp_connect($host, $port);
@@ -41,27 +44,26 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
     }
 
     // Sync deletion.
-    $stats['deletes'] = _ftp_cdn_cron_sync_deletion($fs, $files);
+    $stats['deletes'] = _ftp_cdn_cron_sync_deletion($fs, $files_unique);
 
     // Sync files. Validate only by checking existence and filesize.
-    foreach ($files as $file) {
-      $file_size = filesize($file);
+    foreach ($files as $file => $file_size) {
       $file_size_formatted = _cdn_filesize($file_size);
 
-      if (_ftp_cdn_cron_file_exists($fs, $file, $file_size)) {
+      if (_ftp_cdn_cron_file_exists($fs, $files_unique[$file], $file_size)) {
         $stats['exists']++;
         $stats['exists_bytes'] += $file_size;
-        cdn_log("Already exists: $file ($file_size_formatted).");
+        cdn_log("Already exists: $files_unique[$file] ($file_size_formatted).");
       }
       else {
-        if (_ftp_cdn_cron_create_path($fs, $file) && ftp_put($fs, "./$file", "./$file", FTP_BINARY)) {
+        if (_ftp_cdn_cron_create_path($fs, $files_unique[$file]) && ftp_put($fs, "./$files_unique[$file]", "./$file", FTP_BINARY)) {
           $stats['uploads']++;
           $stats['uploaded_bytes'] += $file_size;
-          cdn_log("Uploaded $file ($file_size_formatted).");
+          cdn_log("Uploaded $files_unique[$file] ($file_size_formatted).");
         }
         else {
           $stats['uploads_failed']++;
-          cdn_log("Failed to upload $file.");
+          cdn_log("Failed to upload $files_unique[$file].");
         }
       }
     }

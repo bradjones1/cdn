@@ -6,6 +6,7 @@
  * Basic functions for CDN synchronization cron.
  */
 
+
 /**
  * Executes a CDN synchronization cron run when called
  *
@@ -63,19 +64,20 @@ function cdn_cron_run() {
     extract($stats);
     $exists_kbytes = number_format($exists_bytes / 1024, 1);
     $uploaded_kbytes = number_format($uploaded_bytes / 1024, 1);
-    $message = "Synchronization took $duration seconds.<br>";
-    $message .= "$deletes files have been deleted.<br />";
+    $message = "Synchronization method: <em>$sync_method</em>.<br />";
+    $message .= "Synchronization took <em>$duration seconds</em>.<br />";
+    $message .= "<em>$deletes</em> files have been deleted.<br />";
     if ($exists_bytes) {
-      $message .= "$exists files already existed ($exists_kbytes KB).<br />";
+      $message .= "<em>$exists</em> files already existed ($exists_kbytes KB).<br />";
     }
     else {
-      $message .= "$exists files already existed.<br />";
+      $message .= "<em>$exists</em> files already existed.<br />";
     }
     if ($uploaded_bytes) {
-      $message .= "$uploads files have been uploaded ($uploaded_kbytes KB).";
+      $message .= "<em>$uploads</em> files have been uploaded ($uploaded_kbytes KB).";
     }
     else {
-      $message .= "$uploads files have been uploaded.";
+      $message .= "<em>$uploads</em> files have been uploaded.";
     }
 
     // Log to watchdog.
@@ -84,7 +86,8 @@ function cdn_cron_run() {
       watchdog('cdn_cron', "$uploads_failed file uploads have failed.", WATCHDOG_ERROR);
     }
 
-    // Record CDN synchronization cron time and statistics.
+    // Record CDN synchronization cron time and statistics message for usage
+    // in the status report at admin/logs/status.
     variable_set('cdn_cron_last', time());
     variable_set('cdn_cron_last_stats', $message);
 
@@ -104,7 +107,7 @@ function cdn_cron_run() {
 function cdn_cron_cleanup() {
   // See if the semaphore is still locked.
   if (variable_get('cdn_cron_semaphore', FALSE)) {
-    watchdog('cron', t('CDN synchronization cron run exceeded the time limit and was aborted.'), WATCHDOG_WARNING);
+    watchdog('cron', 'CDN synchronization cron run exceeded the time limit and was aborted.', WATCHDOG_WARNING);
 
     // Release CDN synchronization cron semaphore
     variable_del('cdn_cron_semaphore');
@@ -126,15 +129,16 @@ function cdn_cron_cleanup() {
 function cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $exclude_pattern) {
   // Get all files that match the pattern and are not within one of the
   // ignored directories.
-  $files = _cdn_cron_file_scan_directory('.', $pattern, $ignored_dirs);
+  $files = _cdn_cron_scan_directory('.', $pattern, $ignored_dirs);
 
   // Add all files that are in any of the directories of which all files must
   // be added.
   foreach ($dirs_all_files as $dir) {
-    $files = array_merge($files, _cdn_cron_file_scan_directory($dir, '.*', $ignored_dirs));
+    $files += _cdn_cron_scan_directory($dir, '.*', $ignored_dirs);
   }
 
-  $files = array_map('_cdn_cron_clean_filepath', $files);
+  // Get relative filepaths.
+  $files = array_flip(array_map('_cdn_cron_clean_filepath', array_flip($files)));
 
   // Remove files if the directory they were in is one of 
   foreach ($files as $key => $file) {
@@ -142,11 +146,20 @@ function cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $e
       unset($files[$key]);
     }
   }
-  $files = array_values($files);
 
   return $files;
 }
 
+function cdn_cron_get_unique_filenames($files) {
+  return array_map('cdn_unique_filename', array_combine(array_keys($files), array_keys($files)));
+}
+
+/**
+ * Initializes the stats array.
+ *
+ * @return
+ *   The stats array.
+ */
 function cdn_cron_init_stats() {
   $stats = array(
     'deletes' => 0,
@@ -197,17 +210,17 @@ function cdn_log($message) {
  *
  * @see file_scan_directory
  */
-function _cdn_cron_file_scan_directory($dir, $pattern, $ignored_dirs = array('.', '..', 'CVS', '.svn')) {
+function _cdn_cron_scan_directory($dir, $pattern, $ignored_dirs = array('.', '..', 'CVS', '.svn')) {
   $files = array();
 
   if (is_dir($dir) && $handle = opendir($dir)) {
     while ($file = readdir($handle)) {
       if (!in_array($file, $ignored_dirs) && $file[0] != '.') {
         if (is_dir("$dir/$file")) {
-          $files = array_merge($files, _cdn_cron_file_scan_directory("$dir/$file", $pattern, $ignored_dirs));
+          $files += _cdn_cron_scan_directory("$dir/$file", $pattern, $ignored_dirs);
         }
         elseif (ereg($pattern, $file)) {
-          $files[] = "$dir/$file";
+          $files["$dir/$file"] = filesize("$dir/$file");
         }
       }
     }
