@@ -7,7 +7,7 @@
  */
 
 
-define('DEBUG', TRUE);
+define('DEBUG', FALSE);
 define('DEBUG_OUTPUT', 'html');
 
 
@@ -39,7 +39,7 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
         cdn_log("Changed directory to remote path ($remote_path).");
       }
       else {
-        cdn_log("Failed to changed directory to remote path ($remote_path).");
+        cdn_log("Failed to change directory to remote path ($remote_path).");
       }
     }
 
@@ -142,18 +142,18 @@ function _ftp_cdn_cron_create_path($fs, $file) {
     if (!in_array($dirs[$i], ftp_nlist($fs, '.'))) {
       $success = ftp_mkdir($fs, $dirs[$i]);
     }
-    $success = ftp_chdir($fs, $dirs[$i]);
+    ftp_chdir($fs, $dirs[$i]);
   }
 
   // Go back to the original working directory.
   $chdir = '';
-  for ($i = 0; $success && $i < count($dirs); $i++) {
+  for ($i = 0; $i < count($dirs); $i++) {
     if ($chdir) {
       $chdir .= '/';
     }
     $chdir .= '..';
   }
-  $success = ftp_chdir($fs, $chdir);
+  ftp_chdir($fs, $chdir);
 
   return $success;
 }
