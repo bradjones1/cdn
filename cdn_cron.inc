@@ -58,12 +58,27 @@ function cdn_cron_run() {
     $stats = $sync_hook($sync_filters, $sync_method_settings);
     $timer = timer_stop('cdn_sync');
 
-    // Log to watchdog.
+    // Build message.
     $duration = round($timer['time'] / 1000, 1);
     extract($stats);
     $exists_kbytes = number_format($exists_bytes / 1024, 1);
     $uploaded_kbytes = number_format($uploaded_bytes / 1024, 1);
-    $message = "Synchronization took $duration seconds.<br />$exists files already existed ($exists_kbytes KB).<br />$uploads files have been uploaded ($uploaded_kbytes KB).";
+    $message = "Synchronization took $duration seconds.<br>";
+    $message .= "$deletes files have been deleted.<br />";
+    if ($exists_bytes) {
+      $message .= "$exists files already existed ($exists_kbytes KB).<br />";
+    }
+    else {
+      $message .= "$exists files already existed.<br />";
+    }
+    if ($uploaded_bytes) {
+      $message .= "$uploads files have been uploaded ($uploaded_kbytes KB).";
+    }
+    else {
+      $message .= "$uploads files have been uploaded.";
+    }
+
+    // Log to watchdog.
     watchdog('cdn_cron', "CDN synchronization cron run completed.<br />$message", WATCHDOG_NOTICE);
     if ($uploads_failed) {
       watchdog('cdn_cron', "$uploads_failed file uploads have failed.", WATCHDOG_ERROR);
@@ -134,6 +149,7 @@ function cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $e
 
 function cdn_cron_init_stats() {
   $stats = array(
+    'deletes' => 0,
     'exists' => 0,
     'exists_bytes' => 0,
     'uploads' => 0,

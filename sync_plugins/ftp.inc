@@ -41,7 +41,7 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
     }
 
     // Sync deletion.
-    _ftp_cdn_cron_sync_deletion($fs, $files);
+    $stats['deletes'] = _ftp_cdn_cron_sync_deletion($fs, $files);
 
     // Sync files. Validate only by checking existence and filesize.
     foreach ($files as $file) {
@@ -84,6 +84,8 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
 function _ftp_cdn_cron_sync_deletion($fs, $files, $path = '') {
   static $files_string;
   
+  $deletes = 0;
+  
   if (!isset($files_string)) {
     $files_string = implode('|', $files);
   }
@@ -95,12 +97,13 @@ function _ftp_cdn_cron_sync_deletion($fs, $files, $path = '') {
 
       if (ftp_size($fs, $file) == -1) {
         ftp_chdir($fs, $file);
-        _ftp_cdn_cron_sync_deletion($fs, $files, "$path/$file");
+        $deletes += _ftp_cdn_cron_sync_deletion($fs, $files, "$path/$file");
         ftp_cdup($fs);
         $deleted = ftp_rmdir($fs, $file);
       }
       else {
         $deleted = ftp_delete($fs, $file);
+        $deletes++;
       }
 
       if ($deleted) {
@@ -111,6 +114,8 @@ function _ftp_cdn_cron_sync_deletion($fs, $files, $path = '') {
       }
     }
   }
+
+  return $deletes;
 }
 
 function _ftp_cdn_cron_file_exists($fs, $file_path, $file_size) {
