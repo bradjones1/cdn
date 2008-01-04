@@ -1,0 +1,92 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Integrates this Drupal site with a CDN (Content Delivery Network), by
+ * automatically synchronizing files to the CDN and rewriting Drupal's file
+ * URLs.
+ */
+
+
+require('cdn.inc');
+
+
+//----------------------------------------------------------------------------
+// Drupal core hooks.
+
+/**
+ * Implementation of hook_requirements().
+ */
+function cdn_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+  switch ($phase) {
+    case 'install' :
+    case 'runtime' :
+    
+      $path = drupal_get_path('module', 'cdn') .'/cdn_cron.php';
+      $cdn_cron_last = variable_get('cdn_cron_last', NULL);
+
+      $requirements['cdn_cron']['title'] = $t('CDN synchronization');
+
+      if (!file_exists('cdn_cron.php') || (file_exists($path) && file_exists('cdn_cron.php') && md5_file($path) != md5_file('cdn_cron.php'))) {
+        $requirements['cdn_cron'] += array(
+          'description' => $t(
+            "In order for the CDN integration module to work correctly, it has
+             to be able to synchronize. This can be done automatically through
+             cron, but you will have to copy the file %file to the same
+             directory as Drupal's cron.php.",
+             array('%file' => $path)
+          ),
+          'severity' => $phase == 'install' ? REQUIREMENT_WARNING : REQUIREMENT_ERROR,
+          'value' => $t('Copy cdn_cron.php'),
+        );
+      }
+      elseif (!file_exists($path)) {
+        $requirements['cdn_cron'] += array(
+          'description' => $t(
+            "You probably <em>moved</em> rather than <em>copied</em> the
+            <em>cdn_cron.php</em> file from %file to the same directory as
+            Drupal's cron.php. You should leave a copy of this file in the CDN
+            integration module directory so that you will not lose this file
+            when you upgrade to another revision of Drupal.",
+            array('%file' => $path)
+          ),
+          'severity' => $phase == 'install' ? REQUIREMENT_WARNING : REQUIREMENT_ERROR,
+          'value' => $t('Copy cdn_corn.php back'),
+        );
+      }
+      elseif (is_numeric($cdn_cron_last)) {
+        $requirements['cdn_cron']['value'] = $t('Last run !time ago', array('!time' => format_interval(time() - $cdn_cron_last)));
+        $requirements['cdn_cron']['description'] = variable_get('cdn_cron_last_stats', '<em>'. $t('No statistics available.') .'</em>');
+      }
+      else {
+        $requirements['cdn_cron'] += array(
+          'description' => $t(
+            'CDN synchronization cron job has not run -- it appears it has not
+             been setup on your system. Please check the help pages for
+             <a href="@url">configuring cron jobs</a>.',
+             array('@url' => 'http://drupal.org/cron')
+            ),
+          'severity' => REQUIREMENT_ERROR,
+          'value' => $t('Never run'),
+        );
+      }
+
+  }
+  return $requirements;
+}
+
+
+//----------------------------------------------------------------------------
+// Menu callbacks.
+
+
+//----------------------------------------------------------------------------
+// Public functions.
+
+
+//----------------------------------------------------------------------------
+// Private functions.
+

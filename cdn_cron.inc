@@ -1,0 +1,215 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Basic functions for CDN synchronization cron.
+ */
+
+/**
+ * Executes a CDN synchronization cron run when called
+ *
+ * Graciously stolen from Drupal's includes/common.inc.
+ */
+function cdn_cron_run() {
+  // If not in 'safe mode', increase the maximum execution time:
+  if (!ini_get('safe_mode')) {
+    set_time_limit(240);
+  }
+  
+  // TRICKY: Create a faux user object to satisfy watchdog queries.
+  global $user;
+  $user = new stdClass();
+  $user->uid = 0;
+
+  // Fetch the CDN synchronization cron semaphore
+  $semaphore = variable_get('cdn_cron_semaphore', FALSE);
+
+  if ($semaphore) {
+    if (time() - $semaphore > 3600) {
+      // Either cron has been running for more than an hour or the semaphore
+      // was not reset due to a database error.
+      watchdog('cdn_cron', 'CDN synchronization cron has been running for more than an hour and is most likely stuck.', WATCHDOG_ERROR);
+
+      // Release CDN synchronization cron semaphore
+      variable_del('cdn_cron_semaphore');
+    }
+    else {
+      // CDN synchronization cron is still running normally.
+      watchdog('cdn_cron', 'Attempting to re-run CDN synchronization cron while it is already running.', WATCHDOG_WARNING);
+    }
+  }
+  else {
+    // Register shutdown callback
+    register_shutdown_function('cdn_cron_cleanup');
+
+    // Lock CDN synchronization cron semaphore
+    variable_set('cdn_cron_semaphore', time());
+
+    $sync_method = variable_get('cdn_sync_method', 'ftp');
+    $sync_filters = variable_get('cdn_sync_filters', FALSE);
+    $sync_method_settings = variable_get('cdn_sync_method_settings', FALSE);
+
+    // Perform the CDN synchronization using the configured method. Default to
+    // the FTP  method. 
+    require_once dirname(drupal_get_filename('module', 'cdn')) ."/sync_plugins/$sync_method.inc";
+    $sync_hook = $sync_method .'_cdn_cron_perform_sync';
+    timer_start('cdn_sync');
+    $stats = $sync_hook($sync_filters, $sync_method_settings);
+    $timer = timer_stop('cdn_sync');
+
+    // Log to watchdog.
+    $duration = round($timer['time'] / 1000, 1);
+    extract($stats);
+    $exists_kbytes = number_format($exists_bytes / 1024, 1);
+    $uploaded_kbytes = number_format($uploaded_bytes / 1024, 1);
+    $message = "Synchronization took $duration seconds.<br />$exists files already existed ($exists_kbytes KB).<br />$uploads files have been uploaded ($uploaded_kbytes KB).";
+    watchdog('cdn_cron', "CDN synchronization cron run completed.<br />$message", WATCHDOG_NOTICE);
+    if ($uploads_failed) {
+      watchdog('cdn_cron', "$uploads_failed file uploads have failed.", WATCHDOG_ERROR);
+    }
+
+    // Record CDN synchronization cron time and statistics.
+    variable_set('cdn_cron_last', time());
+    variable_set('cdn_cron_last_stats', $message);
+
+    // Release CDN synchronization cron semaphore
+    variable_del('cdn_cron_semaphore');
+
+    // Return TRUE so other functions can check if it did run successfully
+    return TRUE;
+  }
+}
+
+/**
+ * Shutdown function for CDN cron cleanup.
+ *
+ * Also graciously stolen from Drupal's includes/common.inc.
+ */
+function cdn_cron_cleanup() {
+  // See if the semaphore is still locked.
+  if (variable_get('cdn_cron_semaphore', FALSE)) {
+    watchdog('cron', t('CDN synchronization cron run exceeded the time limit and was aborted.'), WATCHDOG_WARNING);
+
+    // Release CDN synchronization cron semaphore
+    variable_del('cdn_cron_semaphore');
+  }
+}
+
+
+//----------------------------------------------------------------------------
+// Functions used in the synchronization process.
+
+/**
+ * Generates the list of files that has to be sync, based on a file name
+ * pattern, a list of ignored directories, a list of directories of which any
+ * file will be included, and an exclude pattern.
+ *
+ * @return
+ *   An array of which the keys are filepaths and the values are filesizes.
+ */
+function cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $exclude_pattern) {
+  // Get all files that match the pattern and are not within one of the
+  // ignored directories.
+  $files = _cdn_cron_file_scan_directory('.', $pattern, $ignored_dirs);
+
+  // Add all files that are in any of the directories of which all files must
+  // be added.
+  foreach ($dirs_all_files as $dir) {
+    $files = array_merge($files, _cdn_cron_file_scan_directory($dir, '.*', $ignored_dirs));
+  }
+
+  $files = array_map('_cdn_cron_clean_filepath', $files);
+
+  // Remove files if the directory they were in is one of 
+  foreach ($files as $key => $file) {
+    if (preg_match($exclude_pattern, $file)) {
+      unset($files[$key]);
+    }
+  }
+  $files = array_values($files);
+
+  return $files;
+}
+
+function cdn_cron_init_stats() {
+  $stats = array(
+    'exists' => 0,
+    'exists_bytes' => 0,
+    'uploads' => 0,
+    'uploads_failed' => 0,
+    'uploaded_bytes' => 0,
+  );
+
+  return $stats;
+}
+
+/**
+ * Simple logging function for sync plugin debugging purposes only.
+ */
+function cdn_log($message) {
+  $output = 'console';
+
+  if (DEBUG_OUTPUT !== FALSE) {
+    $output = DEBUG_OUTPUT;
+  }
+
+  if (DEBUG) {
+    $time = '['. date('H:i:s') .'] ';
+
+    switch ($output) {
+      case 'html':
+        print '<pre>'. $time . $message ."</pre>\n";
+        break;
+
+      case 'console':
+      default:
+        print $time . $message ."\n";
+        break;
+    }
+  }
+}
+
+
+//----------------------------------------------------------------------------
+// Private functions.
+
+/**
+ * Stolen from Drupal core. Simplified for CDN cron usage. Parameter order is
+ * unchanged, so you can look at the official file_scan_directory()
+ * documentation but think away the last parameters.
+ *
+ * @see file_scan_directory
+ */
+function _cdn_cron_file_scan_directory($dir, $pattern, $ignored_dirs = array('.', '..', 'CVS', '.svn')) {
+  $files = array();
+
+  if (is_dir($dir) && $handle = opendir($dir)) {
+    while ($file = readdir($handle)) {
+      if (!in_array($file, $ignored_dirs) && $file[0] != '.') {
+        if (is_dir("$dir/$file")) {
+          $files = array_merge($files, _cdn_cron_file_scan_directory("$dir/$file", $pattern, $ignored_dirs));
+        }
+        elseif (ereg($pattern, $file)) {
+          $files[] = "$dir/$file";
+        }
+      }
+    }
+
+    closedir($handle);
+  }
+
+  return $files;
+}
+
+/**
+ * Removes the leading "./" from a path. Designed to be used with array_map().
+ *
+ * @param $path
+ *   A path.
+ * @return
+ *   The path without the leading "./".
+ */
+function _cdn_cron_clean_filepath($path) {
+  return (strpos($path, './') === FALSE) ? $path : substr($path, 2, strlen($path) - 2);
+}
