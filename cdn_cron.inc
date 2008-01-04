@@ -70,21 +70,23 @@ function cdn_cron_run() {
     extract($stats);
     $exists_kbytes = number_format($exists_bytes / 1024, 1);
     $uploaded_kbytes = number_format($uploaded_bytes / 1024, 1);
-    $message = "Synchronization method: <em>$sync_method</em>.<br />";
-    $message .= "Synchronization took <em>$duration seconds</em>.<br />";
-    $message .= "<em>$deletes</em> files have been deleted.<br />";
+    $message = "<ul>";
+    $message = "<li>Method: <em>$sync_method</em></li>";
+    $message .= "<li>Duration: <em>$duration</em> seconds</li>";
+    $message .= "<li>Deleted: <em>$deletes</em> files</li>";
     if ($exists_bytes) {
-      $message .= "<em>$exists</em> files already existed ($exists_kbytes KB).<br />";
+      $message .= "<li>No action: <em>$exists</em> files ($exists_kbytes KB)</li>";
     }
     else {
-      $message .= "<em>$exists</em> files already existed.<br />";
+      $message .= "<li>No action: <em>$exists</em> files</li>";
     }
     if ($uploaded_bytes) {
-      $message .= "<em>$uploads</em> files have been uploaded ($uploaded_kbytes KB).";
+      $message .= "<li>Uploaded: <em>$uploads</em> files ($uploaded_kbytes KB)</li>";
     }
     else {
-      $message .= "<em>$uploads</em> files have been uploaded.";
+      $message .= "<li>Uploaded: <em>$uploads</em> files</li>";
     }
+    $message .= '</ul>';
 
     // Log to watchdog.
     watchdog('cdn_cron', "CDN synchronization cron run completed.<br />$message", WATCHDOG_NOTICE);
@@ -96,6 +98,10 @@ function cdn_cron_run() {
     // in the status report at admin/logs/status.
     variable_set('cdn_cron_last', time());
     variable_set('cdn_cron_last_stats', $message);
+    
+    // Record which files have been synchronized. We have to know this to be
+    // able to generate CDN URLs only for files that have been synchronized.
+    variable_set('cdn_files_synced', $files_unique);
 
     // Release CDN synchronization cron semaphore
     variable_del('cdn_cron_semaphore');
@@ -144,12 +150,14 @@ function cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $e
   }
 
   // Get relative filepaths.
-  $files = array_flip(array_map('_cdn_cron_clean_filepath', array_flip($files)));
+  $files = array_flip(array_map('cdn_clean_filepath', array_flip($files)));
 
   // Remove files if the directory they were in is one of 
-  foreach ($files as $key => $file) {
-    if (preg_match($exclude_pattern, $file)) {
-      unset($files[$key]);
+  if (strlen($exclude_pattern)) {
+    foreach ($files as $key => $file) {
+      if (preg_match($exclude_pattern, $file)) {
+        unset($files[$key]);
+      }
     }
   }
 
@@ -235,16 +243,4 @@ function _cdn_cron_scan_directory($dir, $pattern, $ignored_dirs = array('.', '..
   }
 
   return $files;
-}
-
-/**
- * Removes the leading "./" from a path. Designed to be used with array_map().
- *
- * @param $path
- *   A path.
- * @return
- *   The path without the leading "./".
- */
-function _cdn_cron_clean_filepath($path) {
-  return (strpos($path, './') === FALSE) ? $path : substr($path, 2, strlen($path) - 2);
 }

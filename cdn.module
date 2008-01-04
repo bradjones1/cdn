@@ -16,6 +16,25 @@ require('cdn.inc');
 // Drupal core hooks.
 
 /**
+ * Implementation of hook_menu().
+ */
+function cdn_menu($may_cache) {
+  $items = array();
+
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/cdn',
+      'title' => t('CDN integration'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('cdn_admin_settings_form'),
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+    );    
+  }
+  return $items;
+}
+
+/**
  * Implementation of hook_requirements().
  */
 function cdn_requirements($phase) {
@@ -78,15 +97,58 @@ function cdn_requirements($phase) {
   return $requirements;
 }
 
+/**
+ * Implementation of hook_exit().
+ */
+function cdn_exit($destination) {
+  if (!$destination && variable_get('cdn_dev_page_stats', 0)) {
+    $msg = '';
+    $stats = _cdn_devel_page_stats();
+    extract($stats);
+
+    $msg .= '<strong>CDN integration statistics</strong><br />';
+    $msg .= '<ul>';
+    $msg .= '<li>Total number of files on this page: <strong>'. $file_count .'</strong></li>';
+    $msg .= '<li>Number of files available on the CDN: <strong>'. $remote_file_count .'</strong> ('. number_format($remote_file_count / $file_count * 100) . '%)</li>';
+    if (count($local_files)) {
+      $msg .= '<li>The files that are not (yet?) synchronized to the CDN:<ul>';
+      foreach ($local_files as $file) {
+        $msg .= "<li><code>$file</code></li>";
+      }
+      $msg .= '</ul></li>';
+    }
+    $msg .= '</ul>';
+    print $msg;
+  }
+}
+
 
 //----------------------------------------------------------------------------
-// Menu callbacks.
+// Form API callbacks.
 
-
-//----------------------------------------------------------------------------
-// Public functions.
-
-
-//----------------------------------------------------------------------------
-// Private functions.
-
+/**
+ * Form definition: CDN admin settings form.
+ */
+function cdn_admin_settings_form() {
+  $form['dev'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Development'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['dev']['cdn_dev_page_stats'] = array(
+    '#type' => 'radios',
+    '#title' => t('Show CDN integration statistics'),
+    '#description' => t(
+      'Shows the CDN integration statistics of the current page, to users with
+      <em>adminster site configuration</em> permissions.'
+    ),
+    '#options' => array(
+      '0' => t('Disabled'),
+      '1' => t('Enabled'),
+    ),
+    '#default_value' => variable_get('cdn_dev_page_stats', 0),
+  );
+  
+  return system_settings_form($form);
+}
