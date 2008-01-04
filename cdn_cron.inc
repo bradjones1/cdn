@@ -47,16 +47,22 @@ function cdn_cron_run() {
     // Lock CDN synchronization cron semaphore
     variable_set('cdn_cron_semaphore', time());
 
+    // Get variables.
     $sync_method = variable_get('cdn_sync_method', 'ftp');
     $sync_filters = variable_get('cdn_sync_filters', FALSE);
     $sync_method_settings = variable_get('cdn_sync_method_settings', FALSE);
+
+    // Get parameters for perform_sync hook.
+    $files = cdn_cron_get_files_to_sync($sync_filters['pattern'], $sync_filters['ignored_dirs'], $sync_filters['dirs_all_files'], $sync_filters['exclude_pattern']);
+    $files_unique = cdn_cron_get_unique_filenames($files);
+    $stats = cdn_cron_init_stats();
 
     // Perform the CDN synchronization using the configured method. Default to
     // the FTP  method. 
     require_once dirname(drupal_get_filename('module', 'cdn')) ."/sync_plugins/$sync_method.inc";
     $sync_hook = $sync_method .'_cdn_cron_perform_sync';
     timer_start('cdn_sync');
-    $stats = $sync_hook($sync_filters, $sync_method_settings);
+    $stats = $sync_hook($files, $files_unique, $stats, $sync_method_settings);
     $timer = timer_stop('cdn_sync');
 
     // Build message.

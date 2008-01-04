@@ -14,22 +14,11 @@ define('DEBUG_OUTPUT', 'html');
 /**
  * Implementation of pseudo-hook hook_cdn_cron_perform_sync().
  */
-function ftp_cdn_cron_perform_sync($filters, $settings) {
-  extract($filters);
+function ftp_cdn_cron_perform_sync($files, $files_unique, $stats, $settings) {
   extract($settings);
+  cdn_log(count($files). " files will be synchronized.");
 
-  $stats = cdn_cron_init_stats();
-
-  $files = cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $exclude_pattern);
-  cdn_log("List of files (". count($files). ") that should be synced has been created.");
-  
-  // Get the unique filenames.
-  $files_unique = cdn_cron_get_unique_filenames($files);
-
-  // Connect.
   $fs = ftp_connect($host, $port);
-
-  // Log on.
   if ($fs && ftp_login($fs, $user, $pass)) {
     cdn_log("Logged on to {$host}:{$port}.");
 
@@ -68,7 +57,6 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
       }
     }
 
-    // Close the FTP stream.
     ftp_close($fs);
     cdn_log("Logged out.");
   }
