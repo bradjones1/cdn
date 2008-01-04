@@ -37,7 +37,6 @@ function cdn_unique_filename($filepath, $file = FALSE) {
   }
 
   // Include the version identifier.
-//  $file = preg_replace("/^(.*\/)*((.+)|((.*)(\..*)))?$/", "$1$2-$unique$3", $file);
   $dirs = explode('/', $file);
   $basename = end($dirs);
   unset($dirs[count($dirs) - 1]);

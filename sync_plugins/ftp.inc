@@ -48,18 +48,18 @@ function ftp_cdn_cron_perform_sync($filters, $settings) {
 
     // Sync files. Validate only by checking existence and filesize.
     foreach ($files as $file => $file_size) {
-      $file_size_formatted = _cdn_filesize($file_size);
+      $file_size_formatted = number_format($file_size / 1024, 1);
 
       if (_ftp_cdn_cron_file_exists($fs, $files_unique[$file], $file_size)) {
         $stats['exists']++;
         $stats['exists_bytes'] += $file_size;
-        cdn_log("Already exists: $files_unique[$file] ($file_size_formatted).");
+        cdn_log("Already exists: $files_unique[$file] ($file_size_formatted KB).");
       }
       else {
         if (_ftp_cdn_cron_create_path($fs, $files_unique[$file]) && ftp_put($fs, "./$files_unique[$file]", "./$file", FTP_BINARY)) {
           $stats['uploads']++;
           $stats['uploaded_bytes'] += $file_size;
-          cdn_log("Uploaded $files_unique[$file] ($file_size_formatted).");
+          cdn_log("Uploaded $files_unique[$file] ($file_size_formatted KB).");
         }
         else {
           $stats['uploads_failed']++;
@@ -180,8 +180,4 @@ function _cdn_parse_filesizes_recursive_rawlist($raw_list) {
     }
   }
   return $list;
-}
-
-function _cdn_filesize($size) {
-  return round($size / 1024, 1) . ' KB';
 }
