@@ -53,8 +53,8 @@ function cdn_cron_run() {
     $sync_method_settings = variable_get('cdn_sync_method_settings', FALSE);
 
     // Get parameters for perform_sync hook.
-    $files = cdn_cron_get_files_to_sync($sync_filters['pattern'], $sync_filters['ignored_dirs'], $sync_filters['dirs_all_files'], $sync_filters['exclude_pattern']);
-    $files_unique = cdn_cron_get_unique_filenames($files);
+    list($files, $files_unique_settings) = cdn_cron_get_files_to_sync($sync_filters);
+    $files_unique = cdn_cron_get_unique_filenames($files, $files_unique_settings);
     $stats = cdn_cron_init_stats();
 
     // Perform the CDN synchronization using the configured method. Default to
@@ -138,34 +138,47 @@ function cdn_cron_cleanup() {
  * @return
  *   An array of which the keys are filepaths and the values are filesizes.
  */
-function cdn_cron_get_files_to_sync($pattern, $ignored_dirs, $dirs_all_files, $exclude_pattern) {
-  // Get all files that match the pattern and are not within one of the
-  // ignored directories.
-  $files = _cdn_cron_scan_directory('.', $pattern, $ignored_dirs);
+function cdn_cron_get_files_to_sync($filters) {
+  $files = array();
+  $files_unique_settings = array();
 
-  // Add all files that are in any of the directories of which all files must
-  // be added.
-  foreach ($dirs_all_files as $dir) {
-    $files += _cdn_cron_scan_directory($dir, '.*', $ignored_dirs);
-  }
+  foreach ($filters as $filter) {
+    $newfiles = array();
+    foreach ($filter['paths'] as $path) {
+      $newfiles = _cdn_cron_scan_directory($path, $filter['pattern'], $filter['ignored_dirs']);
 
-  // Get relative filepaths.
-  $files = array_flip(array_map('cdn_clean_filepath', array_flip($files)));
+      if (count($newfiles)) {
+        // Get relative filepaths.
+        $newfiles = array_flip(array_map('cdn_clean_filepath', array_flip($newfiles)));
 
-  // Remove files if the directory they were in is one of 
-  if (strlen($exclude_pattern)) {
-    foreach ($files as $key => $file) {
-      if (preg_match($exclude_pattern, $file)) {
-        unset($files[$key]);
+        // For some unique methods, we have to store some extra parameters.
+        $extra_params = FALSE;
+        if ($filter['unique_method'] == 'md5 of mtimes') {
+          $extra_params = array('path' => $path, 'files' => array_keys($newfiles));
+        }
+
+        // Store the unique settings for each file.
+        $settings = array_fill(
+          0,
+          count($newfiles),
+          array(
+            'method' => $filter['unique_method'],
+            'where' => $filter['unique'],
+            'params' => $extra_params
+          )
+        );
+        $files_unique_settings += array_combine(array_keys($newfiles), $settings);
+
+        $files += $newfiles;
       }
     }
   }
 
-  return $files;
+  return array($files, $files_unique_settings);
 }
 
-function cdn_cron_get_unique_filenames($files) {
-  return array_map('cdn_unique_filename', array_combine(array_keys($files), array_keys($files)));
+function cdn_cron_get_unique_filenames($files, $files_unique_settings) {
+  return array_combine(array_keys($files), array_map('cdn_unique_filename', array_keys($files), $files_unique_settings));
 }
 
 /**

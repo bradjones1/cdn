@@ -100,8 +100,10 @@ function cdn_requirements($phase) {
 /**
  * Implementation of hook_exit().
  */
-function cdn_exit($destination) {
-  if (!$destination && variable_get('cdn_dev_page_stats', 0)) {
+function cdn_exit($destination = NULL) {
+  global $user;
+
+  if (!$destination && user_access('adminster site configuration') && variable_get('cdn_dev_page_stats', 0)) {
     $msg = '';
     $stats = _cdn_devel_page_stats();
     extract($stats);
@@ -138,7 +140,7 @@ function cdn_admin_settings_form() {
   );
   $form['dev']['cdn_dev_page_stats'] = array(
     '#type' => 'radios',
-    '#title' => t('Show CDN integration statistics'),
+    '#title' => t('Show statistics for the current page'),
     '#description' => t(
       'Shows the CDN integration statistics of the current page, to users with
       <em>adminster site configuration</em> permissions.'
@@ -149,6 +151,103 @@ function cdn_admin_settings_form() {
     ),
     '#default_value' => variable_get('cdn_dev_page_stats', 0),
   );
+  $form['stats'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Site-wide statistics'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['stats']['list'] = array(
+    '#value' => theme('cdn_synchronized_files_list', variable_get('cdn_files_synced', array())),
+  );
+  
   
   return system_settings_form($form);
 }
+
+
+//----------------------------------------------------------------------------
+// Private functions.
+
+/**
+ * Collects per-page CDN integration statistics.
+ *
+ * @param $file
+ *   The local file path.
+ * @param $remote_file
+ *   The remote file path.
+ * @param $remote_file_exists
+ *   TRUE if the remote file exists, FALSE otherwise.
+ * @return
+ *   Only if no parameters were passed: the collected statistics.
+ */
+function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_exists = FALSE) {
+  static $file_count, $remote_file_count, $local_files;
+
+  if (!isset($local_files)) {
+    $local_files = array();
+  }
+
+  // If the function is called with parameters set, save the statistics. If no
+  // parameters are passed, return the collected statistics.
+  if ($file) {
+    
+    $file_count++;
+
+    if ($remote_file_exists) {
+      $remote_file_count++;
+    }
+    else {
+      $local_files[] = $file;
+    }
+  }
+  else {
+    return array(
+      'file_count' => $file_count,
+      'remote_file_count' => $remote_file_count,
+      'local_files' => $local_files,
+    );
+  }
+}
+
+
+//----------------------------------------------------------------------------
+// Themeing functions.
+
+/**
+ * @ingroup themeable
+ * @{
+ */
+
+/**
+ * Render the list of synchronized files.
+ *
+ * @param $files
+ *   An array with as keys local files and as values remote files.
+ * @return
+ *   The rendered HTML.
+ */
+function theme_cdn_synchronized_files_list($files) {
+  $output = '';
+
+  if (!count($files)) {
+    $output .= '<p>'. t('No files synchronized yet.') .'</p>';
+  }
+  else {
+    $header = array(
+      array('data' => t('Local file')),
+      array('data' => t('Remote file')),
+    );
+    $rows = array();
+    foreach ($files as $local_file => $remote_file) {
+      $rows[] = array('data' => array($local_file, $remote_file));
+    }
+    $output .= theme('table', $header, $rows);
+  }
+
+  return $output;
+}
+
+/**
+ * @} End of "ingroup themeable".
+ */
