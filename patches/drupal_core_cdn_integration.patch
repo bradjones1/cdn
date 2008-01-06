@@ -71,45 +71,45 @@ Index: includes/theme.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.337.2.2
-diff -u -F^f -r1.337.2.2 theme.inc
---- includes/theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
-+++ includes/theme.inc	6 Jan 2008 23:19:22 -0000
+diff -u -p -r1.337.2.2 theme.inc
+--- theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
++++ theme.inc	6 Jan 2008 23:37:23 -0000
 @@ -322,24 +322,24 @@ function theme_get_setting($setting_name
- 
-     if ($settings['toggle_logo']) {
-       if ($settings['default_logo']) {
+
+    if ($settings['toggle_logo']) {
+      if ($settings['default_logo']) {
 -        $settings['logo'] = base_path() . dirname($theme_object->filename) .'/logo.png';
 +        $settings['logo'] = cdn_file(dirname($theme_object->filename) .'/logo.png');
-       }
-       elseif ($settings['logo_path']) {
+      }
+      elseif ($settings['logo_path']) {
 -        $settings['logo'] = base_path() . $settings['logo_path'];
-+        $settings['logo'] = $base . $settings['logo_path'];
-       }
-     }
- 
-     if ($settings['toggle_favicon']) {
-       if ($settings['default_favicon']) {
-         if (file_exists($favicon = dirname($theme_object->filename) .'/favicon.ico')) {
++        $settings['logo'] = cdn_file($settings['logo_path']);
+      }
+    }
+
+    if ($settings['toggle_favicon']) {
+      if ($settings['default_favicon']) {
+        if (file_exists($favicon = dirname($theme_object->filename) .'/favicon.ico')) {
 -          $settings['favicon'] = base_path() . $favicon;
-+          $settings['favicon'] = $base . $favicon;
-         }
-         else {
++          $settings['favicon'] = cdn_file($favicon);
+        }
+        else {
 -          $settings['favicon'] = base_path() . 'misc/favicon.ico';
-+          $settings['favicon'] = $base . 'misc/favicon.ico';
-         }
-       }
-       elseif ($settings['favicon_path']) {
++          $settings['favicon'] = cdn_file('misc/favicon.ico');
+        }
+      }
+      elseif ($settings['favicon_path']) {
 -        $settings['favicon'] = base_path() . $settings['favicon_path'];
-+        $settings['favicon'] = $base . $settings['favicon_path'];
-       }
-       else {
-         $settings['toggle_favicon'] = FALSE;
++        $settings['favicon'] = cdn_file($settings['favicon_path']);
+      }
+      else {
+        $settings['toggle_favicon'] = FALSE;
 @@ -613,8 +613,7 @@ function theme_links($links, $attributes
- function theme_image($path, $alt = '', $title = '', $attributes = NULL, $getsize = TRUE) {
-   if (!$getsize || (is_file($path) && (list($width, $height, $type, $image_attributes) = @getimagesize($path)))) {
-     $attributes = drupal_attributes($attributes);
+function theme_image($path, $alt = '', $title = '', $attributes = NULL, $getsize = TRUE) {
+  if (!$getsize || (is_file($path) && (list($width, $height, $type, $image_attributes) = @getimagesize($path)))) {
+    $attributes = drupal_attributes($attributes);
 -    $url = (url($path) == $path) ? $path : (base_path() . $path);
 -    return '<img src="'. check_url($url) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
-+    return '<img src="'. check_url(cdn_file(url($path))) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
-   }
- }
++    return '<img src="'. check_url(cdn_file($path)) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
+  }
+}

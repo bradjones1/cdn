@@ -68,7 +68,6 @@ $conf = array(
       'unique' => 'filename',
       'unique_method' => 'mtime',
     ),
-
     2 => array(
       'paths' => array('sites/wimleers.com/files/css'),
       'pattern' => '.*',
