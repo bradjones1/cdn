@@ -14,7 +14,7 @@ define('DEBUG_OUTPUT', 'html');
 /**
  * Implementation of pseudo-hook hook_cdn_cron_perform_sync().
  */
-function ftp_cdn_cron_perform_sync($files, $files_unique, $stats, $settings) {
+function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats, $settings) {
   extract($settings);
   cdn_log(count($files). " files will be synchronized.");
 
@@ -45,7 +45,7 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $stats, $settings) {
         cdn_log("Already exists: $files_unique[$file] ($file_size_formatted KB).");
       }
       else {
-        if (_ftp_cdn_cron_create_path($fs, $files_unique[$file]) && ftp_put($fs, "./$files_unique[$file]", "./$file", FTP_BINARY)) {
+        if (_ftp_cdn_cron_create_path($fs, $files_updated[$file]) && ftp_put($fs, "./$files_updated[$file]", "./$file", FTP_BINARY)) {
           $stats['uploads']++;
           $stats['uploaded_bytes'] += $file_size;
           cdn_log("Uploaded $files_unique[$file] ($file_size_formatted KB).");

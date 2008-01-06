@@ -4,7 +4,7 @@ RCS file: /cvs/drupal/drupal/includes/common.inc,v
 retrieving revision 1.611.2.12
 diff -u -F^f -r1.611.2.12 common.inc
 --- includes/common.inc	17 Oct 2007 21:28:59 -0000	1.611.2.12
-+++ includes/common.inc	4 Jan 2008 20:13:04 -0000
++++ includes/common.inc	6 Jan 2008 23:19:16 -0000
 @@ -1469,15 +1469,15 @@ function drupal_get_css($css = NULL) {
            // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
            // regardless of whether preprocessing is on or off.
@@ -29,10 +29,19 @@ diff -u -F^f -r1.611.2.12 common.inc
        $filename = md5(serialize($types)) .'.css';
        $preprocess_file = drupal_build_css_cache($types, $filename);
 -      $output .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $preprocess_file .'";</style>'. "\n";
-+      $output .= '<style type="text/css" media="'. $media .'">@import "'. cdn_file($file) .'";</style>'. "\n";
++      $output .= '<style type="text/css" media="'. $media .'">@import "'. cdn_file($preprocess_file) .'";</style>'. "\n";
      }
    }
  
+@@ -1521,7 +1521,7 @@ function drupal_build_css_cache($types, 
+           // Return the path to where this CSS file originated from, stripping off the name of the file at the end of the path.
+           $path = base_path() . substr($file, 0, strrpos($file, '/')) .'/';
+           // Wraps all @import arguments in url().
+-          $contents = preg_replace('/@import\s+(?!url)[\'"]?(\S*)\b[\'"]?/i', '@import url("\1")', $contents);
++          $contents = preg_replace('/@import\s+(?!url)[\'"]?(\S*)\b[\'"]?/i', '@import url("\1")', $contents);          
+           // Fix all paths within this CSS file, ignoring absolute paths.
+           $data .= preg_replace('/url\(([\'"]?)(?![a-z]+:)/i', 'url(\1'. $path . '\2', $contents);
+         }
 @@ -1680,7 +1680,7 @@ function drupal_get_js($scope = 'header'
          break;
        default:
@@ -48,7 +57,7 @@ RCS file: /cvs/drupal/drupal/includes/file.inc,v
 retrieving revision 1.90.2.1
 diff -u -F^f -r1.90.2.1 file.inc
 --- includes/file.inc	31 May 2007 05:48:58 -0000	1.90.2.1
-+++ includes/file.inc	4 Jan 2008 20:13:06 -0000
++++ includes/file.inc	6 Jan 2008 23:19:17 -0000
 @@ -33,7 +33,7 @@ function file_create_url($path) {
    }
    switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
@@ -64,7 +73,7 @@ RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.337.2.2
 diff -u -F^f -r1.337.2.2 theme.inc
 --- includes/theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
-+++ includes/theme.inc	4 Jan 2008 20:13:11 -0000
++++ includes/theme.inc	6 Jan 2008 23:19:22 -0000
 @@ -322,24 +322,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
@@ -104,23 +113,3 @@ diff -u -F^f -r1.337.2.2 theme.inc
 +    return '<img src="'. check_url(cdn_file(url($path))) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
    }
  }
- 
-Index: themes/garland/page.tpl.php
-===================================================================
-RCS file: /cvs/drupal/drupal/themes/garland/page.tpl.php,v
-retrieving revision 1.5
-diff -u -F^f -r1.5 page.tpl.php
---- themes/garland/page.tpl.php	14 Dec 2006 00:37:00 -0000	1.5
-+++ themes/garland/page.tpl.php	4 Jan 2008 20:13:36 -0000
-@@ -6,9 +6,9 @@
-     <?php print $head ?>
-     <?php print $styles ?>
-     <?php print $scripts ?>
--    <style type="text/css" media="print">@import "<?php print base_path() . path_to_theme() ?>/print.css";</style>
-+    <style type="text/css" media="print">@import "<?php print $static_base . path_to_theme() ?>/print.css";</style>
-     <!--[if lt IE 7]>
--    <style type="text/css" media="all">@import "<?php print base_path() . path_to_theme() ?>/fix-ie.css";</style>
-+    <style type="text/css" media="all">@import "<?php print $static_base . path_to_theme() ?>/fix-ie.css";</style>
-     <![endif]-->
-   </head>
-   <body<?php print phptemplate_body_class($sidebar_left, $sidebar_right); ?>>

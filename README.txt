@@ -53,24 +53,34 @@ This is my configuration:
 $conf = array(
   'cdn_url' => 'http://wimleers.cachefly.com/wimleers.com',
   'cdn_sync_filters' => array(
+  'cdn_sync_filters' => array(
     0 => array(
       'paths' => array('misc', 'profiles', 'modules', 'sites/all/modules', 'sites/default/modules'),
       'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|svg|swf)$',
-      'ignored_dirs' => array('.', '..', 'CVS', '.svn'),
+      'ignored_dirs' => array('CVS'),
       'unique' => 'filename',
       'unique_method' => 'mtime',
     ),
     1 => array(
       'paths' => array('sites/wimleers.com/files'),
       'pattern' => '.*',
-      'ignored_dirs' => array('.', '..', 'CVS', '.svn'),
+      'ignored_dirs' => array('CVS', 'css'),
       'unique' => 'filename',
       'unique_method' => 'mtime',
     ),
+
     2 => array(
+      'paths' => array('sites/wimleers.com/files/css'),
+      'pattern' => '.*',
+      'ignored_dirs' => array('CVS'),
+      'unique' => 'filename',
+      'unique_method' => 'mtime',
+      'update_urls_in_files' => TRUE,
+    ),
+    3 => array(
       'paths' => array('sites/default/themes/garland-customized'),
-      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg)$',
-      'ignored_dirs' => array('.', '..', 'CVS', '.svn'),
+      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$',
+      'ignored_dirs' => array('CVS'),
       'unique' => 'common parent directory',
       'unique_method' => 'md5 of mtimes',
     ),

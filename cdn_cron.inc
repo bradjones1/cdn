@@ -18,11 +18,6 @@ function cdn_cron_run() {
     set_time_limit(240);
   }
   
-  // TRICKY: Create a faux user object to satisfy watchdog queries.
-  global $user;
-  $user = new stdClass();
-  $user->uid = 0;
-
   // Fetch the CDN synchronization cron semaphore
   $semaphore = variable_get('cdn_cron_semaphore', FALSE);
 
@@ -52,17 +47,22 @@ function cdn_cron_run() {
     $sync_filters = variable_get('cdn_sync_filters', FALSE);
     $sync_method_settings = variable_get('cdn_sync_method_settings', FALSE);
 
-    // Get parameters for perform_sync hook.
-    list($files, $files_unique_settings) = cdn_cron_get_files_to_sync($sync_filters);
-    $files_unique = cdn_cron_get_unique_filenames($files, $files_unique_settings);
-    $stats = cdn_cron_init_stats();
+    // Get the list of files, the unique settings for each file, and the
+    // update settings for each file.
+    list($files, $files_unique_settings, $files_update_settings) = _cdn_cron_get_files_to_sync($sync_filters);
+
+    // Make all filenames unique.
+    $files_unique = _cdn_cron_get_unique_filenames($files, $files_unique_settings);
+
+    // Update files if necessary.
+    $files_updated = _cdn_cron_get_updated_filenames($files, $files_update_settings);
 
     // Perform the CDN synchronization using the configured method. Default to
     // the FTP  method. 
     require_once dirname(drupal_get_filename('module', 'cdn')) ."/sync_plugins/$sync_method.inc";
     $sync_hook = $sync_method .'_cdn_cron_perform_sync';
     timer_start('cdn_sync');
-    $stats = $sync_hook($files, $files_unique, $stats, $sync_method_settings);
+    $stats = $sync_hook($files, $files_unique, $files_updated, _cdn_cron_init_stats(), $sync_method_settings);
     $timer = timer_stop('cdn_sync');
 
     // Build message.
@@ -128,77 +128,7 @@ function cdn_cron_cleanup() {
 
 
 //----------------------------------------------------------------------------
-// Functions used in the synchronization process.
-
-/**
- * Generates the list of files that has to be sync, based on a file name
- * pattern, a list of ignored directories, a list of directories of which any
- * file will be included, and an exclude pattern.
- *
- * @return
- *   An array of which the keys are filepaths and the values are filesizes.
- */
-function cdn_cron_get_files_to_sync($filters) {
-  $files = array();
-  $files_unique_settings = array();
-
-  foreach ($filters as $filter) {
-    $newfiles = array();
-    foreach ($filter['paths'] as $path) {
-      $newfiles = _cdn_cron_scan_directory($path, $filter['pattern'], $filter['ignored_dirs']);
-
-      if (count($newfiles)) {
-        // Get relative filepaths.
-        $newfiles = array_flip(array_map('cdn_clean_filepath', array_flip($newfiles)));
-
-        // For some unique methods, we have to store some extra parameters.
-        $extra_params = FALSE;
-        if ($filter['unique_method'] == 'md5 of mtimes') {
-          $extra_params = array('path' => $path, 'files' => array_keys($newfiles));
-        }
-
-        // Store the unique settings for each file.
-        $settings = array_fill(
-          0,
-          count($newfiles),
-          array(
-            'method' => $filter['unique_method'],
-            'where' => $filter['unique'],
-            'params' => $extra_params
-          )
-        );
-        $files_unique_settings += array_combine(array_keys($newfiles), $settings);
-
-        $files += $newfiles;
-      }
-    }
-  }
-
-  return array($files, $files_unique_settings);
-}
-
-function cdn_cron_get_unique_filenames($files, $files_unique_settings) {
-  return array_combine(array_keys($files), array_map('cdn_unique_filename', array_keys($files), $files_unique_settings));
-}
-
-/**
- * Initializes the stats array.
- *
- * @return
- *   The stats array.
- */
-function cdn_cron_init_stats() {
-  $stats = array(
-    'deletes' => 0,
-    'exists' => 0,
-    'exists_bytes' => 0,
-    'uploads' => 0,
-    'uploads_failed' => 0,
-    'uploaded_bytes' => 0,
-  );
-
-  return $stats;
-}
+// "Global" functions used in the synchronization process.
 
 /**
  * Simple logging function for sync plugin debugging purposes only.
@@ -231,13 +161,65 @@ function cdn_log($message) {
 // Private functions.
 
 /**
+ * Generates the list of files that has to be sync, based on a file name
+ * pattern, a list of ignored directories, a list of directories of which any
+ * file will be included, and an exclude pattern.
+ *
+ * @return
+ *   An array of which the keys are filepaths and the values are filesizes.
+ */
+function _cdn_cron_get_files_to_sync($filters) {
+  $files = array();
+  $files_unique_settings = array();
+  $files_update_settings = array();
+
+  foreach ($filters as $filter) {
+    $newfiles = array();
+    foreach ($filter['paths'] as $path) {
+      $newfiles = _cdn_cron_scan_directory($path, $filter['pattern'], $filter['ignored_dirs']);
+
+      if (count($newfiles)) {
+        // Get relative filepaths.
+        $newfiles = array_flip(array_map('cdn_clean_filepath', array_flip($newfiles)));
+
+        // For some unique methods, we have to store some extra parameters.
+        $extra_params = FALSE;
+        if ($filter['unique_method'] == 'md5 of mtimes') {
+          $extra_params = array('path' => $path, 'files' => array_keys($newfiles));
+        }
+
+        // Store the unique settings for each file.
+        $unique_settings = array_fill(
+          0,
+          count($newfiles),
+          array(
+            'method' => $filter['unique_method'],
+            'where' => $filter['unique'],
+            'params' => $extra_params
+          )
+        );
+        $files_unique_settings += array_combine(array_keys($newfiles), $unique_settings);
+
+        // If desired, update the URLs that are embedded in the files.        
+        $update_settings = array_fill(0, count($newfiles), (isset($filter['update_urls_in_files']) && $filter['update_urls_in_files'] === TRUE) ? TRUE : FALSE);
+        $files_update_settings += array_combine(array_keys($newfiles), $update_settings);
+
+        $files += $newfiles;
+      }
+    }
+  }
+
+  return array($files, $files_unique_settings, $files_update_settings);
+}
+
+/**
  * Stolen from Drupal core. Simplified for CDN cron usage. Parameter order is
  * unchanged, so you can look at the official file_scan_directory()
  * documentation but think away the last parameters.
  *
  * @see file_scan_directory
  */
-function _cdn_cron_scan_directory($dir, $pattern, $ignored_dirs = array('.', '..', 'CVS', '.svn')) {
+function _cdn_cron_scan_directory($dir, $pattern, $ignored_dirs = array('CVS')) {
   $files = array();
 
   if (is_dir($dir) && $handle = opendir($dir)) {
@@ -256,4 +238,31 @@ function _cdn_cron_scan_directory($dir, $pattern, $ignored_dirs = array('.', '..
   }
 
   return $files;
+}
+
+/**
+ * Initializes the stats array.
+ *
+ * @return
+ *   The stats array.
+ */
+function _cdn_cron_init_stats() {
+  $stats = array(
+    'deletes' => 0,
+    'exists' => 0,
+    'exists_bytes' => 0,
+    'uploads' => 0,
+    'uploads_failed' => 0,
+    'uploaded_bytes' => 0,
+  );
+
+  return $stats;
+}
+
+function _cdn_cron_get_unique_filenames($files, $files_unique_settings) {
+  return array_combine(array_keys($files), array_map('cdn_unique_filename', array_keys($files), $files_unique_settings));
+}
+
+function _cdn_cron_get_updated_filenames($files, $files_update_settings) {
+  return array_combine(array_keys($files), array_map('cdn_update_file', array_keys($files), $files_update_settings));
 }

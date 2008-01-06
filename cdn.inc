@@ -23,7 +23,7 @@ function cdn_file($file_path) {
   $file_path = cdn_clean_filepath($file_path);
 
   if (in_array($file_path, array_keys($files_synced))) {
-    $remote_file_path = variable_get('cdn_url', base_path()) . $files_synced[$file_path];
+    $remote_file_path = variable_get('cdn_url', 'yourcdn.com/') . $files_synced[$file_path];
     if ($page_stats) {
       _cdn_devel_page_stats($file_path, $remote_file_path, TRUE);
     }
@@ -34,7 +34,7 @@ function cdn_file($file_path) {
     if ($page_stats) {
       _cdn_devel_page_stats($file_path, $local_file_path, FALSE);
     }
-    return $remote_local_path;
+    return $local_file_path;
   }
 }
 
@@ -113,13 +113,46 @@ function cdn_unique_filename($filepath, $unique_settings = array()) {
 }
 
 /**
- * Removes the leading "./" from a path. Designed to be used with array_map().
+ * Removes the leading "/", "/" or "../"'s from a path.
  *
  * @param $path
  *   A path.
  * @return
- *   The path without the leading "./".
+ *   The cleaned path.
  */
 function cdn_clean_filepath($path) {
-  return preg_replace('/^\.?\/?(.*)/', '$1', $path);
+  return preg_replace('/^(?:(?:\.\.\/)+|\.\/|\/)?(.*)/', '$1', $path);
+}
+
+function cdn_update_file($filepath, $update = FALSE) {
+  if ($update) {
+    $contents = file_get_contents($filepath);
+
+    // Strip surrounding apostrophes or quotes.
+    $contents = preg_replace('/(?<=url\()([\'"]{1})(.*)\1{1}/', '\2', $contents);
+    
+    // Remove the leading base path.
+    $contents = preg_replace('/url\('. preg_quote(base_path(), '/.') .'([\d\w-_\.\/]+)/i', 'url(\1', $contents);
+
+    // Strip all "../" and everything before it, ignoring absolute paths.
+    $contents = preg_replace('/url\(([\'"]?)(?![a-z]+:)[\d\w-_\.\/]+(\.\.\/)+/i', 'url(\1', $contents);
+
+    // Route all paths through cdn_file(), ignoring absolute paths.
+    $contents = preg_replace_callback(
+      '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
+      create_function(
+        '$matches',
+        'return cdn_file($matches[0]);'
+      ),
+      $contents
+    );
+
+    // Create the CDN directory if it does not yet exist.
+    file_check_directory(file_create_path('cdn'), FILE_CREATE_DIRECTORY);
+
+    return file_save_data($contents, 'cdn/'. md5($filepath), FILE_EXISTS_REPLACE);
+  }
+  else {
+    return $filepath;
+  }
 }
