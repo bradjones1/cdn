@@ -155,10 +155,30 @@ function cdn_admin_settings_form() {
     '#type' => 'fieldset',
     '#title' => t('Site-wide statistics'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  require_once 'cdn_cron.inc';
+  list($files_scheduled, $files_unique_settings, $files_update_settings) = _cdn_cron_get_files_to_sync(variable_get('cdn_sync_filters', FALSE));
+  unset($files_unique_settings, $files_update_settings);
+  $files_scheduled_size = 0;
+  foreach ($files_scheduled as $file => $size) {
+    $files_scheduled_size += $size;
+  }
+  $files_synced = variable_get('cdn_files_synced', array());
+
+  $form['stats']['numbers'] = array(
+    '#value' => theme('cdn_numbers', $files_scheduled, $files_scheduled_size, $files_synced),
   );
   $form['stats']['list'] = array(
-    '#value' => theme('cdn_synchronized_files_list', variable_get('cdn_files_synced', array())),
+    '#type' => 'fieldset',
+    '#title' => t('Complete list of files'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['stats']['list']['table'] = array(
+    '#value' => theme('cdn_synchronized_files_list', $files_synced),
   );
   
   
@@ -218,6 +238,30 @@ function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_ex
  * @ingroup themeable
  * @{
  */
+
+function theme_cdn_numbers($files_scheduled, $files_scheduled_size, $files_synced) {
+  $output = '';
+  
+  $header = array(
+    array('data' => t('Scheduled files')),
+    array('data' => t('Size of scheduled files')),
+    array('data' => t('Synchronized files')),
+    array('data' => t('Coverage'))
+  );
+  $rows[0] = array(
+    'data' => array(
+      count($files_scheduled),
+      number_format($files_scheduled_size / 1024) .' KB',
+      count($files_synced),
+      number_format(count($files_synced) / count($files_scheduled) * 100, 2) .'%'
+    ),
+  );
+  $output .= theme('table', $header, $rows);
+  foreach ($files as $local_file => $remote_file) {
+    
+  }
+  return $output;
+}
 
 /**
  * Render the list of synchronized files.
