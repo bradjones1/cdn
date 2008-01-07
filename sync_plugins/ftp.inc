@@ -36,16 +36,17 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
     $stats['deletes'] = _ftp_cdn_cron_sync_deletion($fs, $files_unique);
 
     // Sync files. Validate only by checking existence and filesize.
+    $files_on_server = _ftp_cdn_get_filelist($fs, '.');
     foreach ($files as $file => $file_size) {
       $file_size_formatted = number_format($file_size / 1024, 1);
 
-      if (_ftp_cdn_cron_file_exists($fs, $files_unique[$file], $file_size)) {
+      if ((isset($files_on_server[$files_unique[$file]]) && $files_on_server[$files_unique[$file]] == $file_size)) {
         $stats['exists']++;
         $stats['exists_bytes'] += $file_size;
         cdn_log("Already exists: $files_unique[$file] ($file_size_formatted KB).");
       }
       else {
-        if (_ftp_cdn_cron_create_path($fs, $files_updated[$file]) && ftp_put($fs, "./$files_updated[$file]", "./$file", FTP_BINARY)) {
+        if (_ftp_cdn_cron_create_path($fs, $files_unique[$file]) && ftp_put($fs, "./$files_unique[$file]", "./$files_updated[$file]", FTP_BINARY)) {
           $stats['uploads']++;
           $stats['uploaded_bytes'] += $file_size;
           cdn_log("Uploaded $files_unique[$file] ($file_size_formatted KB).");
@@ -74,7 +75,7 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
 
 function _ftp_cdn_cron_sync_deletion($fs, $files) {
   $deletes = 0;
-  $files_on_server = _cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, '.', TRUE));
+  $files_on_server = _ftp_cdn_get_filelist($fs, '.');
   $files_to_be_deleted = array_diff(array_keys($files_on_server), array_values($files));
 
   foreach ($files_to_be_deleted as $filepath) {
@@ -114,11 +115,6 @@ function _ftp_cdn_cron_sync_deletion($fs, $files) {
   return $deletes;
 }
 
-function _ftp_cdn_cron_file_exists($fs, $file_path, $file_size) {
-  $file_sizes = _cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, '.', TRUE));
-  return (isset($file_sizes[$file_path]) && $file_sizes[$file_path] == $file_size);
-}
-
 function _ftp_cdn_cron_create_path($fs, $file) {
   $success = TRUE;
 
@@ -146,30 +142,34 @@ function _ftp_cdn_cron_create_path($fs, $file) {
   return $success;
 }
 
-function _cdn_parse_filesizes_recursive_rawlist($raw_list) {
-  static $list;
+function _ftp_cdn_get_filelist($fs, $path) {
+  static $filelist = array();
   
-  if (!isset($list)) {
-    foreach ($raw_list as $file) {
-      if ($file == '') {
-        continue;
-      }
-      elseif (substr($file, strlen($file) - 1, strlen($file) ) == ':') {
-        $path = substr($file, 0, strlen($file) - 1);
-      }
-      else {
-        $parts = preg_split("/[\s]+/", $file, 9);
-        $is_file = $parts[0][0] != 'd';
-        $file_name = $parts[8];
-        $file_size = $parts[4];
-      
-        if ($is_file) {
-          $list[$path .'/'. $file_name] = $file_size;
-        }
+  if (!isset($filelist[$path])) {
+    $filelist[$path] = _ftp_cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, $path, TRUE));
+    cdn_log('Retrieved full list of files and file sizes for path "'. $path .'".');
+  }
+  return $filelist[$path];
+}
+
+function _ftp_cdn_parse_filesizes_recursive_rawlist($raw_list) {
+  foreach ($raw_list as $file) {
+    if ($file == '') {
+      continue;
+    }
+    elseif (substr($file, strlen($file) - 1, strlen($file) ) == ':') {
+      $path = substr($file, 0, strlen($file) - 1);
+    }
+    else {
+      $parts = preg_split("/[\s]+/", $file, 9);
+      $is_file = $parts[0][0] != 'd';
+      $file_name = $parts[8];
+      $file_size = $parts[4];
+    
+      if ($is_file) {
+        $list[$path .'/'. $file_name] = $file_size;
       }
     }
-    cdn_log('Retrieved full list of files  and file sizes.');
   }
-
   return $list;
 }

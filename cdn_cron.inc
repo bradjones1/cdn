@@ -88,6 +88,10 @@ function cdn_cron_run() {
     }
     $message .= '</ul>';
 
+    // Delete all temporary files in the cdn directory.
+    $list = file_scan_directory(file_directory_path() .'/cdn', '.*');
+    array_map(create_function('$file', 'return file_delete($file->filename);'), $list);
+
     // Log to watchdog.
     watchdog('cdn_cron', "CDN synchronization cron run completed.<br />$message", WATCHDOG_NOTICE);
     if ($uploads_failed) {
@@ -180,7 +184,7 @@ function _cdn_cron_get_files_to_sync($filters) {
 
       if (count($newfiles)) {
         // Get relative filepaths.
-        $newfiles = array_flip(array_map('cdn_clean_filepath', array_flip($newfiles)));
+        $newfiles = array_combine(array_map('cdn_clean_filepath', array_keys($newfiles)), array_values($newfiles));
 
         // For some unique methods, we have to store some extra parameters.
         $extra_params = FALSE;
