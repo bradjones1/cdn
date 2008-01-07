@@ -71,36 +71,42 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
 //----------------------------------------------------------------------------
 // Private functions.
 
-function _ftp_cdn_cron_sync_deletion($fs, $files, $path = '') {
-  static $files_string;
-  
+
+function _ftp_cdn_cron_sync_deletion($fs, $files) {
   $deletes = 0;
-  
-  if (!isset($files_string)) {
-    $files_string = implode('|', $files);
-  }
+  $files_on_server = _cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, '.', TRUE));
+  $files_to_be_deleted = array_diff(array_keys($files_on_server), array_values($files));
 
-  $list = ftp_nlist($fs, '.');
-  foreach ($list as $file) {
-    if (strpos($files_string, $file) === FALSE) {
-      $deleted = FALSE;
+  foreach ($files_to_be_deleted as $filepath) {
+    $dirs = explode('/', $filepath);
+    $file = end($dirs);
+    unset($dirs[count($dirs) - 1]);
+    $path = implode('/', $dirs);
 
-      if (ftp_size($fs, $file) == -1) {
-        ftp_chdir($fs, $file);
-        $deletes += _ftp_cdn_cron_sync_deletion($fs, $files, "$path/$file");
-        ftp_cdup($fs);
-        $deleted = ftp_rmdir($fs, $file);
-      }
-      else {
-        $deleted = ftp_delete($fs, $file);
-        $deletes++;
-      }
+    ftp_chdir($fs, $path);
+    if (ftp_delete($fs, $file)) {
+      cdn_log("Deleted $path/$file.");
+      $deletes++;
+    }
+    else {
+      cdn_log("Failed to deleted $path/$file.");
+    }
 
-      if ($deleted) {
-        cdn_log("Deleted $path/$file.");
-      }
-      else {
-        cdn_log("Failed to deleted $path/$file.");
+    // Go back to the original working directory, deleting empty directories
+    // on the go.
+    $success = TRUE;
+    for ($i = count($dirs) - 1; $i >= 0; $i--) {
+      ftp_chdir($fs, '..');
+      $list = ftp_nlist($fs, $dirs[$i]);
+      if ($success && empty($list)) {
+        if ($success = ftp_rmdir($fs, $dirs[$i])) {
+          cdn_log("Deleted empty directory ". implode('/', $dirs) .".");
+          $deletes++;
+        }
+        else {
+          cdn_log("Failed to deleted empty directory ". implode('/', $dirs) .".");
+        }
+        unset($dirs[$i]);
       }
     }
   }
@@ -109,13 +115,7 @@ function _ftp_cdn_cron_sync_deletion($fs, $files, $path = '') {
 }
 
 function _ftp_cdn_cron_file_exists($fs, $file_path, $file_size) {
-  static $file_sizes;
-  
-  if (!isset($file_sizes)) {
-    cdn_log('Retrieved file sizes of all files beneath the remote path. This happens only once.');
-    $file_sizes = _cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, '.', TRUE));
-  }
-
+  $file_sizes = _cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, '.', TRUE));
   return (isset($file_sizes[$file_path]) && $file_sizes[$file_path] == $file_size);
 }
 
@@ -147,25 +147,29 @@ function _ftp_cdn_cron_create_path($fs, $file) {
 }
 
 function _cdn_parse_filesizes_recursive_rawlist($raw_list) {
-  $list = array();
-
-  foreach ($raw_list as $file) {
-    if ($file == '') {
-      continue;
-    }
-    elseif (substr($file, strlen($file) - 1, strlen($file) ) == ':') {
-      $path = substr($file, 0, strlen($file) - 1);
-    }
-    else {
-      $parts = preg_split("/[\s]+/", $file, 9);
-      $is_file = $parts[0][0] != 'd';
-      $file_name = $parts[8];
-      $file_size = $parts[4];
+  static $list;
+  
+  if (!isset($list)) {
+    foreach ($raw_list as $file) {
+      if ($file == '') {
+        continue;
+      }
+      elseif (substr($file, strlen($file) - 1, strlen($file) ) == ':') {
+        $path = substr($file, 0, strlen($file) - 1);
+      }
+      else {
+        $parts = preg_split("/[\s]+/", $file, 9);
+        $is_file = $parts[0][0] != 'd';
+        $file_name = $parts[8];
+        $file_size = $parts[4];
       
-      if ($is_file) {
-        $list[$path .'/'. $file_name] = $file_size;
+        if ($is_file) {
+          $list[$path .'/'. $file_name] = $file_size;
+        }
       }
     }
+    cdn_log('Retrieved full list of files  and file sizes.');
   }
+
   return $list;
 }
