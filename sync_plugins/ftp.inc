@@ -16,7 +16,7 @@ define('DEBUG_OUTPUT', 'html');
  */
 function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats, $settings) {
   extract($settings);
-  cdn_log(count($files). " files will be synchronized.");
+  cdn_log(count($files) ." files will be synchronized.");
 
   $fs = ftp_connect($host, $port);
   if ($fs && ftp_login($fs, $user, $pass)) {
@@ -39,8 +39,16 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
     $files_on_server = _ftp_cdn_get_filelist($fs, '.');
     foreach ($files as $file => $file_size) {
       $file_size_formatted = number_format($file_size / 1024, 1);
+      // If we had to alter the original file, make sure we use that file as
+      // the source file. We also have to update the filesize then.
+      $source_file = $files_updated[$file];
+      if ($file != $source_file) {
+        $file_size = filesize($source_file);
+      }
 
-      if ((isset($files_on_server[$files_unique[$file]]) && $files_on_server[$files_unique[$file]] == $file_size)) {
+      $target_file = $files_unique[$file];
+
+      if ((isset($files_on_server[$target_file]) && $files_on_server[$target_file] == $file_size)) {
         $stats['exists']++;
         $stats['exists_bytes'] += $file_size;
         cdn_log("Already exists: $files_unique[$file] ($file_size_formatted KB).");
