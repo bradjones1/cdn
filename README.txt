@@ -1,8 +1,67 @@
 // $Id$
 
+Description
+-----------
+The aim of this module to provide easy Content Delivery Network integration
+for Drupal sites. Obviously it has to patch Drupal core to rewrite the URLs,
+not only to serve them from another domain, but also to make the filenames
+unique.
+
+It has synchronization plugins, so it allows you to use any protocol or
+algorithm to synchronize your files. Currently however, only one plugin is
+available: FTP. Since proper usage of a CDN demands unique filenames for each
+version of a file, we can optimize a lot: to validate a file on the CDN while
+synchronizing, we must only know if it 1) exists and 2) has the correct size.
+
+Which files and directories should be synchronized can be configured very
+precisely. Consult the README for details about that.
+
+The FTP synchronization plugin allows you to use a $15 per month CDN (thus
+making CDNs accessible to *a lot* Drupal users) with no effort after the
+installation!
+For those who know of the infamous YSlow test: if you install and configure
+this module and apply the core patch that also adds Javascript aggregation,
+you will score 98. Almost the maximum! The remainder of points is due to the
+lack Javascript minification (compression).
+
+This module was developed for http://driverpacks.net/.
+
+
+Installation
+------------
+1) Place this module in your modules directory (this will usually be
+"sites/all/modules/").
+
+2) Enable the module.
+
+3) Apply the Drupal core patch. See below.
+
+4) Apply the theme patch to every theme. See below.
+
+5) Read how to configure the CDN synchronization filters. See below.
+
+6) Configure the $conf array in settings.php See below.
+
+7) Copy cdn_cron.php to your Drupal root directory.
+
+8) Configure cdn_cron.php like Drupal's cron.php. See http://drupal.org/cron.
+
+9) Go to admin/logs/status. If the CDN integration module is installed
+correctly or not, it will report so here.
+
+
+Usage
+-----
+When the module is installed properly (see step 9 of the installation), you
+can check the site-wide statistics at admin/settings/cdn. At that same page,
+you can enable the per-page statistics as well. This will show the number of
+files served from the CDN at the bottom of each page, as well as a list of
+files that haven't been synchronized to the CDN yet, to users with the
+"administer site configuration" permission.
+
+
 Applying the Drupal core patch
 ------------------------------
-
 You *must* apply this patch!
 
 First, change the directory to the Drupal root directory.
@@ -20,7 +79,6 @@ patches separately, you will get a conflict.
 
 Applying the theme patch
 ------------------------
-
 You *must* apply this patch to *every* theme that's being used on your website!
 
 Repeat this process for every theme: first, change the directory to the
@@ -28,14 +86,15 @@ directory of the theme. Applying the patch is identical to the example above,
 only with a different filename.
 
 
-Setting up CDN sync filters
----------------------------
+Setting up CDN synchronization filters
+--------------------------------------
+First of all: each filter works *recursively*! Now, the explanations:
 - paths: This is an array of paths (each path being relative to the Drupal
          root directory) on which this filter should be applied.
-- pattern: A regular expression that will be used to filter the files in each
+- pattern: Regular expression that will be used to filter the files in each
            directory. Like the $mask parameter in file_scan_directory().
-- ignored_dirs: An array of directories that should be ignored in each
-                directory. Like the $nomask parameter in file_scan_directory().
+- ignored_dirs: Array of directories that should be ignored in each directory.
+                Like the $nomask parameter in file_scan_directory().
 - unique: Determines how the uniqueness will be applied. You can set it to
           'filename', which will alter the filename, or 'common parent
           directory', which will alter the path of the file. The latter is
@@ -51,13 +110,13 @@ Setting up CDN sync filters
 
 Configuring the $conf array in settings.php
 -------------------------------------------
-
 This is my configuration:
 
 $conf = array(
   'cdn_url' => 'http://wimleers.cachefly.com/wimleers.com',
   'cdn_sync_filters' => array(
-  'cdn_sync_filters' => array(
+    // Add all Javascript, CSS, image and flash files from the most common
+    // directories in Drupal.
     0 => array(
       'paths' => array('misc', 'profiles', 'modules', 'sites/all/modules', 'sites/default/modules'),
       'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|svg|swf)$',
@@ -65,6 +124,9 @@ $conf = array(
       'unique' => 'filename',
       'unique_method' => 'mtime',
     ),
+
+    // We want to add *everything* in the files directory. Except for the
+    // files in the CSS directory, because they need special treatment.
     1 => array(
       'paths' => array('sites/wimleers.com/files'),
       'pattern' => '.*',
@@ -72,6 +134,9 @@ $conf = array(
       'unique' => 'filename',
       'unique_method' => 'mtime',
     ),
+
+    // Add all files in the files/css directory, *but* update the URLs in the
+    // files. This is only necessary if we use CSS aggregation.
     2 => array(
       'paths' => array('sites/wimleers.com/files/css'),
       'pattern' => '.*',
@@ -80,6 +145,12 @@ $conf = array(
       'unique_method' => 'mtime',
       'update_urls_in_files' => TRUE,
     ),
+
+    // Add all Javascript, CSS, image and font files from our themes. But
+    // make sure the URLs don't break when CSS aggregation is disabled, by
+    // using the "common parent directory" unique level and the "md5 of mtimes"
+    // uniqueness method. We can revert to normal values if we have CSS
+    // aggregation enabled.
     3 => array(
       'paths' => array('sites/default/themes/garland-customized'),
       'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$',
@@ -97,3 +168,14 @@ $conf = array(
     'pass' => 'pass',
   ),
 );
+
+
+Author
+------
+Wim Leers
+
+* mail: work@wimleers.com
+* website: http://wimleers.com/work
+
+The author can be contacted for paid customizations of this module as well as
+Drupal consulting, development and installation.
