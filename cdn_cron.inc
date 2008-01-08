@@ -42,20 +42,20 @@ function cdn_cron_run() {
     // Lock CDN synchronization cron semaphore
     variable_set('cdn_cron_semaphore', time());
 
-    // Get variables.
+    // Get the CDN integration configuration.
     $sync_method = variable_get('cdn_sync_method', 'ftp');
     $sync_filters = variable_get('cdn_sync_filters', FALSE);
     $sync_method_settings = variable_get('cdn_sync_method_settings', FALSE);
 
     // Get the list of files, the unique settings for each file, and the
     // update settings for each file.
-    list($files, $files_unique_settings, $files_update_settings) = _cdn_cron_get_files_to_sync($sync_filters);
+    list($files, $files_unique_settings, $files_update_setting) = _cdn_cron_get_files_to_sync($sync_filters);
 
     // Make all filenames unique.
-    $files_unique = _cdn_cron_get_unique_filenames($files, $files_unique_settings);
+    $files_unique = array_combine(array_keys($files), array_map('cdn_unique_filename', array_keys($files), $files_unique_settings));
 
     // Update files if necessary.
-    $files_updated = _cdn_cron_get_updated_filenames($files, $files_update_settings);
+    $files_updated = array_combine(array_keys($files), array_map('cdn_update_file', array_keys($files), $files_update_setting));
 
     // Perform the CDN synchronization using the configured method. Default to
     // the FTP  method. 
@@ -64,6 +64,10 @@ function cdn_cron_run() {
     timer_start('cdn_sync');
     $stats = $sync_hook($files, $files_unique, $files_updated, _cdn_cron_init_stats(), $sync_method_settings);
     $timer = timer_stop('cdn_sync');
+
+    // Delete all temporary files in the cdn directory.
+    $list = file_scan_directory(file_directory_path() .'/cdn', '.*');
+    array_map(create_function('$file', 'return file_delete($file->filename);'), $list);
 
     // Build message.
     $duration = round($timer['time'] / 1000, 1);
@@ -87,10 +91,6 @@ function cdn_cron_run() {
       $message .= "<li>Uploaded: <em>$uploads</em> files</li>";
     }
     $message .= '</ul>';
-
-    // Delete all temporary files in the cdn directory.
-    $list = file_scan_directory(file_directory_path() .'/cdn', '.*');
-    array_map(create_function('$file', 'return file_delete($file->filename);'), $list);
 
     // Log to watchdog.
     watchdog('cdn_cron', "CDN synchronization cron run completed.<br />$message", WATCHDOG_NOTICE);
@@ -136,6 +136,9 @@ function cdn_cron_cleanup() {
 
 /**
  * Simple logging function for sync plugin debugging purposes only.
+ *
+ * @param $message
+ *   The message to log. The current time will be prepended automatically.
  */
 function cdn_log($message) {
   $output = 'console';
@@ -169,6 +172,8 @@ function cdn_log($message) {
  * pattern, a list of ignored directories, a list of directories of which any
  * file will be included, and an exclude pattern.
  *
+ * @param $filters
+ *   A set of filters, as specified in README.txt.
  * @return
  *   An array of which the keys are filepaths and the values are filesizes.
  */
@@ -263,10 +268,21 @@ function _cdn_cron_init_stats() {
   return $stats;
 }
 
-function _cdn_cron_get_unique_filenames($files, $files_unique_settings) {
-  return array_combine(array_keys($files), array_map('cdn_unique_filename', array_keys($files), $files_unique_settings));
-}
-
-function _cdn_cron_get_updated_filenames($files, $files_update_settings) {
-  return array_combine(array_keys($files), array_map('cdn_update_file', array_keys($files), $files_update_settings));
+/**
+ * Helper function to update files where necessary.
+ *
+ * @param $files
+ *   The list of files to be synchronized.
+ * @param $update_setting
+ *   The update setting for each file. The key is the file path.
+ * @return
+ *   The updated $files array.
+ */
+function _cdn_cron_update_files_helper($files, $update_setting) {
+  foreach ($files as $file) {
+    if ($update_seting[$file]) {
+      $files[$file] = cdn_update_file($file);
+    }
+  }
+  return $files;
 }

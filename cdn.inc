@@ -39,12 +39,12 @@ function cdn_file($file_path) {
 }
 
 /**
- * Alters filenames or filepaths to make the filename unique.
+ * Alters filename or file path to make the filename unique.
  *
- * @param $filepath
+ * @param $file_path
  *   The path to the file, relative to the Drupal root directory.
  * @param $unique_settings
- *   The settings to generate the unique filepath for the CDN. This is an
+ *   The settings to generate the unique file path for the CDN. This is an
  *   array with the following structure:
  *   array(
  *     'method' => 'mtime',    // Other values: 'md5'.
@@ -54,7 +54,7 @@ function cdn_file($file_path) {
  * @return
  *   The new basename.
  */
-function cdn_unique_filename($filepath, $unique_settings = array()) {
+function cdn_unique_filename($file_path, $unique_settings = array()) {
   // Generate the file version identifier that will be included in the
   // name to make sure we get a unique filename.
   switch ($unique_settings['method']) {
@@ -72,16 +72,16 @@ function cdn_unique_filename($filepath, $unique_settings = array()) {
       break;
 
     case 'md5':
-      $unique = md5_file($filepath);
+      $unique = md5_file($file_path);
       break;
 
     case 'mtime':
     default:
-      $unique = filemtime($filepath);
+      $unique = filemtime($file_path);
       break;
   }
 
-  $dirs = explode('/', $filepath);
+  $dirs = explode('/', $file_path);
   $basename = end($dirs);
   unset($dirs[count($dirs) - 1]);
   $path = implode('/', $dirs);
@@ -124,35 +124,41 @@ function cdn_clean_filepath($path) {
   return preg_replace('/^(?:(?:\.\.\/)+|\.\/|\/)?(.*)/', '$1', $path);
 }
 
-function cdn_update_file($filepath, $update = FALSE) {
-  if ($update) {
-    $contents = file_get_contents($filepath);
+/**
+ * Updates the contents of the file for CDN compatibility: it searches all
+ * relative URLs and replaces it with absolute URLs to files hosted on the
+ * CDN, if they're available on the CDN already, otherwise they are replaced
+ * with absolute URLs to the files hosted on the local server.
+ *
+ * @param $file_path
+ *   The path to the file, relative to the Drupal root directory.
+ * @return
+ *   Path to the updated file (the original file will never be changed).
+ */
+function cdn_update_file($file_path) {
+  $contents = file_get_contents($file_path);
 
-    // Strip surrounding apostrophes or quotes.
-    $contents = preg_replace('/(?<=url\()([\'"]{1})(.*)\1{1}/', '\2', $contents);
-    
-    // Remove the leading base path.
-    $contents = preg_replace('/url\('. preg_quote(base_path(), '/.') .'([\d\w-_\.\/]+)/i', 'url(\1', $contents);
+  // Strip surrounding apostrophes or quotes.
+  $contents = preg_replace('/(?<=url\()([\'"]{1})(.*)\1{1}/', '\2', $contents);
+  
+  // Remove the leading base path.
+  $contents = preg_replace('/url\('. preg_quote(base_path(), '/.') .'([\d\w-_\.\/]+)/i', 'url(\1', $contents);
 
-    // Strip all "../" and everything before it, ignoring absolute paths.
-    $contents = preg_replace('/url\(([\'"]?)(?![a-z]+:)[\d\w-_\.\/]+(\.\.\/)+/i', 'url(\1', $contents);
+  // Strip all "../" and everything before it, ignoring absolute paths.
+  $contents = preg_replace('/url\(([\'"]?)(?![a-z]+:)[\d\w-_\.\/]+(\.\.\/)+/i', 'url(\1', $contents);
 
-    // Route all paths through cdn_file(), ignoring absolute paths.
-    $contents = preg_replace_callback(
-      '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
-      create_function(
-        '$matches',
-        'return cdn_file($matches[0]);'
-      ),
-      $contents
-    );
+  // Route all paths through cdn_file(), ignoring absolute paths.
+  $contents = preg_replace_callback(
+    '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
+    create_function(
+      '$matches',
+      'return cdn_file($matches[0]);'
+    ),
+    $contents
+  );
 
-    // Create the CDN directory if it does not yet exist.
-    file_check_directory(file_create_path('cdn'), FILE_CREATE_DIRECTORY);
+  // Create the CDN directory if it does not yet exist.
+  file_check_directory(file_create_path('cdn'), FILE_CREATE_DIRECTORY);
 
-    return file_save_data($contents, 'cdn/'. md5($filepath), FILE_EXISTS_REPLACE);
-  }
-  else {
-    return $filepath;
-  }
+  return file_save_data($contents, 'cdn/'. md5($file_path), FILE_EXISTS_REPLACE);
 }
