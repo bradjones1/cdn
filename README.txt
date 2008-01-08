@@ -71,7 +71,7 @@ files that haven't been synchronized to the CDN yet, to users with the
 
 Applying the Drupal core patch
 ------------------------------
-You *must* apply this patch!
+You *must* apply this patch! It has been created against Drupal 5.5.
 
 First, change the directory to the Drupal root directory.
 
