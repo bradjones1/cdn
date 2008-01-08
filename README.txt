@@ -13,6 +13,10 @@ You can apply the included Drupal core patch like this:
 To undo the patch:
   patch -p0 -R < drupal_core_cdn_integration.patch
 
+Note: there is also a patch that combines the CDN integration core patch with
+the JS aggregation. It's included in this module because if you apply both
+patches separately, you will get a conflict.
+
 
 Applying the theme patch
 ------------------------
