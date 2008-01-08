@@ -17,7 +17,7 @@ Which files and directories should be synchronized can be configured very
 precisely. Consult the README for details about that.
 
 The FTP synchronization plugin allows you to use a $15 per month CDN (thus
-making CDNs accessible to *a lot* Drupal users) with no effort after the
+making CDNs accessible to /a lot/ Drupal users) with no effort after the
 installation!
 For those who know of the infamous YSlow test: if you install and configure
 this module and apply the core patch that also adds Javascript aggregation,
@@ -25,6 +25,15 @@ you will score 98. Almost the maximum! The remainder of points is due to the
 lack Javascript minification (compression).
 
 This module was developed for http://driverpacks.net/.
+
+
+Aren't CDN's so expensive only big companies can afford them?
+-------------------------------------------------------------
+Not anymore (in order of best price-value ratio):
+
+1) CacheFly, http://cachefly.com/, starts at USD 15 for 30 GB per month
+
+2) Influxis, http://influxis.com/, starts at USD 10 for 1 GB per month
 
 
 Installation
