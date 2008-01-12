@@ -53,7 +53,7 @@ function cdn_file($file_path, $absolute_url = FALSE) {
  *   The settings to generate the unique file path for the CDN. This is an
  *   array with the following structure:
  *   array(
- *     'method' => 'mtime',    // Other values: 'md5'.
+ *     'method' => 'mtime',    // Other values: 'none', 'md5'.
  *     'where'  => 'filename', // Other values: 'common parent directory' (should be used for themes to not break URLs in CSS files, enables a new method: 'md5 of mtimes').
  *     'params' => array(),    // An array of parameters. Optional. Keys in case of 'common parent directory': 'path' and 'files'. 
  *   )
@@ -61,61 +61,66 @@ function cdn_file($file_path, $absolute_url = FALSE) {
  *   The new basename.
  */
 function cdn_unique_filename($file_path, $unique_settings = array()) {
-  // Generate the file version identifier that will be included in the
-  // name to make sure we get a unique filename.
-  switch ($unique_settings['method']) {
-    case 'md5 of mtimes':
-      static $md5_mtimes;
+  if ($unique_settings['method'] != 'none') {
+    // Generate the file version identifier that will be included in the
+    // name to make sure we get a unique filename.
+    switch ($unique_settings['method']) {
+      case 'md5 of mtimes':
+        static $md5_mtimes;
 
-      if (!isset($md5_mtimes[$unique_settings['params']['path']])) {
-        $mtimes_string = '';
-        foreach ($unique_settings['params']['files'] as $file) {
-          $mtimes_string .= filemtime($file); 
+        if (!isset($md5_mtimes[$unique_settings['params']['path']])) {
+          $mtimes_string = '';
+          foreach ($unique_settings['params']['files'] as $file) {
+            $mtimes_string .= filemtime($file); 
+          }
+          $md5_mtimes[$unique_settings['params']['path']] = md5($mtimes_string);
         }
-        $md5_mtimes[$unique_settings['params']['path']] = md5($mtimes_string);
-      }
-      $unique = $md5_mtimes[$unique_settings['params']['path']];
-      break;
+        $unique = $md5_mtimes[$unique_settings['params']['path']];
+        break;
 
-    case 'md5':
-      $unique = md5_file($file_path);
-      break;
+      case 'md5':
+        $unique = md5_file($file_path);
+        break;
 
-    case 'mtime':
-    default:
-      $unique = filemtime($file_path);
-      break;
-  }
+      case 'mtime':
+      default:
+        $unique = filemtime($file_path);
+        break;
+    }
 
-  $dirs = explode('/', $file_path);
-  $basename = end($dirs);
-  unset($dirs[count($dirs) - 1]);
-  $path = implode('/', $dirs);
+    $dirs = explode('/', $file_path);
+    $basename = end($dirs);
+    unset($dirs[count($dirs) - 1]);
+    $path = implode('/', $dirs);
   
-  switch ($unique_settings['where']) {
-    case 'filename':
-      if (($pos = strrpos($basename, '.')) !== FALSE) {
-        $first = substr($basename, 0, $pos);
-        $last = substr($basename, $pos, strlen($basename) - $pos);
-        $basename = $first .'-'. $unique . $last;
-      }
-      else {
-        $basename .= '-'. $unique;
-      }
-      break;
-
-    case 'common parent directory':
-      $path = $dirs[0];
-      for ($i = 1; $i < count($dirs); $i++) {
-        $path .= "/$dirs[$i]";
-        if ($path == $unique_settings['params']['path']) {
-          $path .= "/$unique";
+    switch ($unique_settings['where']) {
+      case 'filename':
+        if (($pos = strrpos($basename, '.')) !== FALSE) {
+          $first = substr($basename, 0, $pos);
+          $last = substr($basename, $pos, strlen($basename) - $pos);
+          $basename = $first .'-'. $unique . $last;
         }
-      }   
-      break;
-  }
+        else {
+          $basename .= '-'. $unique;
+        }
+        break;
 
-  return $path .'/'. $basename;
+      case 'common parent directory':
+        $path = $dirs[0];
+        for ($i = 1; $i < count($dirs); $i++) {
+          $path .= "/$dirs[$i]";
+          if ($path == $unique_settings['params']['path']) {
+            $path .= "/$unique";
+          }
+        }   
+        break;
+    }
+
+    return $path .'/'. $basename;
+  }
+  else {
+    return $file_path;
+  }
 }
 
 /**

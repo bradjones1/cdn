@@ -110,11 +110,11 @@ First of all: each filter works *recursively*! Now, the explanations:
           strongly recommended for themes, since it will not break URLs in
           CSS files.
 - unique_method: The method that should be used to generate unique filenames.
-                 Currently supported: 'mtime' (the file's mtime property), 
-                 'md5' (md5 hash of the file) or 'md5 of mtimes' (md5 hash of
-                 the concatenated mtimes of a set of files). This last option
-                 is only available if you have set the unique property to
-                 'common parent directory'.
+                 Currently supported: 'none' (no unique filename!), 'mtime'
+                 (the file's mtime property), 'md5' (md5 hash of the file) or
+                 'md5 of mtimes' (md5 hash of the concatenated mtimes of a set
+                 of files). This last option is only available if you have set
+                 the unique property to 'common parent directory'.
 
 
 Configuring the $conf array in settings.php
@@ -128,7 +128,7 @@ $conf = array(
     // directories in Drupal.
     0 => array(
       'paths' => array('misc', 'profiles', 'modules', 'sites/all/modules', 'sites/default/modules'),
-      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|svg|swf)$',
+      'pattern' => '.*\.(ico|js|css|gif|png|jpg|jpeg|svg|swf)$',
       'ignored_dirs' => array('CVS'),
       'unique' => 'filename',
       'unique_method' => 'mtime',
@@ -140,8 +140,7 @@ $conf = array(
       'paths' => array('sites/wimleers.com/files'),
       'pattern' => '.*',
       'ignored_dirs' => array('CVS', 'css'),
-      'unique' => 'filename',
-      'unique_method' => 'mtime',
+      'unique_method' => 'none', // Uploaded files don't change. Hence we can use none-unique filenames.
     ),
 
     // Add all Javascript, CSS, image and font files from our themes. But
