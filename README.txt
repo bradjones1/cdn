@@ -162,7 +162,7 @@ $conf = array(
     // aggregation enabled.
     3 => array(
       'paths' => array('sites/default/themes/garland-customized'),
-      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$',
+      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$', // We *include* css files, because some (e.g. fix-ie.css) are not included in the aggregation.
       'ignored_dirs' => array('CVS'),
       'unique' => 'common parent directory',
       'unique_method' => 'md5 of mtimes',
