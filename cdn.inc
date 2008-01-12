@@ -13,10 +13,13 @@
  *
  * @param $file_path
  *   A file path relative to the Drupal root directory.
+ * @param $absolute_url
+ *   (optional) Makes sure an absolute URL will be generated. (Files hosted
+ *   on the CDN will always generate absolute URLs!)
  * @return
  *   The URL to the file on the CDN, if available, otherwise the normal URL.
  */
-function cdn_file($file_path) {
+function cdn_file($file_path, $absolute_url = FALSE) {
   $files_synced = variable_get('cdn_files_synced', array());
   $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
 
@@ -30,7 +33,10 @@ function cdn_file($file_path) {
     return $remote_file_path;
   }
   else {
-    $local_file_path = base_path() . $file_path;
+    $local_file_path = $file_path;
+    if ($absolute_url) {
+      $local_file_path = $GLOBALS['base_url'] .'/'. $local_file_path;
+    }
     if ($page_stats) {
       _cdn_devel_page_stats($file_path, $local_file_path, FALSE);
     }

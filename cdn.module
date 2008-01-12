@@ -257,9 +257,7 @@ function theme_cdn_numbers($files_scheduled, $files_scheduled_size, $files_synce
     ),
   );
   $output .= theme('table', $header, $rows);
-  foreach ($files as $local_file => $remote_file) {
-    
-  }
+
   return $output;
 }
 
