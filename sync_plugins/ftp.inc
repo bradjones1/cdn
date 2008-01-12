@@ -84,42 +84,44 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
 function _ftp_cdn_cron_sync_deletion($fs, $files) {
   $deletes = 0;
   $files_on_server = _ftp_cdn_get_filelist($fs, '.');
-  $files_to_be_deleted = array_diff(array_keys($files_on_server), array_values($files));
 
-  foreach ($files_to_be_deleted as $filepath) {
-    $dirs = explode('/', $filepath);
-    $file = end($dirs);
-    unset($dirs[count($dirs) - 1]);
-    $path = implode('/', $dirs);
+  if (!empty($files_on_server)) {
+    $files_to_be_deleted = array_diff(array_keys($files_on_server), array_values($files));
 
-    ftp_chdir($fs, $path);
-    if (ftp_delete($fs, $file)) {
-      cdn_log("Deleted $path/$file.");
-      $deletes++;
-    }
-    else {
-      cdn_log("Failed to deleted $path/$file.");
-    }
+    foreach ($files_to_be_deleted as $filepath) {
+      $dirs = explode('/', $filepath);
+      $file = end($dirs);
+      unset($dirs[count($dirs) - 1]);
+      $path = implode('/', $dirs);
 
-    // Go back to the original working directory, deleting empty directories
-    // on the go.
-    $success = TRUE;
-    for ($i = count($dirs) - 1; $i >= 0; $i--) {
-      ftp_chdir($fs, '..');
-      $list = ftp_nlist($fs, $dirs[$i]);
-      if ($success && empty($list)) {
-        if ($success = ftp_rmdir($fs, $dirs[$i])) {
-          cdn_log("Deleted empty directory ". implode('/', $dirs) .".");
-          $deletes++;
+      ftp_chdir($fs, $path);
+      if (ftp_delete($fs, $file)) {
+        cdn_log("Deleted $path/$file.");
+        $deletes++;
+      }
+      else {
+        cdn_log("Failed to deleted $path/$file.");
+      }
+
+      // Go back to the original working directory, deleting empty directories
+      // on the go.
+      $success = TRUE;
+      for ($i = count($dirs) - 1; $i >= 0; $i--) {
+        ftp_chdir($fs, '..');
+        $list = ftp_nlist($fs, $dirs[$i]);
+        if ($success && empty($list)) {
+          if ($success = ftp_rmdir($fs, $dirs[$i])) {
+            cdn_log("Deleted empty directory ". implode('/', $dirs) .".");
+            $deletes++;
+          }
+          else {
+            cdn_log("Failed to deleted empty directory ". implode('/', $dirs) .".");
+          }
+          unset($dirs[$i]);
         }
-        else {
-          cdn_log("Failed to deleted empty directory ". implode('/', $dirs) .".");
-        }
-        unset($dirs[$i]);
       }
     }
   }
-
   return $deletes;
 }
 
@@ -161,6 +163,8 @@ function _ftp_cdn_get_filelist($fs, $path) {
 }
 
 function _ftp_cdn_parse_filesizes_recursive_rawlist($raw_list) {
+  $list = array();
+
   foreach ($raw_list as $file) {
     if ($file == '') {
       continue;

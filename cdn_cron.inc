@@ -59,7 +59,7 @@ function cdn_cron_run() {
 
     // Perform the CDN synchronization using the configured method. Default to
     // the FTP  method. 
-    require_once dirname(drupal_get_filename('module', 'cdn')) ."/sync_plugins/$sync_method.inc";
+    require_once drupal_get_path('module', 'cdn') ."/sync_plugins/$sync_method.inc";
     $sync_hook = $sync_method .'_cdn_cron_perform_sync';
     timer_start('cdn_sync');
     $stats = $sync_hook($files, $files_unique, $files_updated, _cdn_cron_init_stats(), $sync_method_settings);
