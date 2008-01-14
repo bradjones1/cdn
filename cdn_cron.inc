@@ -54,8 +54,12 @@ function cdn_cron_run() {
     // Make all filenames unique.
     $files_unique = array_combine(array_keys($files), array_map('cdn_unique_filename', array_keys($files), $files_unique_settings));
 
+    // Store the files that are being synced in a variable, these URLs will be
+    // used while updating files.
+    variable_set('cdn_cron_files_syncing', $files_unique);
+
     // Update files if necessary.
-    $files_updated = array_combine(array_keys($files), array_map('cdn_update_file', array_keys($files), $files_update_setting));
+    $files_updated = array_combine(array_keys($files), _cdn_cron_update_files_wrapper(array_keys($files), $files_update_setting));
 
     // Perform the CDN synchronization using the configured method. Default to
     // the FTP  method. 
@@ -106,6 +110,9 @@ function cdn_cron_run() {
     // Record which files have been synchronized. We have to know this to be
     // able to generate CDN URLs only for files that have been synchronized.
     variable_set('cdn_files_synced', $files_unique);
+
+    // Delete the files that were being synced, which /are/ synced by now.
+    variable_del('cdn_cron_files_syncing');
 
     // Release CDN synchronization cron semaphore
     variable_del('cdn_cron_semaphore');
@@ -269,20 +276,32 @@ function _cdn_cron_init_stats() {
 }
 
 /**
- * Helper function to update files where necessary.
+ * Wrapper of cdn_update_file() for use only within cron mode. This function
+ * simply calls cdn_update_file(), but also sets the $files_synced parameter.
+ * @see cdn_update_file()
  *
  * @param $files
  *   The list of files to be synchronized.
  * @param $update_setting
  *   The update setting for each file. The key is the file path.
  * @return
- *   The updated $files array.
+ *   The updated $files array, as updated by cdn_update_file().
  */
-function _cdn_cron_update_files_helper($files, $update_setting) {
+function _cdn_cron_update_files_wrapper($files, $update_setting) {
+  static $files_syncing = array();
+  
+  if (empty($files_syncing)) {
+    $files_syncing = variable_get('cdn_cron_files_syncing', array());
+  }
+
+  $files_updated = array();
   foreach ($files as $file) {
-    if ($update_seting[$file]) {
-      $files[$file] = cdn_update_file($file);
+    if ($update_setting[$file]) {
+      $files_updated[] = cdn_update_file($file, $files_syncing);
+    }
+    else {
+      $files_updated[] = $file;
     }
   }
-  return $files;
+  return $files_updated;
 }

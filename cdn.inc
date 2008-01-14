@@ -16,11 +16,16 @@
  * @param $absolute_url
  *   (optional) Makes sure an absolute URL will be generated. (Files hosted
  *   on the CDN will always generate absolute URLs!)
+ * @param $files_synced
+ *   (optional) An array of synced files, with the keys the source file paths
+ *   and the values the file paths on the CDN. This parameter is used by the
+ *   cdn_update_file() function for example. In normal usage, you should not
+ *   need it.
  * @return
  *   The URL to the file on the CDN, if available, otherwise the normal URL.
  */
-function cdn_file($file_path, $absolute_url = FALSE) {
-  $files_synced = variable_get('cdn_files_synced', array());
+function cdn_file($file_path, $absolute_url = FALSE, $files_synced = array()) {
+  $files_synced = (!empty($files_synced)) ? $files_synced : variable_get('cdn_files_synced', array());
   $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
 
   $file_path = cdn_clean_filepath($file_path);
@@ -33,10 +38,8 @@ function cdn_file($file_path, $absolute_url = FALSE) {
     return $remote_file_path;
   }
   else {
-    $local_file_path = $file_path;
-    if ($absolute_url) {
-      $local_file_path = $GLOBALS['base_url'] .'/'. $local_file_path;
-    }
+    $local_file_path = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
+    $local_file_path .= $file_path;
     if ($page_stats) {
       _cdn_devel_page_stats($file_path, $local_file_path, FALSE);
     }
@@ -143,10 +146,15 @@ function cdn_clean_filepath($path) {
  *
  * @param $file_path
  *   The path to the file, relative to the Drupal root directory.
+ * @param $files_synced
+ *   (optional) An array of synced files, with the keys the source file paths
+ *   and the values the file paths on the server. This parameter is used by
+ *   to be able to update files while the synchronization is still running,
+ *   to get the new files on the CDN.
  * @return
  *   Path to the updated file (the original file will never be changed).
  */
-function cdn_update_file($file_path) {
+function cdn_update_file($file_path, $files_synced = array()) {
   $contents = file_get_contents($file_path);
 
   // Strip surrounding apostrophes or quotes.
@@ -158,12 +166,20 @@ function cdn_update_file($file_path) {
   // Strip all "../" and everything before it, ignoring absolute paths.
   $contents = preg_replace('/url\(([\'"]?)(?![a-z]+:)[\d\w-_\.\/]+(\.\.\/)+/i', 'url(\1', $contents);
 
+  // Create the function body of the anonymous function.
+  if (empty($files_synced)) {
+    $function_body = 'return cdn_file($matches[0]);';
+  }
+  else {
+    $function_body = 'return cdn_file($matches[0], '. var_export($files_synced, TRUE) .');';
+  }
+
   // Route all paths through cdn_file(), ignoring absolute paths.
   $contents = preg_replace_callback(
     '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
     create_function(
       '$matches',
-      'return cdn_file($matches[0]);'
+      $function_body
     ),
     $contents
   );
