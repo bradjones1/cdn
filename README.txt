@@ -135,31 +135,19 @@ $conf = array(
     ),
 
     // We want to add *everything* in the files directory. Except for the
-    // files in the CSS directory, because they need special treatment.
+    // files in the CSS and JS directory, because they need other treatment:
+    // we assume that files in this directory don't change, so we can use
+    // non-unique filenames, resulting in nicer filenames when they're
+    // downloaded.
     1 => array(
       'paths' => array('sites/wimleers.com/files'),
       'pattern' => '.*',
-      'ignored_dirs' => array('CVS', 'css'),
-      'unique_method' => 'none', // Uploaded files don't change. Hence we can use none-unique filenames.
-    ),
-
-    // Add all Javascript, CSS, image and font files from our themes. But
-    // make sure the URLs don't break when CSS aggregation is disabled, by
-    // using the "common parent directory" unique level and the "md5 of mtimes"
-    // uniqueness method. We can revert to normal values if we have CSS
-    // aggregation enabled.
-    2 => array(
-      'paths' => array('sites/default/themes/garland-customized'),
-      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$', // We *include* css files, because some (e.g. fix-ie.css) are not included in the aggregation.
-      'ignored_dirs' => array('CVS'),
-      'unique' => 'common parent directory',
-      'unique_method' => 'md5 of mtimes',
+      'ignored_dirs' => array('CVS', 'css', 'js'),
+      'unique_method' => 'none',
     ),
 
     // Add all files in the files/css directory, *but* update the URLs in the
     // files. This is only necessary if we use CSS aggregation.
-    // This filter must come after the images and fonts referenced in the CSS
-    // files have been synchronized!
     2 => array(
       'paths' => array('sites/wimleers.com/files/css'),
       'pattern' => '.*',
@@ -167,6 +155,29 @@ $conf = array(
       'unique' => 'filename',
       'unique_method' => 'mtime',
       'update_urls_in_files' => TRUE,
+    ),
+
+    // Add all files in the files/js directory. This is only necessary if we
+    // use JS aggregation.
+    3 => array(
+      'paths' => array('sites/wimleers.com/files/js'),
+      'pattern' => '.*',
+      'ignored_dirs' => array('CVS'),
+      'unique' => 'filename',
+      'unique_method' => 'mtime',
+    ),
+
+    // Add all Javascript, CSS, image and font files from our themes. But
+    // make sure the URLs don't break when CSS aggregation is disabled, by
+    // using the "common parent directory" unique level and the "md5 of mtimes"
+    // uniqueness method. We can revert to normal values if we have CSS
+    // aggregation enabled.
+    4 => array(
+      'paths' => array('sites/default/themes/garland-customized'),
+      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$', // We *include* css files, because some (e.g. fix-ie.css) are not included in the aggregation.
+      'ignored_dirs' => array('CVS'),
+      'unique' => 'common parent directory',
+      'unique_method' => 'md5 of mtimes',
     ),
   ),
   'cdn_sync_method' => 'ftp',
