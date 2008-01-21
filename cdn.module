@@ -365,10 +365,11 @@ function theme_cdn_scheduled_unsynced_files_list($files_scheduled_unsynced) {
   else {
     $header = array(
       array('data' => t('Local file')),
+      array('data' => t('Size')),
     );
     $rows = array();
     foreach ($files_scheduled_unsynced as $file) {
-      $rows[] = array('data' => array($file));
+      $rows[] = array('data' => array($file, number_format(filesize($file) / 1024, 2) .' KB'));
     }
     $output .= theme('table', $header, $rows);
   }
