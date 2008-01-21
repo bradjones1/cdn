@@ -104,23 +104,22 @@ function cdn_exit($destination = NULL) {
   global $user;
 
   if (!$destination && user_access('adminster site configuration') && variable_get('cdn_dev_page_stats', 0)) {
-    $msg = '';
-    $stats = _cdn_devel_page_stats();
-    extract($stats);
-
-    $msg .= '<strong>CDN integration statistics</strong><br />';
-    $msg .= '<ul>';
-    $msg .= '<li>Total number of files on this page: <strong>'. $file_count .'</strong></li>';
-    $msg .= '<li>Number of files available on the CDN: <strong>'. $remote_file_count .'</strong> ('. number_format($remote_file_count / $file_count * 100) . '%)</li>';
-    if (count($local_files)) {
-      $msg .= '<li>The files that are not (yet?) synchronized to the CDN:<ul>';
-      foreach ($local_files as $file) {
-        $msg .= "<li><code>$file</code></li>";
-      }
-      $msg .= '</ul></li>';
-    }
-    $msg .= '</ul>';
-    print $msg;
+    list(
+      $file_count,
+      $remote_file_count,
+      $local_files,
+      $remote_files,
+      $synced_files,
+      $unsynced_files,
+    ) = _cdn_devel_page_stats();
+    print theme('cdn_page_stats',
+      $file_count,
+      $remote_file_count,
+      $local_files,
+      $remote_files,
+      $synced_files,
+      $unsynced_files
+    );
   }
 }
 
@@ -158,6 +157,21 @@ function cdn_admin_settings_form() {
     '#collapsed' => FALSE,
   );
 
+  $cdn_cron_last = variable_get('cdn_cron_last', FALSE);  
+  $form['stats']['last_run'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Last run'),
+    '#description' => t('Results from the last CDN synchronization'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  if (isset($cdn_cron_last)) {
+    $form['stats']['last_run']['#value'] = '<p>'. t('Last run was !time ago.', array('!time' => format_interval(time() - $cdn_cron_last))) .'</p>'. variable_get('cdn_cron_last_stats', '<p><em>'. t('No statistics available.') .'</em></p>');
+  }
+  else {
+    $form['stats']['last_run']['#value'] = '<p>'. t('No CDN synchronization run has been performed yet. Please check the !status-report to find out what you have to do.', array('!status-report' => l('Status report', 'admin/logs/status'))) .'</p>';
+  }
+
   require_once 'cdn_cron.inc';
   list($files_scheduled, $files_unique_settings, $files_update_settings) = _cdn_cron_get_files_to_sync(variable_get('cdn_sync_filters', FALSE));
   unset($files_unique_settings, $files_update_settings);
@@ -166,18 +180,30 @@ function cdn_admin_settings_form() {
     $files_scheduled_size += $size;
   }
   $files_synced = variable_get('cdn_files_synced', array());
+  $files_scheduled_unsynced = array_diff(array_keys($files_scheduled), array_keys($files_synced));
+  $coverage = (count($files_synced) - count($files_scheduled_unsynced)) / count($files_scheduled);
 
   $form['stats']['numbers'] = array(
-    '#value' => theme('cdn_numbers', $files_scheduled, $files_scheduled_size, $files_synced),
+    '#value' => theme('cdn_numbers', $files_scheduled, $files_scheduled_size, $files_synced, $coverage),
   );
-  $form['stats']['list'] = array(
+
+  $form['stats']['list_scheduled_unsynced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Complete list of files'),
+    '#title' => t('Files that are scheduled but not yet synchronized'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['stats']['list_scheduled_unsynced']['table'] = array(
+    '#value' => theme('cdn_scheduled_unsynced_files_list', $files_scheduled_unsynced),
+  );
+
+  $form['stats']['list_synced'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Synchronized files'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
-  $form['stats']['list']['table'] = array(
+  $form['stats']['list_synced']['table'] = array(
     '#value' => theme('cdn_synchronized_files_list', $files_synced),
   );
   
@@ -202,10 +228,13 @@ function cdn_admin_settings_form() {
  *   Only if no parameters were passed: the collected statistics.
  */
 function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_exists = FALSE) {
-  static $file_count, $remote_file_count, $local_files;
+  static $file_count, $remote_file_count, $local_files, $remote_files, $synced_files, $unsynced_files;
 
   if (!isset($local_files)) {
     $local_files = array();
+    $remote_files = array();
+    $synced_files = array();
+    $unsynced_files = array();
   }
 
   // If the function is called with parameters set, save the statistics. If no
@@ -213,19 +242,25 @@ function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_ex
   if ($file) {
     
     $file_count++;
+    $local_files[] = $file;
+    $remote_files[$file] = $remote_file;
 
     if ($remote_file_exists) {
       $remote_file_count++;
+      $synced_files[] = $file;
     }
     else {
-      $local_files[] = $file;
+      $unsynced_files[] = $file;
     }
   }
   else {
     return array(
-      'file_count' => $file_count,
-      'remote_file_count' => $remote_file_count,
-      'local_files' => $local_files,
+      $file_count,
+      $remote_file_count,
+      $local_files,
+      $remote_files,
+      $synced_files,
+      $unsynced_files,
     );
   }
 }
@@ -239,7 +274,7 @@ function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_ex
  * @{
  */
 
-function theme_cdn_numbers($files_scheduled, $files_scheduled_size, $files_synced) {
+function theme_cdn_numbers($files_scheduled, $files_scheduled_size, $files_synced, $coverage) {
   $output = '';
   
   $header = array(
@@ -247,16 +282,44 @@ function theme_cdn_numbers($files_scheduled, $files_scheduled_size, $files_synce
     array('data' => t('Size of scheduled files')),
     array('data' => t('Synchronized files')),
     array('data' => t('Coverage'))
-  );
+  );  
   $rows[0] = array(
     'data' => array(
       count($files_scheduled),
       number_format($files_scheduled_size / 1024) .' KB',
       count($files_synced),
-      number_format(count($files_synced) / count($files_scheduled) * 100, 2) .'%'
+      number_format($coverage * 100, 2) .'%'
     ),
   );
   $output .= theme('table', $header, $rows);
+
+  return $output;
+}
+
+/**
+ * Render the list of scheduled but not yet synchronized files.
+ *
+ * @param $files_scheduled_unsynced
+ *   Array of local files.
+ * @return
+ *   The rendered HTML.
+ */
+function theme_cdn_scheduled_unsynced_files_list($files_scheduled_unsynced) {
+  $output = '';
+
+  if (!count($files_scheduled_unsynced)) {
+    $output .= '<p>'. t('All files are synchronized!') .'</p>';
+  }
+  else {
+    $header = array(
+      array('data' => t('Local file')),
+    );
+    $rows = array();
+    foreach ($files_scheduled_unsynced as $file) {
+      $rows[] = array('data' => $file);
+    }
+    $output .= theme('table', $header, $rows);
+  }
 
   return $output;
 }
@@ -287,6 +350,44 @@ function theme_cdn_synchronized_files_list($files) {
     $output .= theme('table', $header, $rows);
   }
 
+  return $output;
+}
+
+
+/**
+ * Render the CDN integration page statistics.
+ *
+ * @return
+ *   The rendered HTML.
+ */
+function theme_cdn_page_stats($file_count, $remote_file_count, $local_files, $remote_files, $synced_files, $unsynced_files) {
+  $output = '';
+  $items = array();
+
+  $output .= '<div id="cdn-integration-page-stats">';
+  $items[] = 'Total number of files on this page: <strong>'. $file_count .'</strong>';
+  $items[] = 'Number of files available on the CDN: <strong>'. $remote_file_count .'</strong> ('. number_format($remote_file_count / $file_count * 100) . '%)';
+  
+  // Nested list of unsynced files.
+  if (count($unsynced_files)) {
+    $unsynced_items = array();
+    foreach ($unsynced_files as $file) {
+      $unsynced_items = array(l($file, $file));
+    }
+    $items[] = 'The files that are not (yet?) synchronized to the CDN:' . theme('item_list', $unsynced_items, NULL, 'ol');
+  }
+
+  // Nested list of synced files.
+  if (count($synced_files)) {
+    $synced_items = array();
+    foreach ($synced_files as $file) {
+      $synced_items[] = array(l($file, $remote_files[$file]));
+    }
+    $items[] = 'The files that are synchronized to the CDN:' . theme('item_list', $synced_items, NULL, 'ol');
+  }
+
+  $output .= theme('item_list', $items, '<strong>'. t('CDN integration statistics') .'</strong>');
+  $output .= '</div>';
   return $output;
 }
 
