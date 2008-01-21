@@ -309,6 +309,21 @@ function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_ex
  * @{
  */
 
+/**
+ * Renders site-wide CDN integration statistics.
+ *
+ * @param $files_scheduled
+ *   Array of files that are scheduled for synchronization.
+ * @param $files_scheduled_size
+ *   Total size of files that are scheduled for synchronization, in bytes.
+ * @param $files_synced
+ *   Array of files that are already synchronized to the CDN.
+ * @param $coverage
+ *   Floating point number, indicating the percentage of synchronized
+ *   scheduled files
+ * @return
+ *   The rendered HTML.
+ */
 function theme_cdn_numbers($files_scheduled, $files_scheduled_size, $files_synced, $coverage) {
   $output = '';
   
