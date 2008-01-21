@@ -122,6 +122,9 @@ Configuring the $conf array in settings.php
 This is my configuration:
 
 $conf = array(
+  'file_url_rewrite' => array(
+    'cdn_file_url', // List the CDN module's URL rewrite function as the preferred server.
+  ),
   'cdn_url' => 'http://wimleers.cachefly.com/wimleers.com',
   'cdn_sync_filters' => array(
     // Add all Javascript, CSS, image and flash files from the most common

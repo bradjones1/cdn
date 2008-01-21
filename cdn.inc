@@ -24,7 +24,7 @@
  * @return
  *   The URL to the file on the CDN, if available, otherwise the normal URL.
  */
-function cdn_file($file_path, $absolute_url = FALSE, $files_synced = array()) {
+function cdn_file_url($file_path, $absolute_url = FALSE, $files_synced = array()) {
   $files_synced = (!empty($files_synced)) ? $files_synced : variable_get('cdn_files_synced', array());
   $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
 
@@ -168,13 +168,13 @@ function cdn_update_file($file_path, $files_synced = array()) {
 
   // Create the function body of the anonymous function.
   if (empty($files_synced)) {
-    $function_body = 'return cdn_file($matches[0]);';
+    $function_body = 'return cdn_file_url($matches[0]);';
   }
   else {
-    $function_body = 'return cdn_file($matches[0], '. var_export($files_synced, TRUE) .');';
+    $function_body = 'return cdn_file_url($matches[0], '. var_export($files_synced, TRUE) .');';
   }
 
-  // Route all paths through cdn_file(), ignoring absolute paths.
+  // Route all paths through cdn_file_url(), ignoring absolute paths.
   $contents = preg_replace_callback(
     '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
     create_function(

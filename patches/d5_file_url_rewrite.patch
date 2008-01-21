@@ -1,0 +1,175 @@
+Index: includes/common.inc
+===================================================================
+RCS file: /cvs/drupal/drupal/includes/common.inc,v
+retrieving revision 1.611.2.14
+diff -u -F^f -r1.611.2.14 common.inc
+--- includes/common.inc	27 Dec 2007 09:21:23 -0000	1.611.2.14
++++ includes/common.inc	21 Jan 2008 20:42:59 -0000
+@@ -1379,6 +1379,59 @@ function base_path() {
+ }
+ 
+ /**
++ * Returns a rewritten file URL. Allows you to serve files from different
++ * servers than the server on which Drupal is hosted.
++ *
++ * @param $file_path
++ *   Path to a file, relative to the root directory. E.g.: "misc/jquery.js".
++ * @param $absolute_url
++ *   Whether to generate an absolute URL or not.
++ * @return
++ *   A valid file URL.
++ */
++function file_url($file_path, $absolute_url = FALSE) {
++  $file_url_rewrite = variable_get('file_url_rewrite', 'drupal_file_url');
++  $file_url = FALSE;
++
++  // Try the first URL rewriting function, then the second, etc.
++  if (is_array($file_url_rewrite)) {
++    foreach ($file_url_rewrite as $function) {
++      $file_url = call_user_func($function, $file_path, $absolute_url);
++
++      // If the URL rewriting function sucesfully generated a URL, we can stop
++      // trying.
++      if ($file_url) {
++        break;
++      }
++    }
++  }
++
++  // Always fall back to Drupal's own file URL rewriting function, to
++  // guarantee a working file URL.
++  if (!$file_url) {
++    $file_url = drupal_file_url($file_path, $absolute_url);
++  }
++
++  return $file_url;
++}
++
++/**
++ * Drupal's default URL rewriting function.
++ * This URL rewriting function only has to prepend the base URL or the base path.
++ *
++ * @param $file_path
++ *   Path to a file, relative to the root directory. E.g.: "misc/jquery.js".
++ * @param $absolute_url
++ *   Whether to generate an absolute URL or not.
++ * @return
++ *   A valid file URL.
++ */
++function drupal_file_url($file_path, $absolute_url) {
++  $prefix = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
++  return $prefix . $file_path;
++}
++
++/**
+  * Provide a substitute clone() function for PHP4.
+  */
+ function drupal_clone($object) {
+@@ -1474,15 +1527,15 @@ function drupal_get_css($css = NULL) {
+           // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
+           // regardless of whether preprocessing is on or off.
+           if (!$preprocess && $type == 'module') {
+-            $no_module_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $file .'";</style>' ."\n";
++            $no_module_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. file_url($file) .'";</style>' ."\n";
+           }
+           // If a CSS file is not to be preprocessed and it's a theme CSS file, it needs to *always* appear at the *bottom*,
+           // regardless of whether preprocessing is on or off.
+           else if (!$preprocess && $type == 'theme') {
+-            $no_theme_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $file .'";</style>' ."\n";
++            $no_theme_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. file_url($file) .'";</style>' ."\n";
+           }
+           else {
+-            $output .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $file .'";</style>' ."\n";
++            $output .= '<style type="text/css" media="'. $media .'">@import "'. file_url($file) .'";</style>' ."\n";
+           }
+         }
+       }
+@@ -1491,7 +1544,7 @@ function drupal_get_css($css = NULL) {
+     if ($is_writable && $preprocess_css) {
+       $filename = md5(serialize($types)) .'.css';
+       $preprocess_file = drupal_build_css_cache($types, $filename);
+-      $output .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $preprocess_file .'";</style>'. "\n";
++      $output .= '<style type="text/css" media="'. $media .'">@import "'. file_url($preprocess_file) .'";</style>'. "\n";
+     }
+   }
+ 
+@@ -1526,7 +1579,7 @@ function drupal_build_css_cache($types, 
+           // Return the path to where this CSS file originated from, stripping off the name of the file at the end of the path.
+           $path = base_path() . substr($file, 0, strrpos($file, '/')) .'/';
+           // Wraps all @import arguments in url().
+-          $contents = preg_replace('/@import\s+(?!url)[\'"]?(\S*)\b[\'"]?/i', '@import url("\1")', $contents);
++          $contents = preg_replace('/@import\s+(?!url)[\'"]?(\S*)\b[\'"]?/i', '@import url("\1")', $contents);          
+           // Fix all paths within this CSS file, ignoring absolute paths.
+           $data .= preg_replace('/url\(([\'"]?)(?![a-z]+:)/i', 'url(\1'. $path . '\2', $contents);
+         }
+@@ -1685,7 +1738,7 @@ function drupal_get_js($scope = 'header'
+         break;
+       default:
+         foreach ($data as $path => $info) {
+-          $output .= '<script type="text/javascript"'. ($info['defer'] ? ' defer="defer"' : '') .' src="'. check_url(base_path() . $path) . ($info['cache'] ? '' : '?'. time()) ."\"></script>\n";
++          $output .= '<script type="text/javascript"'. ($info['defer'] ? ' defer="defer"' : '') .' src="'. check_url(file_url($path)) . ($info['cache'] ? '' : '?'. time()) ."\"></script>\n";
+         }
+     }
+   }
+Index: includes/file.inc
+===================================================================
+RCS file: /cvs/drupal/drupal/includes/file.inc,v
+retrieving revision 1.90.2.3
+diff -u -F^f -r1.90.2.3 file.inc
+--- includes/file.inc	7 Jan 2008 01:00:22 -0000	1.90.2.3
++++ includes/file.inc	21 Jan 2008 20:42:59 -0000
+@@ -33,7 +33,7 @@ function file_create_url($path) {
+   }
+   switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
+     case FILE_DOWNLOADS_PUBLIC:
+-      return $GLOBALS['base_url'] .'/'. file_directory_path() .'/'. str_replace('\\', '/', $path);
++      return file_url(file_directory_path() .'/'. str_replace('\\', '/', $path), TRUE);
+     case FILE_DOWNLOADS_PRIVATE:
+       return url('system/files/'. $path, NULL, NULL, TRUE);
+   }
+Index: includes/theme.inc
+===================================================================
+RCS file: /cvs/drupal/drupal/includes/theme.inc,v
+retrieving revision 1.337.2.2
+diff -u -F^f -r1.337.2.2 theme.inc
+--- includes/theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
++++ includes/theme.inc	21 Jan 2008 20:43:00 -0000
+@@ -322,24 +322,24 @@ function theme_get_setting($setting_name
+ 
+     if ($settings['toggle_logo']) {
+       if ($settings['default_logo']) {
+-        $settings['logo'] = base_path() . dirname($theme_object->filename) .'/logo.png';
++        $settings['logo'] = file_url(dirname($theme_object->filename) .'/logo.png');
+       }
+       elseif ($settings['logo_path']) {
+-        $settings['logo'] = base_path() . $settings['logo_path'];
++        $settings['logo'] = file_url($settings['logo_path']);
+       }
+     }
+ 
+     if ($settings['toggle_favicon']) {
+       if ($settings['default_favicon']) {
+         if (file_exists($favicon = dirname($theme_object->filename) .'/favicon.ico')) {
+-          $settings['favicon'] = base_path() . $favicon;
++          $settings['favicon'] = file_url($favicon);
+         }
+         else {
+-          $settings['favicon'] = base_path() . 'misc/favicon.ico';
++          $settings['favicon'] = file_url('misc/favicon.ico');
+         }
+       }
+       elseif ($settings['favicon_path']) {
+-        $settings['favicon'] = base_path() . $settings['favicon_path'];
++        $settings['favicon'] = file_url($settings['favicon_path']);
+       }
+       else {
+         $settings['toggle_favicon'] = FALSE;
+@@ -613,8 +613,7 @@ function theme_links($links, $attributes
+ function theme_image($path, $alt = '', $title = '', $attributes = NULL, $getsize = TRUE) {
+   if (!$getsize || (is_file($path) && (list($width, $height, $type, $image_attributes) = @getimagesize($path)))) {
+     $attributes = drupal_attributes($attributes);
+-    $url = (url($path) == $path) ? $path : (base_path() . $path);
+-    return '<img src="'. check_url($url) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
++    return '<img src="'. check_url(file_url($path)) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
+   }
+ }

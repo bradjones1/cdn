@@ -4,7 +4,7 @@ RCS file: /cvs/drupal/drupal/update.php,v
 retrieving revision 1.211.2.2
 diff -u -F^f -r1.211.2.2 update.php
 --- update.php	8 Apr 2007 00:54:04 -0000	1.211.2.2
-+++ update.php	12 Jan 2008 15:12:23 -0000
++++ update.php	21 Jan 2008 20:03:07 -0000
 @@ -405,8 +405,8 @@ function update_update_page() {
  
  function update_progress_page() {
@@ -30,36 +30,96 @@ RCS file: /cvs/drupal/drupal/includes/common.inc,v
 retrieving revision 1.611.2.14
 diff -u -F^f -r1.611.2.14 common.inc
 --- includes/common.inc	27 Dec 2007 09:21:23 -0000	1.611.2.14
-+++ includes/common.inc	12 Jan 2008 15:12:25 -0000
-@@ -1474,15 +1474,15 @@ function drupal_get_css($css = NULL) {
++++ includes/common.inc	21 Jan 2008 20:03:08 -0000
+@@ -1379,6 +1379,59 @@ function base_path() {
+ }
+ 
+ /**
++ * Returns a rewritten file URL. Allows you to serve files from different
++ * servers than the server on which Drupal is hosted.
++ *
++ * @param $file_path
++ *   Path to a file, relative to the root directory. E.g.: "misc/jquery.js".
++ * @param $absolute_url
++ *   Whether to generate an absolute URL or not.
++ * @return
++ *   A valid file URL.
++ */
++function file_url($file_path, $absolute_url = FALSE) {
++  $file_url_rewrite = variable_get('file_url_rewrite', 'drupal_file_url');
++  $file_url = FALSE;
++
++  // Try the first URL rewriting function, then the second, etc.
++  if (is_array($file_url_rewrite)) {
++    foreach ($file_url_rewrite as $function) {
++      $file_url = call_user_func($function, $file_path, $absolute_url);
++
++      // If the URL rewriting function sucesfully generated a URL, we can stop
++      // trying.
++      if ($file_url) {
++        break;
++      }
++    }
++  }
++
++  // Always fall back to Drupal's own file URL rewriting function,
++  // to guarantee a working file URL.
++  if (!$file_url) {
++    $file_url = drupal_file_url($file_path, $absolute_url);
++  }
++
++  return $file_url;
++}
++
++/**
++ * Drupal's default URL rewriting function.
++ * This URL rewriting function only has to prepend the base URL or the base path.
++ *
++ * @param $file_path
++ *   Path to a file, relative to the root directory. E.g.: "misc/jquery.js".
++ * @param $absolute_url
++ *   Whether to generate an absolute URL or not.
++ * @return
++ *   A valid file URL.
++ */
++function drupal_file_url($file_path, $absolute_url) {
++  $prefix = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
++  return $prefix . $file_path;
++}
++
++/**
+  * Provide a substitute clone() function for PHP4.
+  */
+ function drupal_clone($object) {
+@@ -1474,15 +1527,15 @@ function drupal_get_css($css = NULL) {
            // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
            // regardless of whether preprocessing is on or off.
            if (!$preprocess && $type == 'module') {
 -            $no_module_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $file .'";</style>' ."\n";
-+            $no_module_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. cdn_file($file) .'";</style>' ."\n";
++            $no_module_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. file_url($file) .'";</style>' ."\n";
            }
            // If a CSS file is not to be preprocessed and it's a theme CSS file, it needs to *always* appear at the *bottom*,
            // regardless of whether preprocessing is on or off.
            else if (!$preprocess && $type == 'theme') {
 -            $no_theme_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $file .'";</style>' ."\n";
-+            $no_theme_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. cdn_file($file) .'";</style>' ."\n";
++            $no_theme_preprocess .= '<style type="text/css" media="'. $media .'">@import "'. file_url($file) .'";</style>' ."\n";
            }
            else {
 -            $output .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $file .'";</style>' ."\n";
-+            $output .= '<style type="text/css" media="'. $media .'">@import "'. cdn_file($file) .'";</style>' ."\n";
++            $output .= '<style type="text/css" media="'. $media .'">@import "'. file_url($file) .'";</style>' ."\n";
            }
          }
        }
-@@ -1491,7 +1491,7 @@ function drupal_get_css($css = NULL) {
+@@ -1491,7 +1544,7 @@ function drupal_get_css($css = NULL) {
      if ($is_writable && $preprocess_css) {
        $filename = md5(serialize($types)) .'.css';
        $preprocess_file = drupal_build_css_cache($types, $filename);
 -      $output .= '<style type="text/css" media="'. $media .'">@import "'. base_path() . $preprocess_file .'";</style>'. "\n";
-+      $output .= '<style type="text/css" media="'. $media .'">@import "'. cdn_file($preprocess_file) .'";</style>'. "\n";
++      $output .= '<style type="text/css" media="'. $media .'">@import "'. file_url($preprocess_file) .'";</style>'. "\n";
      }
    }
  
-@@ -1607,24 +1607,26 @@ function drupal_clear_css_cache() {
+@@ -1607,24 +1660,26 @@ function drupal_clear_css_cache() {
   *   (optional) If set to FALSE, the JavaScript file is loaded anew on every page
   *   call, that means, it is not cached. Defaults to TRUE. Used only when $type
   *   references a JavaScript file.
@@ -98,7 +158,7 @@ diff -u -F^f -r1.611.2.14 common.inc
    if (!isset($javascript[$scope])) {
      $javascript[$scope] = array('core' => array(), 'module' => array(), 'theme' => array(), 'setting' => array(), 'inline' => array());
    }
-@@ -1633,7 +1635,7 @@ function _drupal_add_js($data, $type, $s
+@@ -1633,7 +1688,7 @@ function _drupal_add_js($data, $type, $s
      $javascript[$scope][$type] = array();
    }
  
@@ -107,7 +167,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      switch ($type) {
        case 'setting':
          $javascript[$scope][$type][] = $data;
-@@ -1642,7 +1644,8 @@ function _drupal_add_js($data, $type, $s
+@@ -1642,7 +1697,8 @@ function _drupal_add_js($data, $type, $s
          $javascript[$scope][$type][] = array('code' => $data, 'defer' => $defer);
          break;
        default:
@@ -117,7 +177,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      }
    }
  
-@@ -1665,13 +1668,25 @@ function _drupal_add_js($data, $type, $s
+@@ -1665,13 +1721,25 @@ function _drupal_add_js($data, $type, $s
   * @return
   *   All JavaScript code segments and includes for the scope as HTML tags.
   */
@@ -146,7 +206,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      if (!$data) continue;
  
      switch ($type) {
-@@ -1684,16 +1699,74 @@ function drupal_get_js($scope = 'header'
+@@ -1684,16 +1752,74 @@ function drupal_get_js($scope = 'header'
          }
          break;
        default:
@@ -155,7 +215,7 @@ diff -u -F^f -r1.611.2.14 common.inc
          foreach ($data as $path => $info) {
 -          $output .= '<script type="text/javascript"'. ($info['defer'] ? ' defer="defer"' : '') .' src="'. check_url(base_path() . $path) . ($info['cache'] ? '' : '?'. time()) ."\"></script>\n";
 +          if (!$info['preprocess'] || !$is_writable || !$preprocess_js) {   
-+            $no_preprocess[$type] .= '<script type="text/javascript"'. ($info['defer'] ? ' defer="defer"' : '') .' src="'. check_url(cdn_file($path)) . ($info['cache'] ? '' : '?'. time()) ."\"></script>\n";
++            $no_preprocess[$type] .= '<script type="text/javascript"'. ($info['defer'] ? ' defer="defer"' : '') .' src="'. check_url(file_url($path)) . ($info['cache'] ? '' : '?'. time()) ."\"></script>\n";
 +          }
 +          else {             
 +            $files[$path] = $info;
@@ -169,7 +229,7 @@ diff -u -F^f -r1.611.2.14 common.inc
 +  if ($is_writable && $preprocess_js && count($files) > 0) {     
 +    $filename = md5(serialize($files)) .'.js';
 +    $preprocess_file = drupal_build_js_cache($files, $filename);
-+    $preprocessed .= '<script type="text/javascript" src="'. cdn_file($preprocess_file) .'"></script>'. "\n";
++    $preprocessed .= '<script type="text/javascript" src="'. file_url($preprocess_file) .'"></script>'. "\n";
 +  }
 +  
 +  // Keep the order of JS files consistent as some are preprocessed and others are not.
@@ -229,13 +289,13 @@ RCS file: /cvs/drupal/drupal/includes/file.inc,v
 retrieving revision 1.90.2.3
 diff -u -F^f -r1.90.2.3 file.inc
 --- includes/file.inc	7 Jan 2008 01:00:22 -0000	1.90.2.3
-+++ includes/file.inc	12 Jan 2008 15:12:25 -0000
++++ includes/file.inc	21 Jan 2008 20:03:08 -0000
 @@ -33,7 +33,7 @@ function file_create_url($path) {
    }
    switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
      case FILE_DOWNLOADS_PUBLIC:
 -      return $GLOBALS['base_url'] .'/'. file_directory_path() .'/'. str_replace('\\', '/', $path);
-+      return cdn_file(file_directory_path() .'/'. str_replace('\\', '/', $path), TRUE);
++      return file_url(file_directory_path() .'/'. str_replace('\\', '/', $path), TRUE);
      case FILE_DOWNLOADS_PRIVATE:
        return url('system/files/'. $path, NULL, NULL, TRUE);
    }
@@ -245,17 +305,17 @@ RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.337.2.2
 diff -u -F^f -r1.337.2.2 theme.inc
 --- includes/theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
-+++ includes/theme.inc	12 Jan 2008 15:12:26 -0000
++++ includes/theme.inc	21 Jan 2008 20:03:09 -0000
 @@ -322,24 +322,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
        if ($settings['default_logo']) {
 -        $settings['logo'] = base_path() . dirname($theme_object->filename) .'/logo.png';
-+        $settings['logo'] = cdn_file(dirname($theme_object->filename) .'/logo.png');
++        $settings['logo'] = file_url(dirname($theme_object->filename) .'/logo.png');
        }
        elseif ($settings['logo_path']) {
 -        $settings['logo'] = base_path() . $settings['logo_path'];
-+        $settings['logo'] = cdn_file($settings['logo_path']);
++        $settings['logo'] = file_url($settings['logo_path']);
        }
      }
  
@@ -263,16 +323,16 @@ diff -u -F^f -r1.337.2.2 theme.inc
        if ($settings['default_favicon']) {
          if (file_exists($favicon = dirname($theme_object->filename) .'/favicon.ico')) {
 -          $settings['favicon'] = base_path() . $favicon;
-+          $settings['favicon'] = cdn_file($favicon);
++          $settings['favicon'] = file_url($favicon);
          }
          else {
 -          $settings['favicon'] = base_path() . 'misc/favicon.ico';
-+          $settings['favicon'] = cdn_file('misc/favicon.ico');
++          $settings['favicon'] = file_url('misc/favicon.ico');
          }
        }
        elseif ($settings['favicon_path']) {
 -        $settings['favicon'] = base_path() . $settings['favicon_path'];
-+        $settings['favicon'] = cdn_file($settings['favicon_path']);
++        $settings['favicon'] = file_url($settings['favicon_path']);
        }
        else {
          $settings['toggle_favicon'] = FALSE;
@@ -282,7 +342,7 @@ diff -u -F^f -r1.337.2.2 theme.inc
      $attributes = drupal_attributes($attributes);
 -    $url = (url($path) == $path) ? $path : (base_path() . $path);
 -    return '<img src="'. check_url($url) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
-+    return '<img src="'. check_url(cdn_file($path)) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
++    return '<img src="'. check_url(file_url($path)) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
    }
  }
  
@@ -292,13 +352,7 @@ RCS file: /cvs/drupal/drupal/misc/autocomplete.js,v
 retrieving revision 1.17
 diff -u -F^f -r1.17 autocomplete.js
 --- misc/autocomplete.js	9 Jan 2007 07:31:04 -0000	1.17
-+++ misc/autocomplete.js	12 Jan 2008 15:12:26 -0000
-@@ -1,4 +1,4 @@
--// $Id$
-+// $Id$
- 
- /**
-  * Attaches the autocomplete behaviour to all required fields
++++ misc/autocomplete.js	21 Jan 2008 20:03:09 -0000
 @@ -15,7 +15,7 @@
      $(input.form).submit(Drupal.autocompleteSubmit);
      new Drupal.jsAC(input, acdb[uri]);
@@ -448,7 +502,7 @@ RCS file: /cvs/drupal/drupal/misc/collapse.js,v
 retrieving revision 1.10
 diff -u -F^f -r1.10 collapse.js
 --- misc/collapse.js	11 Jan 2007 03:38:31 -0000	1.10
-+++ misc/collapse.js	12 Jan 2008 15:12:26 -0000
++++ misc/collapse.js	21 Jan 2008 20:03:09 -0000
 @@ -19,7 +19,7 @@
          Drupal.collapseScrollIntoView(this.parentNode);
        }
@@ -482,7 +536,7 @@ RCS file: /cvs/drupal/drupal/misc/drupal.js,v
 retrieving revision 1.29.2.1
 diff -u -F^f -r1.29.2.1 drupal.js
 --- misc/drupal.js	15 Jul 2007 23:07:06 -0000	1.29.2.1
-+++ misc/drupal.js	12 Jan 2008 15:12:26 -0000
++++ misc/drupal.js	21 Jan 2008 20:03:09 -0000
 @@ -50,7 +50,7 @@
          // Restore form submission
          button.form.action = action;
@@ -526,7 +580,7 @@ RCS file: /cvs/drupal/drupal/misc/progress.js,v
 retrieving revision 1.14
 diff -u -F^f -r1.14 progress.js
 --- misc/progress.js	14 Dec 2006 14:21:36 -0000	1.14
-+++ misc/progress.js	12 Jan 2008 15:12:26 -0000
++++ misc/progress.js	21 Jan 2008 20:03:09 -0000
 @@ -23,7 +23,7 @@
    $(this.element).html('<div class="percentage"></div>'+
                         '<div class="message">&nbsp;</div>'+
@@ -584,7 +638,7 @@ RCS file: /cvs/drupal/drupal/misc/tableselect.js,v
 retrieving revision 1.1
 diff -u -F^f -r1.1 tableselect.js
 --- misc/tableselect.js	21 Nov 2006 08:16:39 -0000	1.1
-+++ misc/tableselect.js	12 Jan 2008 15:12:26 -0000
++++ misc/tableselect.js	21 Jan 2008 20:03:09 -0000
 @@ -40,7 +40,7 @@
      // Keep track of the last checked checkbox.
      lastChecked = e.target;
@@ -609,7 +663,7 @@ RCS file: /cvs/drupal/drupal/misc/textarea.js,v
 retrieving revision 1.11.2.1
 diff -u -F^f -r1.11.2.1 textarea.js
 --- misc/textarea.js	18 Apr 2007 02:41:19 -0000	1.11.2.1
-+++ misc/textarea.js	12 Jan 2008 15:12:26 -0000
++++ misc/textarea.js	21 Jan 2008 20:03:09 -0000
 @@ -29,7 +29,7 @@
        textarea.css('opacity', 1);
      }
@@ -625,7 +679,7 @@ RCS file: /cvs/drupal/drupal/misc/Attic/update.js,v
 retrieving revision 1.10
 diff -u -F^f -r1.10 update.js
 --- misc/update.js	27 Dec 2006 14:11:45 -0000	1.10
-+++ misc/update.js	12 Jan 2008 15:12:26 -0000
++++ misc/update.js	21 Jan 2008 20:03:09 -0000
 @@ -12,7 +12,7 @@
            pb.stopMonitoring();
            window.location = window.location.href.split('op=')[0] +'op=finished';
@@ -650,13 +704,7 @@ RCS file: /cvs/drupal/drupal/misc/Attic/upload.js,v
 retrieving revision 1.11
 diff -u -F^f -r1.11 upload.js
 --- misc/upload.js	31 Aug 2006 23:31:25 -0000	1.11
-+++ misc/upload.js	12 Jan 2008 15:12:26 -0000
-@@ -1,4 +1,4 @@
--// $Id$
-+// $Id$
- 
- /**
-  * Attaches the upload behaviour to the upload form.
++++ misc/upload.js	21 Jan 2008 20:03:10 -0000
 @@ -13,7 +13,7 @@
      var hide = base + '-hide';
      var upload = new Drupal.jsUpload(uri, button, wrapper, hide);
@@ -708,13 +756,7 @@ RCS file: /cvs/drupal/drupal/misc/farbtastic/farbtastic.js,v
 retrieving revision 1.3
 diff -u -F^f -r1.3 farbtastic.js
 --- misc/farbtastic/farbtastic.js	10 Jan 2007 07:03:48 -0000	1.3
-+++ misc/farbtastic/farbtastic.js	12 Jan 2008 15:12:26 -0000
-@@ -1,4 +1,4 @@
--// $Id$
-+// $Id$
- // Farbtastic 1.2
- 
- jQuery.fn.farbtastic = function (callback) {
++++ misc/farbtastic/farbtastic.js	21 Jan 2008 20:03:10 -0000
 @@ -9,7 +9,7 @@
  jQuery.farbtastic = function (container, callback) {
    var container = $(container).get(0);
@@ -870,7 +912,7 @@ RCS file: /cvs/drupal/drupal/modules/color/color.js,v
 retrieving revision 1.1.2.1
 diff -u -F^f -r1.1.2.1 color.js
 --- modules/color/color.js	18 Apr 2007 03:38:58 -0000	1.1.2.1
-+++ modules/color/color.js	12 Jan 2008 15:12:27 -0000
++++ modules/color/color.js	21 Jan 2008 20:03:10 -0000
 @@ -223,7 +223,7 @@
          );
          $(this).after(lock);
@@ -895,7 +937,7 @@ RCS file: /cvs/drupal/drupal/modules/system/system.module,v
 retrieving revision 1.440.2.28
 diff -u -F^f -r1.440.2.28 system.module
 --- modules/system/system.module	11 Jan 2008 00:47:17 -0000	1.440.2.28
-+++ modules/system/system.module	12 Jan 2008 15:12:28 -0000
++++ modules/system/system.module	21 Jan 2008 20:03:12 -0000
 @@ -229,7 +229,7 @@ function system_menu($may_cache) {
      $items[] = array(
        'path' => 'admin/settings/performance',
@@ -950,116 +992,3 @@ diff -u -F^f -r1.440.2.28 system.module
  
    return 'admin/build/modules';
  }
-Index: sites/default/settings.php
-===================================================================
-RCS file: /cvs/drupal/drupal/sites/default/Attic/settings.php,v
-retrieving revision 1.39.2.3
-diff -u -F^f -r1.39.2.3 settings.php
---- sites/default/settings.php	9 Jul 2007 04:28:12 -0000	1.39.2.3
-+++ sites/default/settings.php	12 Jan 2008 15:12:28 -0000
-@@ -90,7 +90,7 @@
-  *   $db_url = 'mysqli://username:password@localhost/databasename';
-  *   $db_url = 'pgsql://username:password@localhost/databasename';
-  */
--$db_url = 'mysql://username:password@localhost/databasename';
-+$db_url = 'mysql://root:root@localhost/cdntest';
- $db_prefix = '';
- 
- /**
-@@ -163,3 +163,59 @@
- #   'anonymous' => 'Visitor',
- # );
- 
-+$conf = array(
-+  'cdn_url' => 'http://wimleers.cachefly.com/cdntest',
-+  'cdn_sync_filters' => array(
-+    // Add all Javascript, CSS, image and flash files from the most common
-+    // directories in Drupal.
-+    0 => array(
-+      'paths' => array('misc', 'profiles', 'modules', 'sites/all/modules', 'sites/default/modules'),
-+      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|svg|swf)$',
-+      'ignored_dirs' => array('CVS'),
-+      'unique' => 'filename',
-+      'unique_method' => 'mtime',
-+    ),
-+
-+    // We want to add *everything* in the files directory. Except for the
-+    // files in the CSS directory, because they need special treatment.
-+    1 => array(
-+      'paths' => array('sites/default/files'),
-+      'pattern' => '.*',
-+      'ignored_dirs' => array('CVS', 'css'),
-+      'unique' => 'filename',
-+      'unique_method' => 'mtime',
-+    ),
-+
-+    // Add all files in the files/css directory, *but* update the URLs in the
-+    // files. This is only necessary if we use CSS aggregation.
-+    2 => array(
-+      'paths' => array('sites/default/files/css'),
-+      'pattern' => '.*',
-+      'ignored_dirs' => array('CVS'),
-+      'unique' => 'filename',
-+      'unique_method' => 'mtime',
-+      'update_urls_in_files' => TRUE,
-+    ),
-+
-+    // Add all Javascript, CSS, image and font files from our themes. But
-+    // make sure the URLs don't break when CSS aggregation is disabled, by
-+    // using the "common parent directory" unique level and the "md5 of mtimes"
-+    // uniqueness method. We can revert to normal values if we have CSS
-+    // aggregation enabled.
-+    3 => array(
-+      'paths' => array('themes/garland'),
-+      'pattern' => '.*\.(js|css|gif|png|jpg|jpeg|otf)$',
-+      'ignored_dirs' => array('CVS'),
-+      'unique' => 'common parent directory',
-+      'unique_method' => 'md5 of mtimes',
-+    ),
-+  ),
-+  'cdn_sync_method' => 'ftp',
-+  'cdn_sync_method_settings' => array(
-+    'host' => 'ftp.cachefly.com',
-+    'remote_path' => 'wimleers.com',
-+    'port' => 21,
-+    'user' => 'wimleers',
-+    'pass' => '8ce95fcb',
-+  ),
-+);
-\ No newline at end of file
-Index: themes/garland/page.tpl.php
-===================================================================
-RCS file: /cvs/drupal/drupal/themes/garland/page.tpl.php,v
-retrieving revision 1.5
-diff -u -F^f -r1.5 page.tpl.php
---- themes/garland/page.tpl.php	14 Dec 2006 00:37:00 -0000	1.5
-+++ themes/garland/page.tpl.php	12 Jan 2008 15:12:29 -0000
-@@ -6,9 +6,9 @@
-     <?php print $head ?>
-     <?php print $styles ?>
-     <?php print $scripts ?>
--    <style type="text/css" media="print">@import "<?php print base_path() . path_to_theme() ?>/print.css";</style>
-+    <style type="text/css" media="print">@import "<?php print $static_base . path_to_theme() ?>/print.css";</style>
-     <!--[if lt IE 7]>
--    <style type="text/css" media="all">@import "<?php print base_path() . path_to_theme() ?>/fix-ie.css";</style>
-+    <style type="text/css" media="all">@import "<?php print $static_base . path_to_theme() ?>/fix-ie.css";</style>
-     <![endif]-->
-   </head>
-   <body<?php print phptemplate_body_class($sidebar_left, $sidebar_right); ?>>
-Index: themes/garland/template.php
-===================================================================
-RCS file: /cvs/drupal/drupal/themes/garland/template.php,v
-retrieving revision 1.4.2.1
-diff -u -F^f -r1.4.2.1 template.php
---- themes/garland/template.php	18 Apr 2007 03:38:59 -0000	1.4.2.1
-+++ themes/garland/template.php	12 Jan 2008 15:12:29 -0000
-@@ -56,6 +56,9 @@ function phptemplate_comment_wrapper($co
-  * Override or insert PHPTemplate variables into the templates.
-  */
- function _phptemplate_variables($hook, $vars) {
-+
-+  $vars['static_base'] = variable_get('static_url', base_path());
-+
-   if ($hook == 'page') {
- 
-     if ($secondary = menu_secondary_local_tasks()) {
