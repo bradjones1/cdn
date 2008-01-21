@@ -372,7 +372,7 @@ function theme_cdn_page_stats($file_count, $remote_file_count, $local_files, $re
   if (count($unsynced_files)) {
     $unsynced_items = array();
     foreach ($unsynced_files as $file) {
-      $unsynced_items = array(l($file, $file));
+      $unsynced_items[] = array(l($file, $file));
     }
     $items[] = 'The files that are not (yet?) synchronized to the CDN:' . theme('item_list', $unsynced_items, NULL, 'ol');
   }
