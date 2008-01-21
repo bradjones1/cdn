@@ -263,9 +263,10 @@ function cdn_admin_settings_form() {
  *   Only if no parameters were passed: the collected statistics.
  */
 function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_exists = FALSE) {
-  static $file_count, $remote_file_count, $local_files, $remote_files, $synced_files, $unsynced_files;
+  static $all_requests, $file_count, $remote_file_count, $local_files, $remote_files, $synced_files, $unsynced_files;
 
-  if (!isset($local_files)) {
+  if (!isset($all_requests)) {
+    $all_requests = array();
     $local_files = array();
     $remote_files = array();
     $synced_files = array();
@@ -274,8 +275,9 @@ function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_ex
 
   // If the function is called with parameters set, save the statistics. If no
   // parameters are passed, return the collected statistics.
-  if ($file) {
-    
+  if ($file && !isset($all_requests[$file])) {
+    $all_requests[$file] = TRUE;
+  
     $file_count++;
     $local_files[] = $file;
     $remote_files[$file] = $remote_file;
@@ -288,7 +290,7 @@ function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_ex
       $unsynced_files[] = $file;
     }
   }
-  else {
+  elseif (!$file) {
     return array(
       $file_count,
       $remote_file_count,
