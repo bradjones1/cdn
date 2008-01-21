@@ -46,10 +46,11 @@ function cdn_requirements($phase) {
     
       $path = drupal_get_path('module', 'cdn') .'/cdn_cron.php';
       $cdn_cron_last = variable_get('cdn_cron_last', NULL);
+      $cdn_cron_method = variable_get('cdn_cron_method', 'cdn');
 
       $requirements['cdn_cron']['title'] = $t('CDN synchronization');
 
-      if (!file_exists('cdn_cron.php') || (file_exists($path) && file_exists('cdn_cron.php') && md5_file($path) != md5_file('cdn_cron.php'))) {
+      if ($cdn_cron_method == 'cdn' && !file_exists('cdn_cron.php') || (file_exists($path) && file_exists('cdn_cron.php') && md5_file($path) != md5_file('cdn_cron.php'))) {
         $requirements['cdn_cron'] += array(
           'description' => $t(
             "In order for the CDN integration module to work correctly, it has
@@ -62,7 +63,7 @@ function cdn_requirements($phase) {
           'value' => $t('Copy cdn_cron.php'),
         );
       }
-      elseif (!file_exists($path)) {
+      elseif ($cdn_cron_method == 'cdn' && !file_exists($path)) {
         $requirements['cdn_cron'] += array(
           'description' => $t(
             "You probably <em>moved</em> rather than <em>copied</em> the
@@ -123,6 +124,18 @@ function cdn_exit($destination = NULL) {
   }
 }
 
+/**
+ * Implementation of hook_cron().
+ */
+function cdn_cron() {
+  if (variable_get('cdn_cron_method', 'cdn') == 'core') {
+    $cdn_dir = drupal_get_path('module', 'cdn');
+    require_once "$cdn_dir/cdn.inc";
+    require_once "$cdn_dir/cdn_cron.inc";
+    cdn_cron_run();
+  }
+}
+
 
 //----------------------------------------------------------------------------
 // Form API callbacks.
@@ -131,6 +144,28 @@ function cdn_exit($destination = NULL) {
  * Form definition: CDN admin settings form.
  */
 function cdn_admin_settings_form() {
+  $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['settings']['cdn_cron_method'] = array(
+    '#type' => 'radios',
+    '#title' => t('Cron method'),
+    '#description' => t(
+      "Since CDN synchronization typically takes a lot of time (relatively),
+      you may want to run it as a separate cron, so it doesn't slow down the
+      'normal' cron of Drupal core."
+    ),
+    '#options' => array(
+      'core' => t("Drupal core's cron"),
+      'cdn' => t("CDN integration's cron"),
+    ),
+    '#default_value' => variable_get('cdn_cron_method', 'cdn'),
+  );
+  
+  
   $form['dev'] = array(
     '#type' => 'fieldset',
     '#title' => t('Development'),
