@@ -368,7 +368,7 @@ function theme_cdn_scheduled_unsynced_files_list($files_scheduled_unsynced) {
     );
     $rows = array();
     foreach ($files_scheduled_unsynced as $file) {
-      $rows[] = array('data' => $file);
+      $rows[] = array('data' => array($file));
     }
     $output .= theme('table', $header, $rows);
   }
