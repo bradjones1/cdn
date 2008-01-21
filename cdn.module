@@ -407,6 +407,18 @@ function theme_cdn_synchronized_files_list($files) {
 /**
  * Render the CDN integration page statistics.
  *
+ * @param $file_count
+ *   The number of files detected on this page.
+ * @param $remote_file_count
+ *   The number of files on this page that are served from the CDN.
+ * @param $local_files
+ *   Array of local files.
+ * @param $remote_files
+ *   Array of remote files (i.e. on the CDN), keys are local files.
+ * @param $synced_files
+ *   Array of synchronized files.
+ * @param $unsynced_files
+ *   Array of unsynchronized files.
  * @return
  *   The rendered HTML.
  */
