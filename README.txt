@@ -76,14 +76,16 @@ You *must* apply this patch! It has been created against Drupal 5.5.
 First, change the directory to the Drupal root directory.
 
 You can apply the included Drupal core patch like this:
-  patch -p0 < drupal_core_cdn_integration.patch
+  patch -p0 < d5_file_url_rewrite.patch
 
 To undo the patch:
-  patch -p0 -R < drupal_core_cdn_integration.patch
+  patch -p0 -R < d5_file_url_rewrite.patch
 
 Note: there is also a patch that combines the CDN integration core patch with
 the JS aggregation. It's included in this module because if you apply both
-patches separately, you will get a conflict.
+patches separately, you will get a conflict. This patch also sets the default
+location for drupal.js and jquery.js to the footer of the page, and defaults
+calls to drupal_add_js() to the footer as well.
 
 
 Applying the theme patch
@@ -122,9 +124,14 @@ Configuring the $conf array in settings.php
 This is my configuration:
 
 $conf = array(
+  // Configure Drupal core's file URL rewriting ability. If any of the
+  // functions listed here fails, Drupal will default to its own ("normal")
+  // file URL rewriting function.
   'file_url_rewrite' => array(
     'cdn_file_url', // List the CDN module's URL rewrite function as the preferred server.
   ),
+
+  // CDN integration module settings.
   'cdn_url' => 'http://wimleers.cachefly.com/wimleers.com',
   'cdn_sync_filters' => array(
     // Add all Javascript, CSS, image and flash files from the most common
