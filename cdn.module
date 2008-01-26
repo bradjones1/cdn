@@ -192,7 +192,7 @@ function cdn_admin_settings_form() {
     '#collapsed' => FALSE,
   );
 
-  $cdn_cron_last = variable_get('cdn_cron_last', FALSE);  
+  $cdn_cron_last = variable_get('cdn_cron_last', NULL);
   $form['stats']['last_run'] = array(
     '#type' => 'fieldset',
     '#title' => t('Last run'),
@@ -216,7 +216,7 @@ function cdn_admin_settings_form() {
   }
   $files_synced = variable_get('cdn_files_synced', array());
   $files_scheduled_unsynced = array_diff(array_keys($files_scheduled), array_keys($files_synced));
-  $coverage = (count($files_synced) - count($files_scheduled_unsynced)) / count($files_scheduled);
+  $coverage = (count($files_scheduled) == 0) ? 1 : (count($files_synced) - count($files_scheduled_unsynced)) / count($files_scheduled);
 
   $form['stats']['numbers'] = array(
     '#value' => theme('cdn_numbers', $files_scheduled, $files_scheduled_size, $files_synced, $coverage),
