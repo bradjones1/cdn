@@ -4,7 +4,7 @@ RCS file: /cvs/drupal/drupal/update.php,v
 retrieving revision 1.211.2.2
 diff -u -F^f -r1.211.2.2 update.php
 --- update.php	8 Apr 2007 00:54:04 -0000	1.211.2.2
-+++ update.php	21 Jan 2008 20:03:07 -0000
++++ update.php	26 Jan 2008 22:32:42 -0000
 @@ -405,8 +405,8 @@ function update_update_page() {
  
  function update_progress_page() {
@@ -27,14 +27,16 @@ diff -u -F^f -r1.211.2.2 update.php
 Index: includes/common.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/common.inc,v
-retrieving revision 1.611.2.14
-diff -u -F^f -r1.611.2.14 common.inc
---- includes/common.inc	27 Dec 2007 09:21:23 -0000	1.611.2.14
-+++ includes/common.inc	21 Jan 2008 20:03:08 -0000
-@@ -1379,6 +1379,59 @@ function base_path() {
+retrieving revision 1.611.2.15
+diff -u -F^f -r1.611.2.15 common.inc
+--- includes/common.inc	22 Jan 2008 09:36:49 -0000	1.611.2.15
++++ includes/common.inc	26 Jan 2008 22:32:43 -0000
+@@ -1378,6 +1378,57 @@ function base_path() {
+   return $GLOBALS['base_path'];
  }
  
- /**
++
++/**
 + * Returns a rewritten file URL. Allows you to serve files from different
 + * servers than the server on which Drupal is hosted.
 + *
@@ -46,52 +48,48 @@ diff -u -F^f -r1.611.2.14 common.inc
 + *   A valid file URL.
 + */
 +function file_url($file_path, $absolute_url = FALSE) {
-+  $file_url_rewrite = variable_get('file_url_rewrite', 'drupal_file_url');
++  static $modules;
 +  $file_url = FALSE;
 +
-+  // Try the first URL rewriting function, then the second, etc.
-+  if (is_array($file_url_rewrite)) {
-+    foreach ($file_url_rewrite as $function) {
-+      $file_url = call_user_func($function, $file_path, $absolute_url);
++  if (!isset($modules)) {
++    $modules = array();
++    foreach (module_implements('file_server') as $module) {
++      $modules[] = array(
++        'module' => $module,
++        'weight' => variable_get("file_server_{$module}_weight", 0),
++      );
++    }
 +
-+      // If the URL rewriting function sucesfully generated a URL, we can stop
-+      // trying.
-+      if ($file_url) {
-+        break;
-+      }
++    // Sort file server types by weight.
++    uasort($modules, create_function('$a, $b', 'return $a["weight"] > $b["weight"];'));
++  }
++  
++  // Try the first preferred file server to check if it can serve the file.
++  // Then try the second, and so on.
++  foreach ($modules as $module) {
++    $file_url = module_invoke($module, 'url', $file_path, $absolute_url);
++
++    // If the URL rewriting function sucesfully generated a URL, we can stop
++    // trying to find a server that can serve the file.
++    if ($file_url) {
++      break;
 +    }
 +  }
-+
-+  // Always fall back to Drupal's own file URL rewriting function,
-+  // to guarantee a working file URL.
++  
++  // Always fall back to Drupal's default file server, to guarantee a working
++  // file URL.
 +  if (!$file_url) {
-+    $file_url = drupal_file_url($file_path, $absolute_url);
++    $prefix = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
++    $file_url = $prefix . $file_path;
 +  }
 +
 +  return $file_url;
 +}
 +
-+/**
-+ * Drupal's default URL rewriting function.
-+ * This URL rewriting function only has to prepend the base URL or the base path.
-+ *
-+ * @param $file_path
-+ *   Path to a file, relative to the root directory. E.g.: "misc/jquery.js".
-+ * @param $absolute_url
-+ *   Whether to generate an absolute URL or not.
-+ * @return
-+ *   A valid file URL.
-+ */
-+function drupal_file_url($file_path, $absolute_url) {
-+  $prefix = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
-+  return $prefix . $file_path;
-+}
-+
-+/**
+ /**
   * Provide a substitute clone() function for PHP4.
   */
- function drupal_clone($object) {
-@@ -1474,15 +1527,15 @@ function drupal_get_css($css = NULL) {
+@@ -1474,15 +1525,15 @@ function drupal_get_css($css = NULL) {
            // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
            // regardless of whether preprocessing is on or off.
            if (!$preprocess && $type == 'module') {
@@ -110,7 +108,7 @@ diff -u -F^f -r1.611.2.14 common.inc
            }
          }
        }
-@@ -1491,7 +1544,7 @@ function drupal_get_css($css = NULL) {
+@@ -1491,7 +1542,7 @@ function drupal_get_css($css = NULL) {
      if ($is_writable && $preprocess_css) {
        $filename = md5(serialize($types)) .'.css';
        $preprocess_file = drupal_build_css_cache($types, $filename);
@@ -119,7 +117,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      }
    }
  
-@@ -1607,24 +1660,26 @@ function drupal_clear_css_cache() {
+@@ -1607,24 +1658,26 @@ function drupal_clear_css_cache() {
   *   (optional) If set to FALSE, the JavaScript file is loaded anew on every page
   *   call, that means, it is not cached. Defaults to TRUE. Used only when $type
   *   references a JavaScript file.
@@ -158,7 +156,7 @@ diff -u -F^f -r1.611.2.14 common.inc
    if (!isset($javascript[$scope])) {
      $javascript[$scope] = array('core' => array(), 'module' => array(), 'theme' => array(), 'setting' => array(), 'inline' => array());
    }
-@@ -1633,7 +1688,7 @@ function _drupal_add_js($data, $type, $s
+@@ -1633,7 +1686,7 @@ function _drupal_add_js($data, $type, $s
      $javascript[$scope][$type] = array();
    }
  
@@ -167,7 +165,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      switch ($type) {
        case 'setting':
          $javascript[$scope][$type][] = $data;
-@@ -1642,7 +1697,8 @@ function _drupal_add_js($data, $type, $s
+@@ -1642,7 +1695,8 @@ function _drupal_add_js($data, $type, $s
          $javascript[$scope][$type][] = array('code' => $data, 'defer' => $defer);
          break;
        default:
@@ -177,7 +175,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      }
    }
  
-@@ -1665,13 +1721,25 @@ function _drupal_add_js($data, $type, $s
+@@ -1665,13 +1719,25 @@ function _drupal_add_js($data, $type, $s
   * @return
   *   All JavaScript code segments and includes for the scope as HTML tags.
   */
@@ -206,7 +204,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      if (!$data) continue;
  
      switch ($type) {
-@@ -1684,16 +1752,74 @@ function drupal_get_js($scope = 'header'
+@@ -1684,16 +1750,74 @@ function drupal_get_js($scope = 'header'
          }
          break;
        default:
@@ -289,7 +287,7 @@ RCS file: /cvs/drupal/drupal/includes/file.inc,v
 retrieving revision 1.90.2.3
 diff -u -F^f -r1.90.2.3 file.inc
 --- includes/file.inc	7 Jan 2008 01:00:22 -0000	1.90.2.3
-+++ includes/file.inc	21 Jan 2008 20:03:08 -0000
++++ includes/file.inc	26 Jan 2008 22:32:44 -0000
 @@ -33,7 +33,7 @@ function file_create_url($path) {
    }
    switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
@@ -305,7 +303,7 @@ RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.337.2.2
 diff -u -F^f -r1.337.2.2 theme.inc
 --- includes/theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
-+++ includes/theme.inc	21 Jan 2008 20:03:09 -0000
++++ includes/theme.inc	26 Jan 2008 22:32:44 -0000
 @@ -322,24 +322,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
@@ -352,7 +350,7 @@ RCS file: /cvs/drupal/drupal/misc/autocomplete.js,v
 retrieving revision 1.17
 diff -u -F^f -r1.17 autocomplete.js
 --- misc/autocomplete.js	9 Jan 2007 07:31:04 -0000	1.17
-+++ misc/autocomplete.js	21 Jan 2008 20:03:09 -0000
++++ misc/autocomplete.js	26 Jan 2008 22:32:45 -0000
 @@ -15,7 +15,7 @@
      $(input.form).submit(Drupal.autocompleteSubmit);
      new Drupal.jsAC(input, acdb[uri]);
@@ -502,7 +500,7 @@ RCS file: /cvs/drupal/drupal/misc/collapse.js,v
 retrieving revision 1.10
 diff -u -F^f -r1.10 collapse.js
 --- misc/collapse.js	11 Jan 2007 03:38:31 -0000	1.10
-+++ misc/collapse.js	21 Jan 2008 20:03:09 -0000
++++ misc/collapse.js	26 Jan 2008 22:32:45 -0000
 @@ -19,7 +19,7 @@
          Drupal.collapseScrollIntoView(this.parentNode);
        }
@@ -536,7 +534,7 @@ RCS file: /cvs/drupal/drupal/misc/drupal.js,v
 retrieving revision 1.29.2.1
 diff -u -F^f -r1.29.2.1 drupal.js
 --- misc/drupal.js	15 Jul 2007 23:07:06 -0000	1.29.2.1
-+++ misc/drupal.js	21 Jan 2008 20:03:09 -0000
++++ misc/drupal.js	26 Jan 2008 22:32:45 -0000
 @@ -50,7 +50,7 @@
          // Restore form submission
          button.form.action = action;
@@ -580,7 +578,7 @@ RCS file: /cvs/drupal/drupal/misc/progress.js,v
 retrieving revision 1.14
 diff -u -F^f -r1.14 progress.js
 --- misc/progress.js	14 Dec 2006 14:21:36 -0000	1.14
-+++ misc/progress.js	21 Jan 2008 20:03:09 -0000
++++ misc/progress.js	26 Jan 2008 22:32:45 -0000
 @@ -23,7 +23,7 @@
    $(this.element).html('<div class="percentage"></div>'+
                         '<div class="message">&nbsp;</div>'+
@@ -638,7 +636,7 @@ RCS file: /cvs/drupal/drupal/misc/tableselect.js,v
 retrieving revision 1.1
 diff -u -F^f -r1.1 tableselect.js
 --- misc/tableselect.js	21 Nov 2006 08:16:39 -0000	1.1
-+++ misc/tableselect.js	21 Jan 2008 20:03:09 -0000
++++ misc/tableselect.js	26 Jan 2008 22:32:45 -0000
 @@ -40,7 +40,7 @@
      // Keep track of the last checked checkbox.
      lastChecked = e.target;
@@ -663,7 +661,7 @@ RCS file: /cvs/drupal/drupal/misc/textarea.js,v
 retrieving revision 1.11.2.1
 diff -u -F^f -r1.11.2.1 textarea.js
 --- misc/textarea.js	18 Apr 2007 02:41:19 -0000	1.11.2.1
-+++ misc/textarea.js	21 Jan 2008 20:03:09 -0000
++++ misc/textarea.js	26 Jan 2008 22:32:45 -0000
 @@ -29,7 +29,7 @@
        textarea.css('opacity', 1);
      }
@@ -679,7 +677,7 @@ RCS file: /cvs/drupal/drupal/misc/Attic/update.js,v
 retrieving revision 1.10
 diff -u -F^f -r1.10 update.js
 --- misc/update.js	27 Dec 2006 14:11:45 -0000	1.10
-+++ misc/update.js	21 Jan 2008 20:03:09 -0000
++++ misc/update.js	26 Jan 2008 22:32:45 -0000
 @@ -12,7 +12,7 @@
            pb.stopMonitoring();
            window.location = window.location.href.split('op=')[0] +'op=finished';
@@ -704,7 +702,7 @@ RCS file: /cvs/drupal/drupal/misc/Attic/upload.js,v
 retrieving revision 1.11
 diff -u -F^f -r1.11 upload.js
 --- misc/upload.js	31 Aug 2006 23:31:25 -0000	1.11
-+++ misc/upload.js	21 Jan 2008 20:03:10 -0000
++++ misc/upload.js	26 Jan 2008 22:32:45 -0000
 @@ -13,7 +13,7 @@
      var hide = base + '-hide';
      var upload = new Drupal.jsUpload(uri, button, wrapper, hide);
@@ -756,7 +754,7 @@ RCS file: /cvs/drupal/drupal/misc/farbtastic/farbtastic.js,v
 retrieving revision 1.3
 diff -u -F^f -r1.3 farbtastic.js
 --- misc/farbtastic/farbtastic.js	10 Jan 2007 07:03:48 -0000	1.3
-+++ misc/farbtastic/farbtastic.js	21 Jan 2008 20:03:10 -0000
++++ misc/farbtastic/farbtastic.js	26 Jan 2008 22:32:45 -0000
 @@ -9,7 +9,7 @@
  jQuery.farbtastic = function (container, callback) {
    var container = $(container).get(0);
@@ -912,7 +910,7 @@ RCS file: /cvs/drupal/drupal/modules/color/color.js,v
 retrieving revision 1.1.2.1
 diff -u -F^f -r1.1.2.1 color.js
 --- modules/color/color.js	18 Apr 2007 03:38:58 -0000	1.1.2.1
-+++ modules/color/color.js	21 Jan 2008 20:03:10 -0000
++++ modules/color/color.js	26 Jan 2008 22:32:45 -0000
 @@ -223,7 +223,7 @@
          );
          $(this).after(lock);
@@ -937,7 +935,7 @@ RCS file: /cvs/drupal/drupal/modules/system/system.module,v
 retrieving revision 1.440.2.28
 diff -u -F^f -r1.440.2.28 system.module
 --- modules/system/system.module	11 Jan 2008 00:47:17 -0000	1.440.2.28
-+++ modules/system/system.module	21 Jan 2008 20:03:12 -0000
++++ modules/system/system.module	26 Jan 2008 22:32:47 -0000
 @@ -229,7 +229,7 @@ function system_menu($may_cache) {
      $items[] = array(
        'path' => 'admin/settings/performance',
@@ -984,7 +982,77 @@ diff -u -F^f -r1.440.2.28 system.module
  
    return system_settings_form($form);
  }
-@@ -1524,6 +1534,7 @@ function system_modules_submit($form_id,
+@@ -738,9 +748,69 @@ function system_file_system_settings() {
+     '#description' => t('If you want any sort of access control on the downloading of files, this needs to be set to <em>private</em>. You can change this at any time, however all download URLs will change and there may be unexpected problems so it is not recommended.')
+   );
+ 
++  $form['file_servers'] = array(
++    '#tree' => TRUE,
++    '#type' => 'fieldset',
++    '#title' => t('File servers'),
++    '#description' => t(
++      '<strong>This setting is for advanced users</strong>.<br />
++      Enables Drupal to serve files from any kind of file server. Drupal will
++      automatically fall back to file servers that are lower in the list.
++      <br />The web server Drupal is running on will always be used as the
++      default file server.'),
++    '#collapsible' => FALSE,
++  );
++
++  $modules = array();
++  foreach (module_implements('file_server', TRUE) as $module) {
++    $info = _module_parse_info_file(drupal_get_path('module', $module) ."/$module.info");
++    $file_server_info = module_invoke($module, 'file_server', 'info');
++
++    $modules[$module] = array(
++      'type' => $file_server_info['type'],
++      'module' => (!isset($file_server_info['configuration_page'])) ? $info['name'] : l($info['name'], $file_server_info['configuration_page']),
++      'weight' => variable_get("file_server_{$module}_weight", 0),
++    );
++  }
++
++  // Sort file server types by weight.
++  uasort($modules, create_function('$a, $b', 'return $a["weight"] > $b["weight"];'));
++
++  foreach ($modules as $module => $settings) {
++    $form['file_servers']['types'][$module] = array('#value' => $settings['type']);
++    $form['file_servers']['modules'][$module] = array('#value' => $settings['module']);
++    $form['file_servers']['weights']["file_server_{$module}_weight"] = array('#type' => 'weight', '#default_value' => $settings['weight']);
++  }
++
++  // The web server Drupal is running on is always available, and it's the
++  // default server, i.e. a server we can always fall back to. So it must
++  // always be at the bottom of the list and don't have a configurable weight.
++  $form['file_servers']['types']['drupal'] = array('#value' => t('Web server'));
++  $form['file_servers']['modules']['drupal'] = array('#value' => 'Drupal');
++  $form['file_servers']['weights']['file_server_drupal_weight'] = array('#value' => t('Default server'));
++
+   return system_settings_form($form);
+ }
+ 
++function theme_system_file_system_settings($form) {
++  $header = array(t('Type'), t('Module'), t('Weight'));
++  $rows = array();
++  foreach (element_children($form['file_servers']['modules']) as $module) {
++    // Don't take form control structures
++    if (is_array($form['file_servers']['modules'][$module])) {
++      $rows[] = array(
++        drupal_render($form['file_servers']['types'][$module]),
++        drupal_render($form['file_servers']['modules'][$module]),
++        drupal_render($form['file_servers']['weights']["file_server_{$module}_weight"]),
++      );
++    }
++  }
++
++  $form['file_servers']['#value'] = theme('table', $header, $rows);
++
++  return drupal_render($form);
++}
++
+ function system_image_toolkit_settings() {
+   $toolkits_available = image_get_available_toolkits();
+   if (count($toolkits_available) > 1) {
+@@ -1524,6 +1594,7 @@ function system_modules_submit($form_id,
    }
  
    drupal_clear_css_cache();
