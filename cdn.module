@@ -263,9 +263,11 @@ function cdn_admin_settings_form() {
  *   Only if no parameters were passed: the collected statistics.
  */
 function _cdn_devel_page_stats($file = FALSE, $remote_file = '', $remote_file_exists = FALSE) {
-  static $all_requests, $file_count, $remote_file_count, $local_files, $remote_files, $synced_files, $unsynced_files;
+  static $file_count, $remote_file_count, $all_requests, $local_files, $remote_files, $synced_files, $unsynced_files;
 
   if (!isset($all_requests)) {
+    $file_count = 0;
+    $remote_file_count = 0;
     $all_requests = array();
     $local_files = array();
     $remote_files = array();
@@ -432,7 +434,7 @@ function theme_cdn_page_stats($file_count, $remote_file_count, $local_files, $re
   $output .= '<div id="cdn-integration-page-stats">';
   $items[] = 'Total number of files on this page: <strong>'. $file_count .'</strong>';
   $percentage = ($file_count == 0) ? '100' : number_format($remote_file_count / $file_count * 100);
-  $items[] = 'Number of files available on the CDN: <strong>'. $remote_file_count .'</strong> ('. $percentage . '%)';
+  $items[] = 'Number of files available on the CDN: <strong>'. $remote_file_count .'</strong> ('. $percentage . '% coverage)';
   
   // Nested list of unsynced files.
   if (count($unsynced_files)) {
