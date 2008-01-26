@@ -1,11 +1,11 @@
 Index: includes/common.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/common.inc,v
-retrieving revision 1.611.2.14
-diff -u -F^f -r1.611.2.14 common.inc
---- includes/common.inc	27 Dec 2007 09:21:23 -0000	1.611.2.14
-+++ includes/common.inc	21 Jan 2008 20:42:59 -0000
-@@ -1379,6 +1379,59 @@ function base_path() {
+retrieving revision 1.611.2.15
+diff -u -F^f -r1.611.2.15 common.inc
+--- includes/common.inc	22 Jan 2008 09:36:49 -0000	1.611.2.15
++++ includes/common.inc	26 Jan 2008 22:08:15 -0000
+@@ -1379,6 +1379,56 @@ function base_path() {
  }
  
  /**
@@ -20,52 +20,49 @@ diff -u -F^f -r1.611.2.14 common.inc
 + *   A valid file URL.
 + */
 +function file_url($file_path, $absolute_url = FALSE) {
-+  $file_url_rewrite = variable_get('file_url_rewrite', 'drupal_file_url');
++  static $modules;
 +  $file_url = FALSE;
 +
-+  // Try the first URL rewriting function, then the second, etc.
-+  if (is_array($file_url_rewrite)) {
-+    foreach ($file_url_rewrite as $function) {
-+      $file_url = call_user_func($function, $file_path, $absolute_url);
++  if (!isset($modules)) {
++    $modules = array();
++    foreach (module_implements('file_server') as $module) {
++      $modules[] = array(
++        'module' => $module,
++        'weight' => variable_get("file_server_{$module}_weight", 0),
++      );
++    }
 +
-+      // If the URL rewriting function sucesfully generated a URL, we can stop
-+      // trying.
-+      if ($file_url) {
-+        break;
-+      }
++    // Sort file server types by weight.
++    uasort($modules, create_function('$a, $b', 'return $a["weight"] > $b["weight"];'));
++  }
++  
++  // Try the first preferred file server to check if it can serve the file.
++  // Then try the second, and so on.
++  foreach ($modules as $module) {
++    $file_url = module_invoke($module, 'url', $file_path, $absolute_url);
++
++    // If the URL rewriting function sucesfully generated a URL, we can stop
++    // trying to find a server that can serve the file.
++    if ($file_url) {
++      break;
 +    }
 +  }
-+
-+  // Always fall back to Drupal's own file URL rewriting function, to
-+  // guarantee a working file URL.
++  
++  // Always fall back to Drupal's default file server, to guarantee a working
++  // file URL.
 +  if (!$file_url) {
-+    $file_url = drupal_file_url($file_path, $absolute_url);
++    $prefix = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
++    $file_url = $prefix . $file_path;
 +  }
 +
 +  return $file_url;
 +}
 +
 +/**
-+ * Drupal's default URL rewriting function.
-+ * This URL rewriting function only has to prepend the base URL or the base path.
-+ *
-+ * @param $file_path
-+ *   Path to a file, relative to the root directory. E.g.: "misc/jquery.js".
-+ * @param $absolute_url
-+ *   Whether to generate an absolute URL or not.
-+ * @return
-+ *   A valid file URL.
-+ */
-+function drupal_file_url($file_path, $absolute_url) {
-+  $prefix = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
-+  return $prefix . $file_path;
-+}
-+
-+/**
   * Provide a substitute clone() function for PHP4.
   */
  function drupal_clone($object) {
-@@ -1474,15 +1527,15 @@ function drupal_get_css($css = NULL) {
+@@ -1474,15 +1524,15 @@ function drupal_get_css($css = NULL) {
            // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
            // regardless of whether preprocessing is on or off.
            if (!$preprocess && $type == 'module') {
@@ -84,7 +81,7 @@ diff -u -F^f -r1.611.2.14 common.inc
            }
          }
        }
-@@ -1491,7 +1544,7 @@ function drupal_get_css($css = NULL) {
+@@ -1491,7 +1541,7 @@ function drupal_get_css($css = NULL) {
      if ($is_writable && $preprocess_css) {
        $filename = md5(serialize($types)) .'.css';
        $preprocess_file = drupal_build_css_cache($types, $filename);
@@ -93,7 +90,7 @@ diff -u -F^f -r1.611.2.14 common.inc
      }
    }
  
-@@ -1526,7 +1579,7 @@ function drupal_build_css_cache($types, 
+@@ -1526,7 +1576,7 @@ function drupal_build_css_cache($types, 
            // Return the path to where this CSS file originated from, stripping off the name of the file at the end of the path.
            $path = base_path() . substr($file, 0, strrpos($file, '/')) .'/';
            // Wraps all @import arguments in url().
@@ -102,7 +99,7 @@ diff -u -F^f -r1.611.2.14 common.inc
            // Fix all paths within this CSS file, ignoring absolute paths.
            $data .= preg_replace('/url\(([\'"]?)(?![a-z]+:)/i', 'url(\1'. $path . '\2', $contents);
          }
-@@ -1685,7 +1738,7 @@ function drupal_get_js($scope = 'header'
+@@ -1685,7 +1735,7 @@ function drupal_get_js($scope = 'header'
          break;
        default:
          foreach ($data as $path => $info) {
@@ -117,7 +114,7 @@ RCS file: /cvs/drupal/drupal/includes/file.inc,v
 retrieving revision 1.90.2.3
 diff -u -F^f -r1.90.2.3 file.inc
 --- includes/file.inc	7 Jan 2008 01:00:22 -0000	1.90.2.3
-+++ includes/file.inc	21 Jan 2008 20:42:59 -0000
++++ includes/file.inc	26 Jan 2008 22:08:16 -0000
 @@ -33,7 +33,7 @@ function file_create_url($path) {
    }
    switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
@@ -133,7 +130,7 @@ RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.337.2.2
 diff -u -F^f -r1.337.2.2 theme.inc
 --- includes/theme.inc	31 May 2007 05:52:42 -0000	1.337.2.2
-+++ includes/theme.inc	21 Jan 2008 20:43:00 -0000
++++ includes/theme.inc	26 Jan 2008 22:08:16 -0000
 @@ -322,24 +322,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
@@ -173,3 +170,81 @@ diff -u -F^f -r1.337.2.2 theme.inc
 +    return '<img src="'. check_url(file_url($path)) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. $image_attributes . $attributes .' />';
    }
  }
+ 
+Index: modules/system/system.module
+===================================================================
+RCS file: /cvs/drupal/drupal/modules/system/system.module,v
+retrieving revision 1.440.2.28
+diff -u -F^f -r1.440.2.28 system.module
+--- modules/system/system.module	11 Jan 2008 00:47:17 -0000	1.440.2.28
++++ modules/system/system.module	26 Jan 2008 22:08:18 -0000
+@@ -738,9 +738,69 @@ function system_file_system_settings() {
+     '#description' => t('If you want any sort of access control on the downloading of files, this needs to be set to <em>private</em>. You can change this at any time, however all download URLs will change and there may be unexpected problems so it is not recommended.')
+   );
+ 
++  $form['file_servers'] = array(
++    '#tree' => TRUE,
++    '#type' => 'fieldset',
++    '#title' => t('File servers'),
++    '#description' => t(
++      '<strong>This setting is for advanced users</strong>.<br />
++      Enables Drupal to serve files from any kind of file server. Drupal will
++      automatically fall back to file servers that are lower in the list.
++      <br />The web server Drupal is running on will always be used as the
++      default file server.'),
++    '#collapsible' => FALSE,
++  );
++
++  $modules = array();
++  foreach (module_implements('file_server', TRUE) as $module) {
++    $info = _module_parse_info_file(drupal_get_path('module', $module) ."/$module.info");
++    $file_server_info = module_invoke($module, 'file_server', 'info');
++
++    $modules[$module] = array(
++      'type' => $file_server_info['type'],
++      'module' => (!isset($file_server_info['configuration_page'])) ? $info['name'] : l($info['name'], $file_server_info['configuration_page']),
++      'weight' => variable_get("file_server_{$module}_weight", 0),
++    );
++  }
++
++  // Sort file server types by weight.
++  uasort($modules, create_function('$a, $b', 'return $a["weight"] > $b["weight"];'));
++
++  foreach ($modules as $module => $settings) {
++    $form['file_servers']['types'][$module] = array('#value' => $settings['type']);
++    $form['file_servers']['modules'][$module] = array('#value' => $settings['module']);
++    $form['file_servers']['weights']["file_server_{$module}_weight"] = array('#type' => 'weight', '#default_value' => $settings['weight']);
++  }
++
++  // The web server Drupal is running on is always available, and it's the
++  // default server, i.e. a server we can always fall back to. So it must
++  // always be at the bottom of the list and don't have a configurable weight.
++  $form['file_servers']['types']['drupal'] = array('#value' => t('Web server'));
++  $form['file_servers']['modules']['drupal'] = array('#value' => 'Drupal');
++  $form['file_servers']['weights']['file_server_drupal_weight'] = array('#value' => t('Default server'));
++
+   return system_settings_form($form);
+ }
+ 
++function theme_system_file_system_settings($form) {
++  $header = array(t('Type'), t('Module'), t('Weight'));
++  $rows = array();
++  foreach (element_children($form['file_servers']['modules']) as $module) {
++    // Don't take form control structures
++    if (is_array($form['file_servers']['modules'][$module])) {
++      $rows[] = array(
++        drupal_render($form['file_servers']['types'][$module]),
++        drupal_render($form['file_servers']['modules'][$module]),
++        drupal_render($form['file_servers']['weights']["file_server_{$module}_weight"]),
++      );
++    }
++  }
++
++  $form['file_servers']['#value'] = theme('table', $header, $rows);
++
++  return drupal_render($form);
++}
++
+ function system_image_toolkit_settings() {
+   $toolkits_available = image_get_available_toolkits();
+   if (count($toolkits_available) > 1) {

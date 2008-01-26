@@ -7,6 +7,8 @@
  */
 
 /**
+ * Implementation of hook_file_server().
+ *
  * Given a file path relative to the Drupal root directory, get the URL of the
  * corresponding file on the CDN, or the normal URL if the corresponding file
  * does not (yet) exist on the CDN.
@@ -24,26 +26,41 @@
  * @return
  *   The URL to the file on the CDN, if available, otherwise the normal URL.
  */
-function cdn_file_url($file_path, $absolute_url = FALSE, $files_synced = array()) {
-  $files_synced = (!empty($files_synced)) ? $files_synced : variable_get('cdn_files_synced', array());
-  $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
+function cdn_file_server($op, $file_path = '', $absolute_url = FALSE, $files_synced = array()) {
+  switch ($op) {
+    case 'info':
+      return array(
+        'type' => t('Content Delivery Network'),
+        'description' => t(
+          'A content delivery network is a load-balanced network of static file
+          servers that are located at various places all over the planet.'
+        ),
+        'configuration_page' => 'admin/settings/cdn',
+      );
+      break;
 
-  $file_path = cdn_clean_filepath($file_path);
+    case 'url':
+      $files_synced = (!empty($files_synced)) ? $files_synced : variable_get('cdn_files_synced', array());
+      $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
 
-  if (in_array($file_path, array_keys($files_synced))) {
-    $remote_file_path = variable_get('cdn_url', 'yourcdn.com/') . $files_synced[$file_path];
-    if ($page_stats) {
-      _cdn_devel_page_stats($file_path, $remote_file_path, TRUE);
-    }
-    return $remote_file_path;
-  }
-  else {
-    $local_file_path = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
-    $local_file_path .= $file_path;
-    if ($page_stats) {
-      _cdn_devel_page_stats($file_path, $local_file_path, FALSE);
-    }
-    return $local_file_path;
+      $file_path = cdn_clean_filepath($file_path);
+
+      if (in_array($file_path, array_keys($files_synced))) {
+        $remote_file_path = variable_get('cdn_url', 'yourcdn.com/') . $files_synced[$file_path];
+        if ($page_stats) {
+          _cdn_devel_page_stats($file_path, $remote_file_path, TRUE);
+        }
+        return $remote_file_path;
+      }
+      else {
+        $local_file_path = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
+        $local_file_path .= $file_path;
+        if ($page_stats) {
+          _cdn_devel_page_stats($file_path, $local_file_path, FALSE);
+        }
+        return $local_file_path;
+      }
+      break;    
   }
 }
 
