@@ -208,7 +208,7 @@ function cdn_admin_settings_form() {
   }
 
   require_once 'cdn_cron.inc';
-  list($files_scheduled, $files_unique_settings, $files_update_settings) = _cdn_cron_get_files_to_sync(variable_get('cdn_sync_filters', FALSE));
+  list($files_scheduled, $files_unique_settings, $files_update_settings) = _cdn_cron_get_files_to_sync(variable_get('cdn_sync_filters', array()));
   unset($files_unique_settings, $files_update_settings);
   $files_scheduled_size = 0;
   foreach ($files_scheduled as $file => $size) {

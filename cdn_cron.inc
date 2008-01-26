@@ -44,7 +44,7 @@ function cdn_cron_run() {
 
     // Get the CDN integration configuration.
     $sync_method = variable_get('cdn_sync_method', 'ftp');
-    $sync_filters = variable_get('cdn_sync_filters', FALSE);
+    $sync_filters = variable_get('cdn_sync_filters', array());
     $sync_method_settings = variable_get('cdn_sync_method_settings', FALSE);
 
     // Get the list of files, the unique settings for each file, and the
