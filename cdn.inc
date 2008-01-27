@@ -60,12 +60,10 @@ function cdn_file_url($file_path, $absolute_url = FALSE, $files_synced = array()
     return $remote_file_path;
   }
   else {
-    $local_file_path = ($absolute_url) ? $GLOBALS['base_url'] .'/' : base_path();
-    $local_file_path .= $file_path;
     if ($page_stats) {
-      _cdn_devel_page_stats($file_path, $local_file_path, FALSE);
+      _cdn_devel_page_stats($file_path, $file_path, FALSE);
     }
-    return $local_file_path;
+    return FALSE;
   }
 }
 
