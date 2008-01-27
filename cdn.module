@@ -216,7 +216,8 @@ function cdn_admin_settings_form() {
   }
   $files_synced = variable_get('cdn_files_synced', array());
   $files_scheduled_unsynced = array_diff(array_keys($files_scheduled), array_keys($files_synced));
-  $coverage = (count($files_scheduled) == 0) ? 1 : (count($files_synced) - count($files_scheduled_unsynced)) / count($files_scheduled);
+  $files_unscheduled_synced = array_diff(array_keys($files_synced), array_keys($files_scheduled));
+  $coverage = (count($files_scheduled) == 0) ? 1 : (count($files_scheduled) - count($files_scheduled_unsynced)) / count($files_scheduled);
 
   $form['stats']['numbers'] = array(
     '#value' => theme('cdn_numbers', $files_scheduled, $files_scheduled_size, $files_synced, $coverage),
@@ -232,6 +233,16 @@ function cdn_admin_settings_form() {
     '#value' => theme('cdn_scheduled_unsynced_files_list', $files_scheduled_unsynced),
   );
 
+  $form['stats']['list_unscheduled_synced'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Files that are queued for deletion'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['stats']['list_unscheduled_synced']['table'] = array(
+    '#value' => theme('cdn_unscheduled_synced_files_list', $files_unscheduled_synced, $files_synced),
+  );
+
   $form['stats']['list_synced'] = array(
     '#type' => 'fieldset',
     '#title' => t('Synchronized files'),
@@ -239,7 +250,7 @@ function cdn_admin_settings_form() {
     '#collapsed' => TRUE,
   );
   $form['stats']['list_synced']['table'] = array(
-    '#value' => theme('cdn_synchronized_files_list', $files_synced),
+    '#value' => theme('cdn_synced_files_list', $files_synced),
   );
   
   
@@ -380,27 +391,55 @@ function theme_cdn_scheduled_unsynced_files_list($files_scheduled_unsynced) {
 }
 
 /**
- * Render the list of synchronized files.
+ * Render the list of files that are queued for deletion.
  *
- * @param $files
- *   An array with as keys local files and as values remote files.
+ * @param $files_unscheduled_synced
+ *   Array of local files.
+ * @param $files_synced
+ *  Array of files that are already synchronized to the CDN.
  * @return
  *   The rendered HTML.
  */
-function theme_cdn_synchronized_files_list($files) {
+function theme_cdn_unscheduled_synced_files_list($files_unscheduled_synced, $files_synced) {
   $output = '';
 
-  if (!count($files)) {
+  if (!count($files_unscheduled_synced)) {
+    $output .= '<p>'. t('No files are queued for deletion.') .'</p>';
+  }
+  else {
+    $header = array(array('data' => t('Local file (links to the remote file)')));
+    $rows = array();
+    foreach ($files_unscheduled_synced as $file) {
+      $rows[] = array('data' => array(l($file, $files_synced[$file])));
+    }
+    $output .= theme('table', $header, $rows);
+  }
+
+  return $output;
+}
+
+/**
+ * Render the list of synchronized files.
+ *
+ * @param $files_synced
+ *   Array of files that are already synchronized to the CDN.
+ * @return
+ *   The rendered HTML.
+ */
+function theme_cdn_synced_files_list($files_synced) {
+  $output = '';
+
+  if (!count($files_synced)) {
     $output .= '<p>'. t('No files synchronized yet.') .'</p>';
   }
   else {
     $header = array(
-      array('data' => t('Local file')),
-      array('data' => t('Remote file')),
+      array('data' => t('Local file (links to the remote file)')),
+      array('data' => t('Size')),
     );
     $rows = array();
-    foreach ($files as $local_file => $remote_file) {
-      $rows[] = array('data' => array($local_file, $remote_file));
+    foreach ($files_synced as $local_file => $remote_file) {
+      $rows[] = array('data' => array(l($local_file, $remote_file), number_format(filesize($local_file) / 1024, 2) .' KB'));
     }
     $output .= theme('table', $header, $rows);
   }
