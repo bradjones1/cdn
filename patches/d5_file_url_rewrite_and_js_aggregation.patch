@@ -67,7 +67,7 @@ diff -u -F^f -r1.611.2.15 common.inc
 +  // Try the first preferred file server to check if it can serve the file.
 +  // Then try the second, and so on.
 +  foreach ($modules as $module) {
-+    $file_url = module_invoke($module['module'], 'url', $file_path, $absolute_url);
++    $file_url = module_invoke($module['module'], 'file_server', 'url', $file_path, $absolute_url);
 +
 +    // If the URL rewriting function sucesfully generated a URL, we can stop
 +    // trying to find a server that can serve the file.
