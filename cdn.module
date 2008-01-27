@@ -102,9 +102,7 @@ function cdn_requirements($phase) {
  * Implementation of hook_exit().
  */
 function cdn_exit($destination = NULL) {
-  global $user;
-
-  if (!$destination && user_access('adminster site configuration') && variable_get('cdn_dev_page_stats', 0)) {
+  if (!$destination && user_access('administer site configuration') && variable_get('cdn_dev_page_stats', 0)) {
     list(
       $file_count,
       $remote_file_count,
