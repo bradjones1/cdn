@@ -159,7 +159,9 @@ function cdn_log($message) {
 
     switch ($output) {
       case 'html':
+        ob_start();
         print '<pre>'. $time . $message ."</pre>\n";
+        ob_flush();
         break;
 
       case 'console':

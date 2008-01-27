@@ -124,13 +124,6 @@ Configuring the $conf array in settings.php
 This is my configuration:
 
 $conf = array(
-  // Configure Drupal core's file URL rewriting ability. If any of the
-  // functions listed here fails, Drupal will default to its own ("normal")
-  // file URL rewriting function.
-  'file_url_rewrite' => array(
-    'cdn_file_url', // List the CDN module's URL rewrite function as the preferred server.
-  ),
-
   // CDN integration module settings.
   'cdn_url' => 'http://wimleers.cachefly.com/wimleers.com',
   'cdn_sync_filters' => array(
@@ -167,14 +160,15 @@ $conf = array(
       'update_urls_in_files' => TRUE,
     ),
 
-    // Add all files in the files/js directory. This is only necessary if we
-    // use JS aggregation.
+    // Add all files in the files/js directory, *but* update the URLs in the
+    // files. This is only necessary if we use JS aggregation.
     3 => array(
       'paths' => array('sites/wimleers.com/files/js'),
       'pattern' => '.*',
       'ignored_dirs' => array('CVS'),
       'unique' => 'filename',
       'unique_method' => 'mtime',
+      'update_urls_in_files' => TRUE,
     ),
 
     // Add all Javascript, CSS, image and font files from our themes. But
