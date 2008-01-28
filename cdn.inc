@@ -23,7 +23,7 @@ function cdn_file_server($op, $file_path, $absolute_url = FALSE) {
       break;
 
     case 'url':
-      return cdn_file_url($file_path, $absolute_url);
+      return cdn_file_url($file_path); // URLs on a CDN are always absolute.
       break;    
   }
 }
@@ -35,9 +35,6 @@ function cdn_file_server($op, $file_path, $absolute_url = FALSE) {
  *
  * @param $file_path
  *   A file path relative to the Drupal root directory.
- * @param $absolute_url
- *   (optional) Makes sure an absolute URL will be generated. (Files hosted
- *   on the CDN will always generate absolute URLs!)
  * @param $files_synced
  *   (optional) An array of synced files, with the keys the source file paths
  *   and the values the file paths on the CDN. This parameter is used by the
@@ -46,7 +43,7 @@ function cdn_file_server($op, $file_path, $absolute_url = FALSE) {
  * @return
  *   The URL to the file on the CDN, if available, otherwise the normal URL.
  */
-function cdn_file_url($file_path, $absolute_url = FALSE, $files_synced = array()) {
+function cdn_file_url($file_path, $files_synced = array()) {
   $files_synced = (!empty($files_synced)) ? $files_synced : variable_get('cdn_files_synced', array());
   $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
 
@@ -142,20 +139,20 @@ function cdn_unique_filename($file_path, $unique_settings = array()) {
     return $path .'/'. $basename;
   }
   else {
-    return $file_path;
+    return $path;
   }
 }
 
 /**
  * Removes the leading "/", "/" or "../"'s from a path.
  *
- * @param $path
+ * @param $file_path
  *   A path.
  * @return
  *   The cleaned path.
  */
-function cdn_clean_filepath($path) {
-  return preg_replace('/^(?:(?:\.\.\/)+|\.\/|\/)?(.*)/', '$1', $path);
+function cdn_clean_filepath($file_path) {
+  return preg_replace('/^(?:(?:\.\.\/)+|\.\/|\/)?(.*)/', '$1', $file_path);
 }
 
 /**
@@ -179,12 +176,20 @@ function cdn_update_file($file_path, $files_synced = array()) {
 
   // Strip surrounding apostrophes or quotes.
   $contents = preg_replace('/(?<=url\()([\'"]{1})(.*)\1{1}/', '\2', $contents);
-  
+
   // Remove the leading base path.
   $contents = preg_replace('/url\('. preg_quote(base_path(), '/.') .'([\d\w-_\.\/]+)/i', 'url(\1', $contents);
 
-  // Strip all "../" and everything before it, ignoring absolute paths.
-  $contents = preg_replace('/url\(([\'"]?)(?![a-z]+:)[\d\w-_\.\/]+(\.\.\/)+/i', 'url(\1', $contents);
+  // Route all paths through the relative path resolving function, ignoring
+  // absolute URLs.
+  $contents = preg_replace_callback(
+    '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
+    create_function(
+      '$matches',
+      'return _cdn_file_path_resolve_relative_paths($matches[0]);'
+    ),
+    $contents
+  );
 
   // Create the function body of the anonymous function.
   if (empty($files_synced)) {
@@ -194,7 +199,7 @@ function cdn_update_file($file_path, $files_synced = array()) {
     $function_body = 'return cdn_file_url($matches[0], '. var_export($files_synced, TRUE) .');';
   }
 
-  // Route all paths through cdn_file_url(), ignoring absolute paths.
+  // Route all paths through cdn_file_url(), ignoring absolute URLs.
   $contents = preg_replace_callback(
     '/(?<=url\()[\d\w-_\.\/]+(?=\))/i',
     create_function(
@@ -208,4 +213,31 @@ function cdn_update_file($file_path, $files_synced = array()) {
   file_check_directory(file_create_path('cdn'), FILE_CREATE_DIRECTORY);
 
   return file_save_data($contents, 'cdn/'. md5($file_path), FILE_EXISTS_REPLACE);
+}
+
+/**
+ * Helper function to resolve relative file paths.
+ *
+ * I got the regular expression for this from:
+ *   http://www.troubleshooters.com/codecorn/littperl/perlreg.htm
+ * and adapted it to work with PHP.
+ *
+ * @param file_path
+ *   A file path that possibly contains relative references (double dot).
+ * @return
+ *   The same file path, but with the relative references resolved.
+ */
+function _cdn_file_path_resolve_relative_paths($file_path) {
+  // Prepend a leading slash, this allows for a simpler regexp.
+  $file_path = "/". $file_path;
+
+  // Regular expression
+  while (preg_match('/\.\./', $file_path)) {
+    $file_path = preg_replace('/\/[^\/]*\/\.\./', '', $file_path);
+  }
+
+  // Remove the leading slash again.
+  $file_path = substr($file_path, 1);
+
+  return $file_path;
 }
