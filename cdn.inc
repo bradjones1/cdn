@@ -139,7 +139,7 @@ function cdn_unique_filename($file_path, $unique_settings = array()) {
     return $path .'/'. $basename;
   }
   else {
-    return $path;
+    return $file_path;
   }
 }
 
