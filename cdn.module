@@ -215,6 +215,7 @@ function cdn_admin_settings_form() {
   $files_synced = variable_get('cdn_files_synced', array());
   $files_scheduled_unsynced = array_diff(array_keys($files_scheduled), array_keys($files_synced));
   $files_unscheduled_synced = array_diff(array_keys($files_synced), array_keys($files_scheduled));
+  $files_scheduled_synced = array_flip(array_diff(array_flip($files_synced), $files_unscheduled_synced));
   $coverage = (count($files_scheduled) == 0) ? 1 : (count($files_scheduled) - count($files_scheduled_unsynced)) / count($files_scheduled);
 
   $form['stats']['numbers'] = array(
@@ -223,7 +224,7 @@ function cdn_admin_settings_form() {
 
   $form['stats']['list_scheduled_unsynced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Files that are scheduled but not yet synchronized'),
+    '#title' => t('Files that are scheduled but not yet synchronized (!count)', array('!count' => count($files_scheduled_unsynced))),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
@@ -233,7 +234,7 @@ function cdn_admin_settings_form() {
 
   $form['stats']['list_unscheduled_synced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Files that are queued for deletion'),
+    '#title' => t('Files that are queued for deletion (!count)', array('!count' => count($files_unscheduled_synced))),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -243,12 +244,12 @@ function cdn_admin_settings_form() {
 
   $form['stats']['list_synced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Synchronized files'),
+    '#title' => t('Synchronized files (!count)', array('!count' => count($files_scheduled_synced))),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
   $form['stats']['list_synced']['table'] = array(
-    '#value' => theme('cdn_synced_files_list', $files_synced),
+    '#value' => theme('cdn_synced_files_list', $files_scheduled_synced),
   );
   
   
