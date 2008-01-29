@@ -29,6 +29,10 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
       }
       else {
         cdn_log("Failed to change directory to remote path ($remote_path).");
+
+        // Fail immediately, otherwise we'd start uploading files into the
+        // root directory!
+        return $stats;
       }
     }
 
@@ -51,17 +55,17 @@ function ftp_cdn_cron_perform_sync($files, $files_unique, $files_updated, $stats
       if ((isset($files_on_server[$target_file]) && $files_on_server[$target_file] == $file_size)) {
         $stats['exists']++;
         $stats['exists_bytes'] += $file_size;
-        cdn_log("Already exists: $files_unique[$file] ($file_size_formatted KB).");
+        cdn_log("Already exists: $target_file ($file_size_formatted KB).");
       }
       else {
-        if (_ftp_cdn_cron_create_path($fs, $files_unique[$file]) && ftp_put($fs, "./$files_unique[$file]", "./$files_updated[$file]", FTP_BINARY)) {
+        if (_ftp_cdn_cron_create_path($fs, $target_file) && ftp_put($fs, "./$target_file", "./$source_file", FTP_BINARY)) {
           $stats['uploads']++;
           $stats['uploaded_bytes'] += $file_size;
-          cdn_log("Uploaded $files_unique[$file] ($file_size_formatted KB).");
+          cdn_log("Uploaded $target_file ($file_size_formatted KB).");
         }
         else {
           $stats['uploads_failed']++;
-          cdn_log("Failed to upload $files_unique[$file].");
+          cdn_log("Failed to upload $target_file.");
         }
       }
     }
@@ -154,7 +158,7 @@ function _ftp_cdn_cron_create_path($fs, $file) {
 
 function _ftp_cdn_get_filelist($fs, $path) {
   static $filelist = array();
-  
+
   if (!isset($filelist[$path])) {
     $filelist[$path] = _ftp_cdn_parse_filesizes_recursive_rawlist(ftp_rawlist($fs, $path, TRUE));
     cdn_log('Retrieved full list of files and file sizes for path "'. $path .'".');
@@ -171,6 +175,11 @@ function _ftp_cdn_parse_filesizes_recursive_rawlist($raw_list) {
     }
     elseif (substr($file, strlen($file) - 1, strlen($file) ) == ':') {
       $path = substr($file, 0, strlen($file) - 1);
+      
+      // Remove leading "./".
+      if (strstr($path, './') !== FALSE ) {
+        $path = substr($path, 2);
+      }
     }
     else {
       $parts = preg_split("/[\s]+/", $file, 9);
