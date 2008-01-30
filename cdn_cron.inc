@@ -13,13 +13,14 @@
  * Graciously stolen from Drupal's includes/common.inc.
  */
 function cdn_cron_run() {
-  // If not in 'safe mode', increase the maximum execution time:
   if (!ini_get('safe_mode')) {
     set_time_limit(240);
   }
   
   // Fetch the CDN synchronization cron semaphore
   $semaphore = variable_get('cdn_cron_semaphore', FALSE);
+
+  _cdn_cron_delete_temporary_files();
 
   if ($semaphore) {
     if (time() - $semaphore > 3600) {
@@ -69,9 +70,7 @@ function cdn_cron_run() {
     $stats = $sync_hook($files, $files_unique, $files_updated, _cdn_cron_init_stats(), $sync_method_settings);
     $timer = timer_stop('cdn_sync');
 
-    // Delete all temporary files in the cdn directory.
-    $list = file_scan_directory(file_directory_path() .'/cdn', '.*');
-    array_map(create_function('$file', 'return file_delete($file->filename);'), $list);
+    _cdn_cron_delete_temporary_files();
 
     // Build message.
     $duration = round($timer['time'] / 1000, 1);
@@ -111,7 +110,8 @@ function cdn_cron_run() {
     // able to generate CDN URLs only for files that have been synchronized.
     variable_set('cdn_files_synced', $files_unique);
 
-    // Delete the files that were being synced, which /are/ synced by now.
+    // Delete the variable that contains an array of files that were being
+    // synced, which /are/ synced by now.
     variable_del('cdn_cron_files_syncing');
 
     // Release CDN synchronization cron semaphore
@@ -130,10 +130,12 @@ function cdn_cron_run() {
 function cdn_cron_cleanup() {
   // See if the semaphore is still locked.
   if (variable_get('cdn_cron_semaphore', FALSE)) {
-    watchdog('cron', 'CDN synchronization cron run exceeded the time limit and was aborted.', WATCHDOG_WARNING);
+    watchdog('cdn_cron', 'CDN synchronization cron run exceeded the time limit and was aborted.', WATCHDOG_WARNING);
 
     // Release CDN synchronization cron semaphore
     variable_del('cdn_cron_semaphore');
+    
+    _cdn_cron_delete_temporary_files();
   }
 }
 
@@ -306,4 +308,13 @@ function _cdn_cron_update_files_wrapper($files, $update_setting) {
     }
   }
   return $files_updated;
+}
+
+/**
+ * Helper function to clean up temporary files - i.e. copies of files that
+ * were being synchronized, but needed the URLs embedded to be updated.
+ */
+function _cdn_cron_delete_temporary_files() {
+  $list = file_scan_directory(file_directory_path() .'/cdn', '.*');
+  array_map(create_function('$file', 'return file_delete($file->filename);'), $list);
 }

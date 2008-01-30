@@ -50,7 +50,18 @@ function cdn_requirements($phase) {
 
       $requirements['cdn_cron']['title'] = $t('CDN synchronization');
 
-      if ($cdn_cron_method == 'cdn' && !file_exists('cdn_cron.php') || (file_exists($path) && file_exists('cdn_cron.php') && md5_file($path) != md5_file('cdn_cron.php'))) {
+      if (ini_get('safe_mode')) {
+        $requirements['cdn_cron'] += array(
+          'description' => $t(
+            'Safe mode is enabled on this server, which prevents the CDN
+            synchronization cron from extending the time limit. This may cause
+            the synchronization to not complete successfully.'
+          ),
+          'severity' => $phase == 'install' ? REQUIREMENT_WARNING : REQUIREMENT_ERROR,
+          'value' => $t('Disable safe mode'),
+        );        
+      }
+      elseif ($cdn_cron_method == 'cdn' && !file_exists('cdn_cron.php') || (file_exists($path) && file_exists('cdn_cron.php') && md5_file($path) != md5_file('cdn_cron.php'))) {
         $requirements['cdn_cron'] += array(
           'description' => $t(
             "In order for the CDN integration module to work correctly, it has
