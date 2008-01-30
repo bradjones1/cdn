@@ -35,6 +35,16 @@ function cdn_menu($may_cache) {
 }
 
 /**
+ * Implementation of hook_perm().
+ */
+function cdn_perm() {
+  return array(
+    'access per-page statistics',
+    'access files on CDN when in debug mode',
+  );
+}
+
+/**
  * Implementation of hook_requirements().
  */
 function cdn_requirements($phase) {
@@ -113,7 +123,7 @@ function cdn_requirements($phase) {
  * Implementation of hook_exit().
  */
 function cdn_exit($destination = NULL) {
-  if (!$destination && user_access('administer site configuration') && variable_get('cdn_dev_page_stats', 0)) {
+  if (!$destination && variable_get('cdn_dev_page_stats', 0) && user_access('access per-page statistics')) {
     list(
       $file_count,
       $remote_file_count,
@@ -173,6 +183,22 @@ function cdn_admin_settings_form() {
     ),
     '#default_value' => variable_get('cdn_cron_method', 'cdn'),
   );
+  $form['settings']['cdn_debug_mode'] = array(
+    '#type' => 'radios',
+    '#title' => t('Debug mode'),
+    '#description' => t(
+      "If you don't want to use the CDN to serve files to your visitors yet,
+      but you do want to see if it's working well for your site, then enable
+      debug mode.<br />It will only serve files from the CDN if they have the
+      %cdn-debug-mode-permission permission.",
+      array('%cdn-debug-mode-permission' => 'access files on CDN when in debug mode')
+    ),
+    '#options' => array(
+      0 => t('Disabled'),
+      1 => t('Enabled'),
+    ),
+    '#default_value' => variable_get('cdn_debug_mode', 0),
+  );  
   
   
   $form['dev'] = array(
@@ -186,7 +212,8 @@ function cdn_admin_settings_form() {
     '#title' => t('Show statistics for the current page'),
     '#description' => t(
       'Shows the CDN integration statistics of the current page, to users with
-      <em>adminster site configuration</em> permissions.'
+      the %access-per-page-statistics permissions.',
+      array('%access-per-page-statistics' => 'access per-page statistics')
     ),
     '#options' => array(
       '0' => t('Disabled'),

@@ -23,7 +23,22 @@ function cdn_file_server($op, $file_path, $absolute_url = FALSE) {
       break;
 
     case 'url':
-      return cdn_file_url($file_path); // URLs on a CDN are always absolute.
+      // If debug mode is enabled and the user doesn't have the necessary
+      // permission to access files on the CDN when debug mode is enabled,
+      // return FALSE (i.e. pretend the file does not exist on the CDN).
+      if ((bool) variable_get('cdn_debug_mode', 0) && !user_access('access files on CDN when in debug mode')) {
+        return FALSE;
+      }
+
+      // URLs on a CDN are always absolute!
+      $url = cdn_file_url($file_path);
+
+      // If the user can access it, add this to the per-page statistics.
+      if (variable_get('cdn_dev_page_stats', 0) && user_access('access per-page statistics')) {
+        _cdn_devel_page_stats($file_path, $url);
+      }
+
+      return $url;
       break;    
   }
 }
@@ -45,23 +60,8 @@ function cdn_file_server($op, $file_path, $absolute_url = FALSE) {
  */
 function cdn_file_url($file_path, $files_synced = array()) {
   $files_synced = (!empty($files_synced)) ? $files_synced : variable_get('cdn_files_synced', array());
-  $page_stats = (bool) variable_get('cdn_dev_page_stats', 0);
-
   $file_path = cdn_clean_filepath($file_path);
-
-  if (in_array($file_path, array_keys($files_synced))) {
-    $remote_file_path = variable_get('cdn_url', 'yourcdn.com/') . $files_synced[$file_path];
-    if ($page_stats) {
-      _cdn_devel_page_stats($file_path, $remote_file_path, TRUE);
-    }
-    return $remote_file_path;
-  }
-  else {
-    if ($page_stats) {
-      _cdn_devel_page_stats($file_path, $file_path, FALSE);
-    }
-    return FALSE;
-  }
+  return (in_array($file_path, array_keys($files_synced))) ? variable_get('cdn_url', 'yourcdn.com/') . $files_synced[$file_path] : FALSE;
 }
 
 /**
