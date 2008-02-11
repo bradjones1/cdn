@@ -35,7 +35,7 @@ function cdn_file_server($op, $file_path, $absolute_url = FALSE) {
 
       // If the user can access it, add this to the per-page statistics.
       if (variable_get('cdn_dev_page_stats', 0) && user_access('access per-page statistics')) {
-        _cdn_devel_page_stats($file_path, $url);
+        _cdn_devel_page_stats($file_path, (!$url) ? '' : $url, (bool) $url);
       }
 
       return $url;
