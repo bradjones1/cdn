@@ -90,7 +90,10 @@ calls to drupal_add_js() to the footer as well.
 
 Applying the theme patch
 ------------------------
-You *must* apply this patch to *every* theme that's being used on your website!
+You *must* apply this patch to *every* theme that's being used on your
+website! Note that the provided patch only works for Garland. You'll have to
+apply similar changes (i.e. wrap the URL in a file_url() call) to the themes
+you're using.
 
 Repeat this process for every theme: first, change the directory to the
 directory of the theme. Applying the patch is identical to the example above,
