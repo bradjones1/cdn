@@ -1,8 +1,0 @@
-// $Id$
-
-Synchronization
----------------
-
-- automatically ignore files of disabled modules and themes (this makes a huge
-  difference if you have several modules installed which you're not or
-  partially using)
