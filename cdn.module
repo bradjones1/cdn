@@ -406,31 +406,6 @@ function cdn_advanced_get_url($path) {
 }
 
 
-/**
- * Implementation of cdn_advanced_pick_server().
- */
-function cdn_advanced_pick_server($servers_for_file) {
-  static $server_name;
-
-  if (!isset($server_name)) {
-    $server_name = 'ftp push cdn';
-  }
-
-  // Try to pick the desired server - if the file being served is available on
-  // our the desired server.
-  foreach ($servers_for_file as $server_for_file) {
-    if ($server_for_file['server'] == $server_name) {
-      return $server_for_file;
-    }
-  }
-
-  // In case our desired server does not have the file, pick the first server
-  // that does have it.
-  return $servers_for_file[0];
-}
-
-
-
 //----------------------------------------------------------------------------
 // Private functions.
 
