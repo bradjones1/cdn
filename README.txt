@@ -14,18 +14,35 @@ domain name. The CDN will then automatically fetch (pull) the files from your
 server (the origin).
 
 In advanced mode, you must install and configure the daemon I wrote as part of
-my bachelor thesis. This allows for much more advanced setups: files can be
-processed before they are synced and your CDN doesn't *have* to support
-Origin Pull, any push method is fine. Push always uses transfer protocols,
-either well-established ones (e.g. FTP) or custom ones (e.g. Amazon S3). It is
-thanks to this abstraction layer that it can be used for *any* CDN, thereby
-avoiding vendor lock-in.
+my bachelor thesis: File Conveyor [1]. This allows for much more advanced
+setups: files can be processed before they are synced and your CDN doesn't
+*have* to support Origin Pull, any push method is fine. Push always uses
+transfer protocols, either well-established ones (e.g. FTP) or custom ones
+(e.g. Amazon S3 and Mosso CloudFiles). It is thanks to this abstraction layer
+that it can be used for *any* CDN, thereby avoiding vendor lock-in.
+- File Conveyor includes "transporters" for FTP, Amazon S3, Amazon CloudFront
+  and Mosso CloudFiles.
+- File Conveyor also allows for any kind of automatic file processing. It
+  includes "processors" for: image optimization (using a combination of
+  ImageMagick, pngcrush, jpegtran and gifsicle), CSS minification (YUI
+  Compressor), JS minification (YUI Compressor and/or Google Closure
+  Compiler), and so on. It's also very easy to add your own processors.
+
+Note:
+"Origin Pull" means the CDN pulls files from the origin server (i.e. the
+Drupal web server). That's where its name comes from. Amazon S3, CloudFiles
+and CacheFly are all examples of Push CDNs. The first two have custom
+protocols, the latter uses FTP. These don't automatically pull files from your
+server (the origin server), but you have to push the files manually (or using
+a script of some sort, or my daemon) to the CDN. Other CDNs, such as
+SimpleCDN, offer both pull- and push-functionality.
 
 This module was written as part of the bachelor thesis [1] of Wim Leers at
 Hasselt University [3].
 
-[1] http://wimleers.com/tags/bachelor-thesis
-[2] http://uhasselt.be/
+[1] http://fileconveyor.org/
+[2] http://wimleers.com/tags/bachelor-thesis
+[3] http://uhasselt.be/
 
 
 Supported CDNs
@@ -33,7 +50,8 @@ Supported CDNs
 - Basic mode: any Origin Pull CDN.
 - Advanced mode: any Origin Pull CDN and any push CDN that supports FTP.
   Support for other transfer protocols is welcomed and encouraged: your
-  patches are welcome! Amazon S3 and Amazon CloudFront are also supported.
+  patches are welcome! Amazon S3, Amazon CloudFront and Mosso CloudFiles are
+  also supported.
 
 
 Installation
