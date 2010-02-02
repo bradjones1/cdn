@@ -52,6 +52,11 @@ function cdn_file_url_alter(&$path) {
   $stats      = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
   $exclusions = variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT);
 
+  // If the current path is an absolute path, return immediately.
+  $fragments = parse_url($path);
+  if (isset($fragments['host']))
+    return;
+
   // If the current path matches one of the excluded paths, return immediately.
   if (drupal_match_path($path, $exclusions))
     return;
