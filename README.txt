@@ -90,6 +90,7 @@ Installation
    status here. If you've enabled advanced mode and have set up the daemon,
    you will see some basic stats here as well, and you can check here to see
    if the daemon is currently running.
+   You can also see here if you've applied the patches correctly!
 
 
 Notes on the backport of hook_file_url_alter() for Drupal 6

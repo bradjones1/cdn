@@ -228,6 +228,24 @@ function cdn_requirements($phase) {
   switch ($phase) {
     case 'install' :
     case 'runtime' :
+      require_once drupal_get_path('module', 'cdn') . '/cdn.requirements.inc';
+
+      // CDN integration core patch.
+      _cdn_requirements_generate_requirement_for_patch(
+        $requirements,
+        'core',
+        $t('CDN integration — Drupal core patch')
+      );
+
+      // CDN integration ImageCache patch.
+      _cdn_requirements_generate_requirement_for_patch(
+        $requirements,
+        'imagecache',
+        $t('CDN integration — ImageCache module patch')
+      );
+
+
+      // CDN integration status.
       $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
       $mode   = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
 
