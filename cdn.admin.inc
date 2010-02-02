@@ -66,6 +66,36 @@ function cdn_admin_settings_form() {
     '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
   );
 
+  $form[CDN_EXCLUSION_VARIABLE] = array(
+    '#type' => 'textarea',
+    '#title' => t('Paths excluded from the CDN'),
+    '#default_value' => variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT),
+    '#description' => t(
+      "Enter one page per line as Drupal paths. The '*' character is a
+      wildcard. Example paths are %blog for the blog page and %blog-wildcard
+      for every personal blog. %front is the front page.<br />
+      <strong>JavaScript files are excluded by default. This is necessary to
+      ensure a painless out-of-the-box experience.</strong><br />
+      <strong><u>Full explanation:</u></strong> it's necessary prevent any
+      possible cross-domain AJAX requests, which would violate the <a
+      href=\"http://en.wikipedia.org/wiki/Same_origin_policy\">same origin
+      policy</a> of browsers. Such violations potentially result in broken
+      functionality. Note that <u>even requests to subdomains such as
+      cdn.yourdomain.com count as cross-domain requests!</u><br />
+      You can opt-in to including JavaScript files by default and then exclude
+      problematic ones, but then you should carefully note which JavaScript
+      files perform AJAX requests. You can prevent all potential problems by
+      using <a href=\"http://en.wikipedia.org/wiki/JSON#JSONP\">JSONP</a>,
+      which is a work-around to allow for cross-domain AJAX
+      requests.</strong>",
+      array(
+        '%blog'          => 'blog',
+        '%blog-wildcard' => 'blog/*',
+        '%front'         => '<front>'
+      )
+    ),
+  );
+
   return system_settings_form($form);
 }
 
@@ -90,7 +120,7 @@ function cdn_admin_basic_settings_form() {
   $form[CDN_BASIC_EXTENSIONS_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Allowed extensions'),
-    '#description'   => t('Only files with these extensions will be synced.'),
+    '#description'   => t('Only files with these extensions will be served from the CDN.'),
     '#default_value' => variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT),
   );
 
