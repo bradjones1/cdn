@@ -85,8 +85,11 @@ function cdn_file_url_alter(&$path) {
       _cdn_devel_page_stats($path, $cdn_url, $server, $end - $start);
     }
 
-    // Override the path with the corresponding CDN URL.
-    $path = $cdn_url;
+    // Override the path with the corresponding CDN URL, *if* the file is
+    // available on the CDN (it may only be not available in advanced mode).
+    if ($cdn_url !== FALSE) {
+      $path = $cdn_url;
+    }
   }
 }
 
