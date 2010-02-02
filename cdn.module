@@ -163,7 +163,13 @@ function cdn_theme() {
  * Implementation of hook_exit().
  */
 function cdn_exit($destination = NULL) {
-  require_once(drupal_get_path('module', 'cdn') . '/cdn.stats.inc');
+  // When the _cdn_devel_page_stats() function does not exist, there are no
+  // stats to show, hence we can return immediately.
+  // This can happen when the stats are disabled (for the current user or
+  // entirely), or when a cached page is being served.
+  if (!function_exists('_cdn_devel_page_stats')) {
+    return;
+  }
 
   // Try not to break non-HTML pages.
   if (function_exists('drupal_get_headers')) {
