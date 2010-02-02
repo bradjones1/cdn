@@ -41,7 +41,10 @@ define('CDN_DAEMON_PID_FILE', 'daemon.pid');
 //----------------------------------------------------------------------------
 // Drupal core.
 
-function custom_file_url_rewrite($path) {
+/**
+ * Implementation of hook_file_url_alter().
+ */
+function cdn_file_url_alter(&$path) {
   $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
   $mode   = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   $stats  = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
@@ -70,10 +73,8 @@ function custom_file_url_rewrite($path) {
       _cdn_devel_page_stats($path, $cdn_url, $server, $end - $start);
     }
 
-    return $cdn_url;
-  }
-  else {
-    return FALSE;
+    // Override the path with the corresponding CDN URL.
+    $path = $cdn_url;
   }
 }
 

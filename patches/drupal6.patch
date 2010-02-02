@@ -1,11 +1,11 @@
 Index: includes/common.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/common.inc,v
-retrieving revision 1.756.2.52
-diff -u -F^f -r1.756.2.52 common.inc
---- includes/common.inc	13 May 2009 19:11:04 -0000	1.756.2.52
-+++ includes/common.inc	22 Jun 2009 20:01:32 -0000
-@@ -1830,15 +1830,15 @@ function drupal_get_css($css = NULL) {
+retrieving revision 1.756.2.74
+diff -u -F '^f' -r1.756.2.74 common.inc
+--- includes/common.inc	16 Dec 2009 20:47:10 -0000	1.756.2.74
++++ includes/common.inc	2 Feb 2010 15:29:19 -0000
+@@ -1870,15 +1870,15 @@ function drupal_get_css($css = NULL) {
              // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
              // regardless of whether preprocessing is on or off.
              if (!$preprocess && $type == 'module') {
@@ -24,16 +24,16 @@ diff -u -F^f -r1.756.2.52 common.inc
              }
            }
          }
-@@ -1848,7 +1848,7 @@ function drupal_get_css($css = NULL) {
-     if ($is_writable && $preprocess_css) {
-       $filename = md5(serialize($types) . $query_string) .'.css';
+@@ -1890,7 +1890,7 @@ function drupal_get_css($css = NULL) {
+       // starting with "ad*".
+       $filename = 'css_'. md5(serialize($types) . $query_string) .'.css';
        $preprocess_file = drupal_build_css_cache($types, $filename);
 -      $output .= '<link type="text/css" rel="stylesheet" media="'. $media .'" href="'. base_path() . $preprocess_file .'" />'."\n";
 +      $output .= '<link type="text/css" rel="stylesheet" media="'. $media .'" href="'. file_create_url($preprocess_file) .'" />'."\n";
      }
    }
  
-@@ -2183,7 +2183,7 @@ function drupal_get_js($scope = 'header'
+@@ -2224,7 +2224,7 @@ function drupal_get_js($scope = 'header'
          // Additionally, go through any remaining scripts if JS preprocessing is on and output the non-cached ones.
          foreach ($data as $path => $info) {
            if (!$info['preprocess'] || !$is_writable || !$preprocess_js) {
@@ -42,9 +42,9 @@ diff -u -F^f -r1.756.2.52 common.inc
            }
            else {
              $files[$path] = $info;
-@@ -2196,7 +2196,7 @@ function drupal_get_js($scope = 'header'
-   if ($is_writable && $preprocess_js && count($files) > 0) {
-     $filename = md5(serialize($files) . $query_string) .'.js';
+@@ -2239,7 +2239,7 @@ function drupal_get_js($scope = 'header'
+     // starting with "ad*".
+     $filename = 'js_'. md5(serialize($files) . $query_string) .'.js';
      $preprocess_file = drupal_build_js_cache($files, $filename);
 -    $preprocessed .= '<script type="text/javascript" src="'. base_path() . $preprocess_file .'"></script>'."\n";
 +    $preprocessed .= '<script type="text/javascript" src="'. file_create_url($preprocess_file) .'"></script>'."\n";
@@ -54,24 +54,30 @@ diff -u -F^f -r1.756.2.52 common.inc
 Index: includes/file.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/file.inc,v
-retrieving revision 1.121.2.6
-diff -u -F^f -r1.121.2.6 file.inc
---- includes/file.inc	13 Apr 2009 19:07:16 -0000	1.121.2.6
-+++ includes/file.inc	22 Jun 2009 20:01:34 -0000
-@@ -35,19 +35,52 @@
+retrieving revision 1.121.2.9
+diff -u -F '^f' -r1.121.2.9 file.inc
+--- includes/file.inc	16 Sep 2009 19:34:14 -0000	1.121.2.9
++++ includes/file.inc	2 Feb 2010 15:29:22 -0000
+@@ -35,19 +35,57 @@
  /**
   * Create the download path to a file.
   *
-+ * There are two kinds of files:
-+ * - those in the files directory (which is stored in the file_directory_path
-+ *   variable and can be retrieved using file_directory_path()). These are
-+ *   files that have either been uploaded by users or were generated
-+ *   automatically (for example through CSS aggregation).
-+ * - those outside of the files directory, which ship as part of Drupal core
-+ *   or contributed modules.
+- * @param $path A string containing the path of the file to generate URL for.
+- * @return A string containing a URL that can be used to download the file.
++ * There are two kinds of local files:
++ * - "created files", i.e. those in the files directory (which is stored in
++ *   the file_directory_path variable and can be retrieved using
++ *   file_directory_path()). These are files that have either been uploaded by
++ *   users or were generated automatically (for example through CSS
++ *   aggregation).
++ * - "shipped files", i.e. those outside of the files directory, which ship as
++ *   part of Drupal core or contributed modules or themes.
 + *
-  * @param $path A string containing the path of the file to generate URL for.
-  * @return A string containing a URL that can be used to download the file.
++ * @param $path
++ *   A string containing the Drupal path (i.e. path relative to the Drupal
++ *   root directory) of the file to generate the URL for.
++ * @return
++ *   A string containing a URL that can be used to download the file.
   */
  function file_create_url($path) {
 -  // Strip file_directory_path from $path. We only include relative paths in urls.
@@ -83,16 +89,14 @@ diff -u -F^f -r1.121.2.6 file.inc
 -      return $GLOBALS['base_url'] .'/'. file_directory_path() .'/'. str_replace('\\', '/', $path);
 -    case FILE_DOWNLOADS_PRIVATE:
 -      return url('system/files/'. $path, array('absolute' => TRUE));
-+  // Check if the file is in the files directory.
-+  $is_in_files_directory = (strpos($path, file_directory_path() .'/') === 0);
-+  
-+  // Allow rewriting of file URLs, so one can use static file servers and
-+  // CDNs.
-+  if (function_exists('custom_file_url_rewrite')) {
-+    $rewritten_path = custom_file_url_rewrite($path);
-+    if ($rewritten_path != FALSE) {
-+      return $rewritten_path;
-+    }
++  // Clean up Windows paths.
++  $old_path = $path = str_replace('\\', '/', $path);
++
++  drupal_alter('file_url', $path);
++
++  // If any module has altered the path, then return the alteration.
++  if ($path != $old_path) {
++    return $path;
 +  }
 +
 +  // Otherwise serve the file from Drupal's web server. This point will only
@@ -102,20 +106,23 @@ diff -u -F^f -r1.121.2.6 file.inc
 +  // the file doesn't match some conditions to be served from a CDN or static
 +  // file server, or because the file has not yet been synced to the CDN or
 +  // static file server.
-+  if (!$is_in_files_directory) {
++
++  // Shipped files.
++  if (strpos($path, file_directory_path() . '/') !== 0) {
 +    return base_path() . $path;
 +  }
++  // Created files.
 +  else {
-+    // Strip file_directory_path from $path. We only include relative paths in urls.
-+    if (strpos($path, file_directory_path() .'/') === 0) {
-+      $path = trim(substr($path, strlen(file_directory_path())), '\\/');
-+    }
-+
 +    switch (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC)) {
 +      case FILE_DOWNLOADS_PUBLIC:
-+        return $GLOBALS['base_url'] .'/'. file_directory_path() .'/'. str_replace('\\', '/', $path);
++        return $GLOBALS['base_url'] . '/' . $path;
 +      case FILE_DOWNLOADS_PRIVATE:
-+        return url('system/files/'. $path, array('absolute' => TRUE));
++        // Strip file_directory_path from $path. Private downloads' URLs are
++        // rewritten to be served relatively to system/files (which is a menu
++        // callback that streams the file) instead of relatively to the file
++        // directory path.
++        $path = file_directory_strip($path);
++        return url('system/files/' . $path, array('absolute' => TRUE));
 +    }
    }
  }
@@ -123,11 +130,11 @@ diff -u -F^f -r1.121.2.6 file.inc
 Index: includes/form.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/form.inc,v
-retrieving revision 1.265.2.24
-diff -u -F^f -r1.265.2.24 form.inc
---- includes/form.inc	13 May 2009 18:22:29 -0000	1.265.2.24
-+++ includes/form.inc	22 Jun 2009 20:01:37 -0000
-@@ -1980,7 +1980,7 @@ function theme_image_button($element) {
+retrieving revision 1.265.2.31
+diff -u -F '^f' -r1.265.2.31 form.inc
+--- includes/form.inc	7 Dec 2009 15:54:52 -0000	1.265.2.31
++++ includes/form.inc	2 Feb 2010 15:29:24 -0000
+@@ -1986,7 +1986,7 @@ function theme_image_button($element) {
      (!empty($element['#value']) ? ('value="'. check_plain($element['#value']) .'" ') : '') .
      'id="'. $element['#id'] .'" '.
      drupal_attributes($element['#attributes']) .
@@ -139,10 +146,10 @@ diff -u -F^f -r1.265.2.24 form.inc
 Index: includes/theme.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/theme.inc,v
-retrieving revision 1.415.2.22
-diff -u -F^f -r1.415.2.22 theme.inc
---- includes/theme.inc	13 May 2009 19:11:04 -0000	1.415.2.22
-+++ includes/theme.inc	22 Jun 2009 20:01:40 -0000
+retrieving revision 1.415.2.24
+diff -u -F '^f' -r1.415.2.24 theme.inc
+--- includes/theme.inc	18 Jun 2009 12:04:04 -0000	1.415.2.24
++++ includes/theme.inc	2 Feb 2010 15:29:32 -0000
 @@ -974,24 +974,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
@@ -178,18 +185,18 @@ diff -u -F^f -r1.415.2.22 theme.inc
    if (!$getsize || (is_file($path) && (list($width, $height, $type, $image_attributes) = @getimagesize($path)))) {
      $attributes = drupal_attributes($attributes);
 -    $url = (url($path) == $path) ? $path : (base_path() . $path);
-+    $url = file_create_url($path);
++    $url = (url($path) == $path) ? $path : file_create_url($path);
      return '<img src="'. check_url($url) .'" alt="'. check_plain($alt) .'" title="'. check_plain($title) .'" '. (isset($image_attributes) ? $image_attributes : '') . $attributes .' />';
    }
  }
 Index: themes/garland/template.php
 ===================================================================
 RCS file: /cvs/drupal/drupal/themes/garland/template.php,v
-retrieving revision 1.16.2.1
-diff -u -F^f -r1.16.2.1 template.php
---- themes/garland/template.php	25 Feb 2009 11:47:37 -0000	1.16.2.1
-+++ themes/garland/template.php	22 Jun 2009 20:01:44 -0000
-@@ -93,9 +93,9 @@ function phptemplate_node_submitted($nod
+retrieving revision 1.16.2.2
+diff -u -F '^f' -r1.16.2.2 template.php
+--- themes/garland/template.php	10 Aug 2009 11:32:54 -0000	1.16.2.2
++++ themes/garland/template.php	2 Feb 2010 15:30:21 -0000
+@@ -90,9 +90,9 @@ function phptemplate_node_submitted($nod
  function phptemplate_get_ie_styles() {
    global $language;
  

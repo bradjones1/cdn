@@ -58,6 +58,9 @@ Installation
 ------------
 1) Apply the Drupal core patch (patches/drupal6.patch). Instructions can be
    found at http://drupal.org/patch/apply.
+   This patch effectively backports hook_file_url_alter() from Drupal 7 to
+   Drupal 6. See the notes about this backport if you're interested in the
+   details or want to use it in your own module.
 
 2) Place this module directory in your "modules" folder (this will usually be
    "sites/all/modules/"). Don't install your module in Drupal core's "modules"
@@ -79,6 +82,23 @@ Installation
    status here. If you've enabled advanced mode and have set up the daemon,
    you will see some basic stats here as well, and you can check here to see
    if the daemon is currently running.
+
+
+Notes on the backport of hook_file_url_alter() for Drupal 6
+-----------------------------------------------------------
+An identical backport is impossible because in Drupal 7, there's the new
+File API which uses PHP stream wrappers. It doesn't make sense to backport the
+entire new File API.
+- Issue for Drupal 7 core patch:
+    http://drupal.org/node/499156
+- The backport of hook_file_url_alter() is based on the patch *before* stream
+  wrapper support went in, i.e. the patch in this comment:
+    http://drupal.org/node/499156#comment-1866878
+    http://drupal.org/files/issues/cdn-integration-499156-62.patch
+- Documentation for hook_file_url_alter() for Drupal 7:
+    http://api.drupal.org/api/function/hook_file_url_alter/7
+- For analogous documentation for the Drupal 6 backport, see the included
+    patches/hook_file_url_alter.php
 
 
 When using multiple servers: picking a specific one based on some criteria
