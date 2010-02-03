@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Theme functions.
+ */
+
+/**
  * Render the CDN integration page statistics.
  *
  * @param $file_count

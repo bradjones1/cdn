@@ -1,4 +1,11 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Functionality to automatically detect if a patch has been applied.
+ */
+
 
 /**
  * Generates a requirement for the given patch.

@@ -200,8 +200,8 @@ function cdn_exit($destination = NULL) {
   if (!$destination
       && variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED) != CDN_DISABLED
       && variable_get(CDN_STATS_VARIABLE, FALSE)
-      && user_access(CDN_PERM_ACCESS_STATS))
-  {
+      && user_access(CDN_PERM_ACCESS_STATS)
+  ) {
     list(
       $file_count,
       $cdn_file_count,
@@ -306,7 +306,10 @@ function cdn_requirements($phase) {
             $db = _cdn_advanced_get_db_connection();
             if ($db !== FALSE) {
               $input_file_mask = $drupal_root_path .'%';
-              $sql = "SELECT COUNT(*) AS count, server FROM synced_files WHERE input_file LIKE :input_file GROUP BY server";
+              $sql = "SELECT COUNT(*) AS count, server
+                      FROM synced_files
+                      WHERE input_file LIKE :input_file
+                      GROUP BY server";
               $stmt = $db->prepare($sql);
               $stmt->bindParam(':input_file', $input_file_mask, PDO::PARAM_STR);
               $stmt->execute();
@@ -317,17 +320,19 @@ function cdn_requirements($phase) {
             if ($persistent_data_db_exists && $persistent_data_db_readable) {
               try {
                 $db = new PDO('sqlite:' . $persistent_data_db);
-              } catch(PDOException $e) {
+              } catch (PDOException $e) {
                 $items[] = t("Could not connect to persistent data database.");
               }
               if ($db !== FALSE) {
-                $sql = "SELECT COUNT(*) FROM pipeline_queue";
+                $sql = "SELECT COUNT(*)
+                        FROM pipeline_queue";
                 $stmt = $db->prepare($sql);
                 $stmt->execute();
                 $result = $stmt->fetchAll();
                 $pipeline_queue_count = $result[0][0];
 
-                $sql = "SELECT COUNT(*) FROM pipeline_list";
+                $sql = "SELECT COUNT(*)
+                        FROM pipeline_list";
                 $stmt = $db->prepare($sql);
                 $stmt->execute();
                 $result = $stmt->fetchAll();
@@ -417,7 +422,9 @@ function cdn_advanced_get_url($path) {
   $input_file = realpath('./' . $path);
 
   // Retrieve the URLs of the file on the CDN.
-  $sql = "SELECT url, server FROM synced_files WHERE input_file = :input_file";
+  $sql = "SELECT url, server
+          FROM synced_files
+          WHERE input_file = :input_file";
   $stmt = $db->prepare($sql);
   $stmt->bindParam(':input_file', $input_file, PDO::PARAM_STR);
   $stmt->execute();
@@ -428,10 +435,11 @@ function cdn_advanced_get_url($path) {
     $url    = FALSE;
     $server = FALSE;
   }
+
   // If the file is available from multiple servers, then allow a special
   // function to pic the desired server. The decision can be made on any
   // desired criteria: user's location, user's role, current date …
-  else if (count($servers) > 1 && function_exists('cdn_advanced_pick_server')) {
+  elseif (count($servers) > 1 && function_exists('cdn_advanced_pick_server')) {
     $picked_server = cdn_advanced_pick_server($servers);
     $url    = $picked_server['url'];
     $server = $picked_server['server'];
@@ -467,7 +475,7 @@ function _cdn_advanced_get_db_connection() {
   elseif (!isset($db)) {
     try {
       $db = new PDO('sqlite:' . variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''));
-    } catch(PDOException $e) {
+    } catch (PDOException $e) {
       watchdog('cdn', t("Could not open synced files DB: %error.", array('%error' => $e)));
       $db = FALSE;
     }
