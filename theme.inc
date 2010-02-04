@@ -31,7 +31,7 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
 
   $output .= '<div id="cdn-integration-page-stats">';
   $items[] = 'Total number of files on this page: <strong>'. $file_count .'</strong>.';
-  $percentage = ($file_count == 0) ? '100' : number_format($cdn_file_count / $file_count * 100);
+  $percentage = ($file_count == 0) ? '100' : ($file_count > 0) ? number_format($cdn_file_count / $file_count * 100) : 0;
   $items[] = 'Number of files available on CDNs: <strong>'. $cdn_file_count .'</strong> ('. $percentage . '% coverage).';
   if ($mode == CDN_MODE_ADVANCED) {
     foreach (array_keys($synced_files_per_server_count) as $server) {
@@ -45,7 +45,7 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
                 !total-time ms, or !avg-time ms on average per file.',
                 array(
                   '!total-time' => round($total_time * 1000, 3),
-                  '!avg-time'   => round($total_time * 1000 / $file_count, 3),
+                  '!avg-time'   => ($file_count > 0) ? round($total_time * 1000 / $file_count, 3) : 0,
                 )
                );
   
