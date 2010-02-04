@@ -28,7 +28,7 @@ define('CDN_EXCLUSION_DEFAULT', "*.js");
 // Variables for basic mode.
 define('CDN_BASIC_URL_VARIABLE', 'cdn_basic_url');
 define('CDN_BASIC_EXTENSIONS_VARIABLE', 'cdn_basic_extensions');
-define('CDN_BASIC_EXTENSIONS_DEFAULT', '.css .ico .gif .jpg .jpeg .png .svg .otf .ttf .swf');
+define('CDN_BASIC_EXTENSIONS_DEFAULT', '.css .js .ico .gif .jpg .jpeg .png .svg .otf .ttf .swf');
 
 // Variables for advanced mode.
 define('CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE', 'cdn_advanced_synced_files_db');
