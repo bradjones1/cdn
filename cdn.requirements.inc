@@ -15,12 +15,23 @@ function _cdn_requirements_generate_requirement_for_patch(&$requirements, $patch
 
   $patterns_function = '_cdn_requirements_' . $patch_name . '_patch_patterns';
   $patterns = $patterns_function();
-  $unpatched_files = _cdn_requirements_check_patch_applied($patterns);
+
+  // No patterns means the patch file could not be found.
+  if ($patterns !== FALSE) {
+    $unpatched_files = _cdn_requirements_check_patch_applied($patterns);
+  }
 
   $key = 'cdn_' . $patch_name . '_patch';
 
   $requirements[$key]['title'] = $title;
-  if (count($unpatched_files) == 0) {
+  if ($patterns === FALSE) {
+    $requirements[$key] += array(
+      'description' => $t('This patch file has been moved or deleted by the administrator. Please restore it, so we can verify that the patch has been properly applied.'),
+      'severity'    => REQUIREMENT_ERROR,
+      'value'       => $t('Unable to check'),
+    );    
+  }
+  elseif (count($unpatched_files) == 0) {
     $requirements[$key] += array(
       'severity'    => REQUIREMENT_OK,
       'value'       => $t('Applied'),
@@ -72,6 +83,11 @@ function _cdn_requirements_check_patch_applied($patterns) {
  * effectively parses the patch and stores it in a meaningful structure.
  */
 function _cdn_requirements_generate_patterns_for_patch($full_path) {
+  // The patch file must exist, otherwise we can't generate any patterns.
+  if (!file_exists($full_path)) {
+    return FALSE;
+  }
+
   $file_kinds = array(
     '/cvs/drupal/drupal/modules'                => 'module',
     '/cvs/drupal/drupal/themes'                 => 'theme',
