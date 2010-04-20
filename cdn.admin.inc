@@ -8,12 +8,26 @@
 
 
 //----------------------------------------------------------------------------
+// Menu system callbacks.
+
+/**
+ * Menu callback; mode-specific settings form (automatically load the correct
+ * form).
+ */
+function cdn_admin_mode_settings_form_router() {
+  $mode = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+  $form_function = ($mode == CDN_MODE_BASIC) ? 'cdn_admin_basic_settings_form' : 'cdn_admin_advanced_settings_form';
+  return drupal_get_form($form_function);
+}
+
+
+//----------------------------------------------------------------------------
 // Form API callbacks.
 
 /**
- * Form definition; settings.
+ * Form definition; general settings.
  */
-function cdn_admin_settings_form() {
+function cdn_admin_general_settings_form() {
   _cdn_admin_check_requirements();
 
   $form[CDN_STATUS_VARIABLE] = array(
@@ -186,9 +200,9 @@ function cdn_admin_other_settings_form() {
 }
 
 /**
- * Default validate callback for the settings form.
+ * Default validate callback for the general settings form.
  */
-function cdn_admin_settings_form_validate($form, &$form_state) {
+function cdn_admin_general_settings_form_validate($form, &$form_state) {
   // Validate the synced files DB whenever advanced mode is enabled. It must
   // be configured (on the advanced settings form) *before* advanced mode can
   // be enabled!

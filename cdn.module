@@ -102,35 +102,25 @@ function cdn_menu() {
     'description'      => 'Configure various settings for CDN integration.',
     'access arguments' => array('administer site configuration'),
     'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('cdn_admin_settings_form'),
+    'page arguments'   => array('cdn_admin_general_settings_form'),
     'type'             => MENU_NORMAL_ITEM,
     'file'             => 'cdn.admin.inc',
   );
 
-  $items['admin/settings/cdn/settings'] = array(
-    'title'            => 'Settings',
+  $items['admin/settings/cdn/general'] = array(
+    'title'            => 'General',
+    'description'      => 'General settings.',
     'access arguments' => array('administer site configuration'),
     'weight'           => -10,
     'type'             => MENU_DEFAULT_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',
   );
-  $items['admin/settings/cdn/basic'] = array(
-    'title'            => 'Basic mode',
-    'description'      => 'Basic mode settings.',
+  $items['admin/settings/cdn/mode'] = array(
+    'title'            => 'Mode-specific',
+    'description'      => 'Mode-specific settings.',
     'access arguments' => array('administer site configuration'),
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('cdn_admin_basic_settings_form'),
+    'page callback'    => 'cdn_admin_mode_settings_form_router',
     'weight'           => -8,
-    'type'             => MENU_LOCAL_TASK,
-    'file'             => 'cdn.admin.inc',
-  );
-  $items['admin/settings/cdn/advanced'] = array(
-    'title'            => 'Advanced mode',
-    'description'      => 'Advanced mode settings.',
-    'access arguments' => array('administer site configuration'),
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('cdn_admin_advanced_settings_form'),
-    'weight'           => -6,
     'type'             => MENU_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',
   );
