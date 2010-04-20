@@ -14,6 +14,8 @@
  * Form definition; settings.
  */
 function cdn_admin_settings_form() {
+  _cdn_admin_check_requirements();
+
   $form[CDN_STATUS_VARIABLE] = array(
     '#type' => 'radios',
     '#title' => t('Status'),
@@ -103,6 +105,8 @@ function cdn_admin_settings_form() {
  * Form definition; basic settings.
  */
 function cdn_admin_basic_settings_form() {
+  _cdn_admin_check_requirements();
+
   $form[CDN_BASIC_URL_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('CDN URL'),
@@ -131,6 +135,8 @@ function cdn_admin_basic_settings_form() {
  * Form definition; advanced settings.
  */
 function cdn_admin_advanced_settings_form() {
+  _cdn_admin_check_requirements();
+
   // Immediately show the user the current status, unless the user is
   // currently editing the values in the form.
   if (!isset($_POST['form_build_id'])) {
@@ -160,6 +166,8 @@ function cdn_admin_advanced_settings_form() {
  * Form definition; other settings.
  */
 function cdn_admin_other_settings_form() {
+  _cdn_admin_check_requirements();
+
   $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
     '#type' => 'textfield',
     '#title' => t('Drupal root directory'),
@@ -188,21 +196,21 @@ function cdn_admin_settings_form_validate($form, &$form_state) {
   $advanced = isset($form_state['values'][CDN_MODE_VARIABLE])   && $form_state['values'][CDN_MODE_VARIABLE]   == CDN_MODE_ADVANCED;
   if ($enabled && $advanced) {
     $synced_files_db = variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, '');
-    if (!_validate_synced_files_db($synced_files_db, CDN_STATUS_VARIABLE)) {
+    if (!_cdn_admin_validate_synced_files_db($synced_files_db, CDN_STATUS_VARIABLE)) {
       drupal_set_message(t('Please correct the above error in the <em>Advanced mode</em> settings form first.'), 'error');
     }
   }
 }
 
 /**
- * Default validate callback for the advancedsettings form.
+ * Default validate callback for the advanced settings form.
  */
 function cdn_admin_advanced_settings_form_validate($form, &$form_state) {
   // Validate the synced files DB when it's filled out on the advanced
   // settings form.
   if (isset($form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE])) {
     $synced_files_db = $form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE];
-    _validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
+    _cdn_admin_validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
   }
 }
 
@@ -220,7 +228,7 @@ function cdn_admin_advanced_settings_form_validate($form, &$form_state) {
  * @return
  *   FALSE if there were any errors, TRUE if there weren't any.
  */
-function _validate_synced_files_db($synced_files_db, $name) {
+function _cdn_admin_validate_synced_files_db($synced_files_db, $name) {
   // Validate the file name.
   if (strpos($synced_files_db, CDN_DAEMON_SYNCED_FILES_DB) === FALSE) {
     form_set_error($name, t('The synced files database should have the file name %name.', array('%name' => CDN_DAEMON_SYNCED_FILES_DB)));
@@ -240,4 +248,35 @@ function _validate_synced_files_db($synced_files_db, $name) {
   }
 
   return TRUE;
+}
+
+/**
+ * Helper function to check if the requirements of the CDN integration module
+ * have been met. If any requirement errors exist, they are aggregated into
+ * a single error message and are subsequently displayed.
+ *
+ * @return
+ *   The number of requirement errors.
+ */
+function _cdn_admin_check_requirements() {
+  // Check run-time requirements of the CDN integration module.
+  include_once './includes/install.inc';
+  $requirements = cdn_requirements('runtime');
+
+  // Filter out the requirement errors and display these, with links back to
+  // the admin/reports/status page.
+  $errors = array();
+  foreach ($requirements as $requirement => $details) {
+    if ($details['severity'] == REQUIREMENT_ERROR) {
+      $errors[] = l($details['title'], 'admin/reports/status') . '<br />' . $details['description'];
+    }
+  }
+  if (!empty($errors)) {
+    $args = array(
+      '!error-list' => theme('item_list', $errors),
+    );
+    drupal_set_message(t('Please fix the following problems with the installation of the CDN integration module:<br />!error-list', $args), 'error');
+  }
+
+  return count($errors);
 }
