@@ -61,7 +61,13 @@ Supported CDNs
 Installation
 ------------
 1) Apply the Drupal core patch (patches/drupal6.patch). Instructions can be
-   found at http://drupal.org/patch/apply.
+   found at http://drupal.org/patch/apply. However, a quick reminder:
+     a) Change the directory to the root directory of your Drupal core:
+          cd /htdocs/example.com
+     b) Copy the patch to this directory
+          cp /htdocs/example.com/sites/all/modules/cdn/patch/drupal6.patch .
+     c) Apply the patch:
+          patch -p0 < drupal6.patch
    This patch effectively backports hook_file_url_alter() from Drupal 7 to
    Drupal 6. See the notes about this backport if you're interested in the
    details or want to use it in your own module.
