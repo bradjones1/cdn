@@ -1,4 +1,11 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Documentation for the hook_file_url_alter() hook.
+ */
+
 
 /**
  * Alter the URL to a file.

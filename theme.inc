@@ -47,9 +47,9 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
                   '!total-time' => round($total_time * 1000, 3),
                   '!avg-time'   => ($file_count > 0) ? round($total_time * 1000 / $file_count, 3) : 0,
                 )
-               );
-  
-  
+  );
+
+
   // Nested list of unsynced files.
   if (count($unsynced_files)) {
     $unsynced_items = array();

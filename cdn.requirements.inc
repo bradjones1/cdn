@@ -29,7 +29,7 @@ function _cdn_requirements_generate_requirement_for_patch(&$requirements, $patch
       'description' => $t('This patch file has been moved or deleted by the administrator. Please restore it, so we can verify that the patch has been properly applied.'),
       'severity'    => REQUIREMENT_ERROR,
       'value'       => $t('Unable to check'),
-    );    
+    );
   }
   elseif (count($unpatched_files) == 0) {
     $requirements[$key] += array(
@@ -109,21 +109,21 @@ function _cdn_requirements_generate_patterns_for_patch($full_path) {
     $line = fgets($fp);
 
     // Check if the current line indicates the next file.
-    if (substr($line, 0, 7) == 'Index: ') {
-      $file_to_patch = substr($line, 7, strlen($line) - 7 - 1);
+    if (drupal_substr($line, 0, 7) == 'Index: ') {
+      $file_to_patch = drupal_substr($line, 7, drupal_strlen($line) - 7 - 1);
     }
 
     // Find out which kind of file this is: a core file, a module file or a
     // theme file.
-    if (substr($line, 0, 10) == 'RCS file: ') {
-      $rcs_file = substr($line, 10);
+    if (drupal_substr($line, 0, 10) == 'RCS file: ') {
+      $rcs_file = drupal_substr($line, 10);
       foreach ($file_kinds as $patch_rcs_file => $patch_type) {
-        if (substr($rcs_file, 0, strlen($patch_rcs_file)) == $patch_rcs_file) {
+        if (drupal_substr($rcs_file, 0, drupal_strlen($patch_rcs_file)) == $patch_rcs_file) {
           $kind = $patch_type;
           // For files of the module or theme kind, also store the exact name.
           if ($kind == 'module' || $kind == 'theme') {
-            $start = strlen($patch_rcs_file) + 1;
-            $module_or_theme = substr($rcs_file, $start, strpos($rcs_file, '/', $start) - $start);
+            $start = drupal_strlen($patch_rcs_file) + 1;
+            $module_or_theme = drupal_substr($rcs_file, $start, strpos($rcs_file, '/', $start) - $start);
           }
           break;
         }
@@ -133,7 +133,7 @@ function _cdn_requirements_generate_patterns_for_patch($full_path) {
     // Finally, store the lines that have been added (+): concatenate them in
     // a "patch block".
     if ($line[0] == '+' && ($line[1] == ' ' | $line[1] == "\n")) {
-      $patch_block .= substr($line, 1);
+      $patch_block .= drupal_substr($line, 1);
     }
     // When we encounter a line that has not been added (+), the current patch
     // block has ended and we should store it as a pattern.

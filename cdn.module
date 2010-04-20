@@ -252,24 +252,25 @@ function cdn_requirements($phase) {
           'description' => $t('CDN integration is disabled for all users.'),
           'severity'    => REQUIREMENT_WARNING,
           'value'       => $t('Disabled'),
-        );        
+        );
       }
       elseif ($status == CDN_DEBUG) {
         $requirements['cdn'] += array(
-          'description' => $t('CDN integration is only enabled for users with
-                               the %cdn-debug-mode-permission permission',
-                               array('%cdn-debug-mode-permission' => CDN_PERM_ACCESS_DEBUG)
-                               ),
+          'description' => $t(
+            'CDN integration is only enabled for users with the
+            %cdn-debug-mode-permission permission',
+            array('%cdn-debug-mode-permission' => CDN_PERM_ACCESS_DEBUG)
+          ),
           'severity' => REQUIREMENT_WARNING,
           'value'    => $t('In debug mode'),
-        );        
+        );
       }
       else {
         $requirements['cdn'] += array(
           'description' => $t('CDN integration is enabled for all users.'),
           'severity'    => REQUIREMENT_OK,
           'value'       => $t('Enabled'),
-        );        
+        );
       }
 
       // When CDN integration is enabled, add on more information.
@@ -294,7 +295,7 @@ function cdn_requirements($phase) {
             $persistent_data_db_exists   = file_exists($persistent_data_db);
             $persistent_data_db_readable = @fopen($persistent_data_db, 'r');
             $daemon_pid_file_exists      = file_exists($daemon_pid_file);
-            
+
             $db = _cdn_advanced_get_db_connection();
             if ($db !== FALSE) {
               $input_file_mask = $drupal_root_path .'%';
@@ -422,7 +423,7 @@ function cdn_advanced_get_url($path) {
   $stmt->execute();
   $servers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-  // The file is not available from any server. 
+  // The file is not available from any server.
   if (count($servers) == 0) {
     $url    = FALSE;
     $server = FALSE;

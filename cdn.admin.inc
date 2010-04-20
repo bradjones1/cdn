@@ -134,7 +134,7 @@ function cdn_admin_basic_settings_form() {
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_URL_VARIABLE, ''),
   );
-  
+
   $form[CDN_BASIC_EXTENSIONS_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Allowed extensions'),
@@ -164,7 +164,7 @@ function cdn_admin_advanced_settings_form() {
       }
     }
   }
-    
+
   $form[CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Synced files database'),
