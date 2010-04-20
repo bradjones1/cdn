@@ -240,12 +240,14 @@ function cdn_requirements($phase) {
         $t('CDN integration — Drupal core patch')
       );
 
-      // CDN integration ImageCache patch.
-      _cdn_requirements_generate_requirement_for_patch(
-        $requirements,
-        'imagecache',
-        $t('CDN integration — ImageCache module patch')
-      );
+      if (module_exists('imagecache')) {
+        // CDN integration ImageCache patch.
+        _cdn_requirements_generate_requirement_for_patch(
+          $requirements,
+          'imagecache',
+          $t('CDN integration — ImageCache module patch')
+        );
+      }
 
 
       // CDN integration status.
