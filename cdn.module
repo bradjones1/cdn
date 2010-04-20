@@ -163,12 +163,12 @@ function cdn_theme() {
     'cdn_page_stats' => array(
       'file'      => 'theme.inc',
       'arguments' => array(
-          $file_count                    => NULL,
-          $cdn_file_count                => NULL,
-          $synced_files_per_server_count => NULL,
-          $total_time                    => NULL,
-          $synced_files                  => NULL,
-          $unsynced_files                => NULL,
+          'file_count'                    => NULL,
+          'cdn_file_count'                => NULL,
+          'synced_files_per_server_count' => NULL,
+          'total_time'                    => NULL,
+          'synced_files'                  => NULL,
+          'unsynced_files'                => NULL,
       ),
     ),
   );
