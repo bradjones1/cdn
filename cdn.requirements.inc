@@ -89,8 +89,8 @@ function _cdn_requirements_generate_patterns_for_patch($full_path) {
   }
 
   $file_kinds = array(
-    '/cvs/drupal/drupal/modules'                => 'module',
-    '/cvs/drupal/drupal/themes'                 => 'theme',
+    '/cvs/drupal/drupal/modules'                => 'core',
+    '/cvs/drupal/drupal/themes'                 => 'core',
     '/cvs/drupal/drupal'                        => 'core',
     '/cvs/drupal-contrib/contributions/modules' => 'module',
     '/cvs/drupal-contrib/contributions/themes'  => 'theme',
@@ -115,7 +115,7 @@ function _cdn_requirements_generate_patterns_for_patch($full_path) {
         if (substr($rcs_file, 0, strlen($patch_rcs_file)) == $patch_rcs_file) {
           $kind = $patch_type;
           // For files of the module or theme kind, also store the exact name.
-          if ($kind == 'module' || $theme == 'theme') {
+          if ($kind == 'module' || $kind == 'theme') {
             $start = strlen($patch_rcs_file) + 1;
             $module_or_theme = substr($rcs_file, $start, strpos($rcs_file, '/', $start) - $start);
           }
