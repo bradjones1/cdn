@@ -66,6 +66,12 @@ function _cdn_requirements_check_patch_applied($patterns) {
         }
 
         $match = preg_match('|' . preg_quote($pattern) . '|m', file_get_contents($full_path));
+        // If it didn't match, try allowing \r\n line endings and see if it
+        // it then matches. This is of course also qualifies as a correctly
+        // applied patch.
+        if (!$match) {
+          $match = preg_match('|' . preg_quote($pattern) . '|m', str_replace("\n", "\r\n", file_get_contents($full_path)));
+        }
         $patched = $patched && $match;
 
         // Remember unpatched files.
