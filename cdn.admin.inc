@@ -27,8 +27,11 @@ function cdn_admin_mode_settings_form_router() {
 /**
  * Form definition; general settings.
  */
-function cdn_admin_general_settings_form() {
-  _cdn_admin_check_requirements();
+function cdn_admin_general_settings_form(&$form_state) {
+  // Prevent requirement errors from showing up twice.
+  if (empty($form_state['post'])) {
+    _cdn_admin_check_requirements();
+  }
 
   $form[CDN_STATUS_VARIABLE] = array(
     '#type' => 'radios',
@@ -40,6 +43,7 @@ function cdn_admin_general_settings_form() {
       %cdn-debug-mode-permission permission.",
       array('%cdn-debug-mode-permission' => 'access files on CDN when in debug mode')
     ),
+    '#required' => TRUE,
     '#options' => array(
       CDN_DISABLED => t('Disabled'),
       CDN_DEBUG    => t('Debug mode'),
@@ -60,7 +64,8 @@ function cdn_admin_general_settings_form() {
       Pull CDN and want to process files before they're synced to the CDN, it
       is also recommended to use this mode."
     ),
-    '#options' => array(
+    '#required' => TRUE,
+    '#options'  => array(
       CDN_MODE_BASIC    => t('Basic'),
       CDN_MODE_ADVANCED => t('Advanced'),
     ),
@@ -75,7 +80,7 @@ function cdn_admin_general_settings_form() {
       the %access-per-page-statistics permission.',
       array('%access-per-page-statistics' => 'access per-page statistics')
     ),
-    '#return_value' => CDN_ENABLED,
+    '#return_value'  => CDN_ENABLED,
     '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
   );
 
@@ -115,8 +120,11 @@ function cdn_admin_general_settings_form() {
 /**
  * Form definition; basic settings.
  */
-function cdn_admin_basic_settings_form() {
-  _cdn_admin_check_requirements();
+function cdn_admin_basic_settings_form(&$form_state) {
+  // Prevent requirement errors from showing up twice.
+  if (empty($form_state['post'])) {
+    _cdn_admin_check_requirements();
+  }
 
   $form[CDN_BASIC_URL_VARIABLE] = array(
     '#type'          => 'textfield',
@@ -128,6 +136,7 @@ function cdn_admin_basic_settings_form() {
                            references to images and fonts from within the CSS
                            files will break because the URLs are no longer
                            valid."),
+    '#required'      => TRUE,
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_URL_VARIABLE, ''),
   );
@@ -136,6 +145,7 @@ function cdn_admin_basic_settings_form() {
     '#type'          => 'textfield',
     '#title'         => t('Allowed extensions'),
     '#description'   => t('Only files with these extensions will be served from the CDN.'),
+    '#required'      => TRUE,
     '#default_value' => variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT),
   );
 
@@ -145,8 +155,11 @@ function cdn_admin_basic_settings_form() {
 /**
  * Form definition; advanced settings.
  */
-function cdn_admin_advanced_settings_form() {
-  _cdn_admin_check_requirements();
+function cdn_admin_advanced_settings_form(&$form_state) {
+  // Prevent requirement errors from showing up twice.
+  if (empty($form_state['post'])) {
+    _cdn_admin_check_requirements();
+  }
 
   // Immediately show the user the current status, unless the user is
   // currently editing the values in the form.
@@ -166,6 +179,7 @@ function cdn_admin_advanced_settings_form() {
     '#type'          => 'textfield',
     '#title'         => t('Synced files database'),
     '#description'   => t('Enter the full path to the daemon\'s synced files database file.'),
+    '#required'      => TRUE,
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
   );
@@ -176,8 +190,11 @@ function cdn_admin_advanced_settings_form() {
 /**
  * Form definition; other settings.
  */
-function cdn_admin_other_settings_form() {
-  _cdn_admin_check_requirements();
+function cdn_admin_other_settings_form(&$form_state) {
+  // Prevent requirement errors from showing up twice.
+  if (empty($form_state['post'])) {
+    _cdn_admin_check_requirements();
+  }
 
   $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
     '#type' => 'textfield',
@@ -190,6 +207,7 @@ function cdn_admin_other_settings_form() {
       <strong>This setting only affects the status report, it does not affect
       the CDN integration itself in any way.</strong>'
     ),
+    '#required'      => TRUE,
     '#default_value' => variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.')),
   );
 
