@@ -52,28 +52,6 @@ function cdn_file_url_alter(&$path) {
   $stats      = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
   $exclusions = variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT);
 
-  // If the Pathologic module is enabled, use its settings to perform similar
-  // processing on the path.
-  if (module_exists('pathologic')) {
-    // Retrieve matching paths settings.
-    $paths = array();
-    $directive = trim(variable_get("filter_pathologic_abs_paths_1", '')); // Using Filtered HTML format.
-    if ($directive !== '') {
-      $paths = array_map('trim', explode("\n", $directive)); // Get rid of white space on each line.
-    }
-    $paths[] = _pathologic_url('<front>');
-    $paths = array_unique($paths);
-
-    // Build regexp, match twice (with or without leading slash) and then trim
-    // slashes.
-    $path_suffix =  '/?(index.php)?(\?q=)?'; // The optional suffix to match.
-    $path_regexp = '(' . implode($path_suffix . '|', $paths) . $path_suffix . ')';
-    $original_path = $path;
-    $path = preg_replace($path_regexp, '', $path);
-    $path = preg_replace($path_regexp, '', '/' . $path);
-    $path = '/' . trim($path, '\\/');
-  }
-
   // If the current path is an absolute path, return immediately.
   $fragments = parse_url($path);
   if (isset($fragments['host']))
