@@ -39,9 +39,9 @@ function _cdn_requirements_generate_requirement_for_patch(&$requirements, $patch
   }
   else {
     $requirements[$key] += array(
-      'description' => $t('This patch has not been applied to the following files:') . '<br />' . theme('item_list', $unpatched_files) . '<br />' . t('Please consult the installation instructions in the included README.txt.'),
+      'description' => $t('This patch has not been properly applied to the following files (or the patch has been updated):') . '<br />' . theme('item_list', $unpatched_files) . '<br />' . t('Please consult the installation instructions in the included README.txt.'),
       'severity'    => REQUIREMENT_ERROR,
-      'value'       => $t('Not or incompletely applied.'),
+      'value'       => $t('Not/incompletely applied patch or updated patch.'),
     );
   }
 }
