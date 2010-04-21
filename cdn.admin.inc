@@ -68,17 +68,14 @@ function cdn_admin_general_settings_form() {
   );
 
   $form[CDN_STATS_VARIABLE] = array(
-    '#type' => 'radios',
+    '#type' => 'checkbox',
     '#title' => t('Show statistics for the current page'),
     '#description' => t(
       'Shows the CDN integration statistics of the current page, to users with
       the %access-per-page-statistics permission.',
       array('%access-per-page-statistics' => 'access per-page statistics')
     ),
-    '#options' => array(
-      CDN_DISABLED => t('Disabled'),
-      CDN_ENABLED  => t('Enabled'),
-    ),
+    '#return_value' => CDN_ENABLED,
     '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
   );
 
