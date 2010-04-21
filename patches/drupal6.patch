@@ -77,7 +77,7 @@ diff -u -F '^f' -r1.121.2.9 file.inc
 + *   A string containing the Drupal path (i.e. path relative to the Drupal
 + *   root directory) of the file to generate the URL for.
 + * @return
-+ *   A string containing a URL that can be used to download the file.
++ *   A string containing a URL that can be used to access the file.
   */
  function file_create_url($path) {
 -  // Strip file_directory_path from $path. We only include relative paths in urls.
@@ -94,18 +94,11 @@ diff -u -F '^f' -r1.121.2.9 file.inc
 +
 +  drupal_alter('file_url', $path);
 +
-+  // If any module has altered the path, then return the alteration.
-+  if ($path != $old_path) {
++  // Return path if it was altered by any module, or if it already is a
++  // root-relative or a protocol-relative URL.
++  if ($path != $old_path || drupal_substr($path, 0, 1) == '/' || drupal_substr($path, 0, 2) == '//') {
 +    return $path;
 +  }
-+
-+  // Otherwise serve the file from Drupal's web server. This point will only
-+  // be reached when either no custom_file_url_rewrite() function has been
-+  // defined, or when that function returned FALSE, thereby indicating that it
-+  // cannot (or doesn't wish to) rewrite the URL. This is typically because
-+  // the file doesn't match some conditions to be served from a CDN or static
-+  // file server, or because the file has not yet been synced to the CDN or
-+  // static file server.
 +
 +  // Shipped files.
 +  if (strpos($path, file_directory_path() . '/') !== 0) {
