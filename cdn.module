@@ -8,13 +8,13 @@
 
 
 define('CDN_DISABLED', 0);
-define('CDN_DEBUG', 1);
+define('CDN_TESTING', 1);
 define('CDN_ENABLED', 2);
 
 // Permissions.
-define('CDN_PERM_ACCESS_STATS', 'access per-page statistics');
-define('CDN_PERM_ACCESS_DEBUG', 'access files on CDN when in debug mode');
-define('CDN_PERM_TOUCH',        'touch files');
+define('CDN_PERM_ACCESS_STATS',   'access per-page statistics');
+define('CDN_PERM_ACCESS_TESTING', 'access files on CDN when in testing mode');
+define('CDN_PERM_TOUCH',          'touch files');
 
 // Variables and values.
 define('CDN_MODE_VARIABLE', 'cdn_mode');
@@ -66,7 +66,7 @@ function cdn_file_url_alter(&$path) {
     require_once(drupal_get_path('module', 'cdn') . '/cdn.stats.inc');
   }
 
-  if ($status == CDN_ENABLED || ($status == CDN_DEBUG && user_access(CDN_PERM_ACCESS_DEBUG))) {
+  if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
     if ($stats) {
       $start = microtime();
     }
@@ -153,7 +153,7 @@ function cdn_menu() {
  * Implementation of hook_perm().
  */
 function cdn_perm() {
-  return array(CDN_PERM_ACCESS_STATS, CDN_PERM_ACCESS_DEBUG, CDN_PERM_TOUCH);
+  return array(CDN_PERM_ACCESS_STATS, CDN_PERM_ACCESS_TESTING, CDN_PERM_TOUCH);
 }
 
 /**
@@ -276,7 +276,7 @@ function cdn_requirements($phase) {
 
       $requirements['cdn']['title'] = $t('CDN integration');
 
-      // Set the basic info: disabled/debug/enabled.
+      // Set the basic info: disabled/testing/enabled.
       if ($status == CDN_DISABLED) {
         $requirements['cdn'] += array(
           'description' => $t('CDN integration is disabled for all users.'),
@@ -284,15 +284,15 @@ function cdn_requirements($phase) {
           'value'       => $t('Disabled'),
         );
       }
-      elseif ($status == CDN_DEBUG) {
+      elseif ($status == CDN_TESTING) {
         $requirements['cdn'] += array(
           'description' => $t(
             'CDN integration is only enabled for users with the
-            %cdn-debug-mode-permission permission',
-            array('%cdn-debug-mode-permission' => CDN_PERM_ACCESS_DEBUG)
+            %cdn-testing-mode-permission permission',
+            array('%cdn-testing-mode-permission' => CDN_PERM_ACCESS_TESTING)
           ),
           'severity' => REQUIREMENT_WARNING,
-          'value'    => $t('In debug mode'),
+          'value'    => $t('In testing mode'),
         );
       }
       else {

@@ -41,14 +41,14 @@ function cdn_admin_general_settings_form(&$form_state) {
     '#description' => t(
       "If you don't want to use the CDN to serve files to your visitors yet,
       but you do want to see if it's working well for your site, then enable
-      debug mode.<br />It will only serve files from the CDN if they have the
-      %cdn-debug-mode-permission permission.",
-      array('%cdn-debug-mode-permission' => 'access files on CDN when in debug mode')
+      testing mode.<br />It will only serve files from the CDN if they have
+      the %cdn-testing-mode-permission permission.",
+      array('%cdn-testing-mode-permission' => 'access files on CDN when in testing mode')
     ),
     '#required' => TRUE,
     '#options' => array(
       CDN_DISABLED => t('Disabled'),
-      CDN_DEBUG    => t('Debug mode'),
+      CDN_TESTING  => t('Testing mode'),
       CDN_ENABLED  => t('Enabled'),
     ),
     '#default_value' => variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED),
@@ -85,7 +85,7 @@ function cdn_admin_general_settings_form(&$form_state) {
     '#return_value'  => CDN_ENABLED,
     '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
     '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_STATUS_VARIABLE => array(CDN_DEBUG, CDN_ENABLED)),
+    '#dependency'    => array('radio:' . CDN_STATUS_VARIABLE => array(CDN_TESTING, CDN_ENABLED)),
   );
 
   return system_settings_form($form);
