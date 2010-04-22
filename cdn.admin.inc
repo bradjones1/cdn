@@ -76,7 +76,7 @@ function cdn_admin_general_settings_form(&$form_state) {
 
   $form[CDN_STATS_VARIABLE] = array(
     '#type' => 'checkbox',
-    '#title' => t('Show statistics for the current page'),
+    '#title' => t('Display statistics'),
     '#description' => t(
       'Shows the CDN integration statistics of the current page, to users with
       the %access-per-page-statistics permission.',
