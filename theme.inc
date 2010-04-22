@@ -54,9 +54,9 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
   if (count($unsynced_files)) {
     $unsynced_items = array();
     foreach ($unsynced_files as $file) {
-      $unsynced_items[] = array(l($file, $file));
+      $unsynced_items[] = theme('cdn_page_stats_file_link', $file, file_create_url($file), FALSE, $file, NULL);
     }
-    $items[] = 'The files that are not (yet?) synchronized to the CDN:' . theme('item_list', $unsynced_items, NULL, 'ol');
+    $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', $unsynced_items);
   }
 
   // Nested list of synced files.
@@ -66,13 +66,54 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
       $file    = $synced_file['file'];
       $cdn_url = $synced_file['cdn_url'];
       $server  = $synced_file['server'];
-      $text = ($mode == CDN_MODE_BASIC) ? '!file' : '!file (server: !server)';
-      $synced_items[] = array(l(t($text, array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $synced_file['absolute path']))));
+
+      $synced_items[] = theme('cdn_page_stats_file_link', $file, $synced_file['absolute path'], TRUE, $cdn_url, $server);
     }
-    $items[] = 'The files that are synchronized to the CDN:' . theme('item_list', $synced_items, NULL, 'ol');
+    $items[] = t('The files that are synchronized to the CDN:') . theme('item_list', $synced_items);
   }
 
   $output .= theme('item_list', $items, '<strong>'. t('CDN integration statistics for %drupal_path', array('%drupal_path' => $_GET['q'])) .'</strong>');
   $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Render a file link in the CDN integration page statistics.
+ *
+ * @param $file
+ *   A string containing the Drupal path (i.e. path relative to the Drupal
+ *   root directory) of the file to generate the URL for.
+ * @param $absolute_path
+ *   The absolute path (on the filesystem) to the file.
+ * @param $synced
+ *   Whether this file has been synced to the CDN or not.
+ * @param $cdn_url
+ *   The CDN URL of the file, or the normal URL when the file is not on a CDN.
+ * @param $server
+ *   The server on which the file resides.
+ * @return
+ *   The rendered HTML.
+ */
+function theme_cdn_page_stats_file_link($file, $absolute_path, $synced, $cdn_url, $server) {
+  static $text_format;
+
+  if (!isset($text_format)) {
+    $mode        = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+    $text_format = ($mode == CDN_MODE_BASIC) ? '!file' : '!file (server: !server)';
+  }
+
+  $file_link  = l(t($text_format, array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
+  $touch_link = l('touch', 'admin/cdn/touch/' . $file);
+
+  $output = '';
+  $output .= '<span class="file-link">' . $file_link;
+  if ($synced) {
+    $output .= '<span class="touch-link">';
+    $output .=   '<span class="arrow">' . t('→') . '</span>';
+    $output .=    $touch_link;
+    $output .=   '<span class="touch-help">' . t('Touching this file will trigger a resync to the CDN.') . '</span>';
+    $output .= '</span>';
+  }
+  $output .= '</span>';
   return $output;
 }

@@ -6,6 +6,56 @@
  * Per-page CDN integration statistics functionality.
  */
 
+function cdn_touch_file_form(&$form_state) {
+  // All arguments after the first are in fact the different parts of the file
+  // path that is being passed in.
+  $additional_args = func_get_args();
+  // Ignore the first function argument: this is $form_state.
+  array_shift($additional_args);
+  $filepath = implode('/', $additional_args);
+
+  // Store the page we should redirect to after the file has been touched, or
+  // upon cancellation.
+  if (!isset($form_state['storage']['redirect'])) {
+    $form_state['storage']['redirect'] = (isset($_SERVER['HTTP_REFERER'])) ? $_SERVER['HTTP_REFERER'] : '<front>';
+  }
+
+  if (!file_exists($filepath)) {
+    drupal_set_message(t('The file %filepath does not exist and thus could not be touched.', array('%filepath' => $filepath)), 'error');
+    drupal_goto($form_state['storage']['redirect']);
+  }
+  else {
+    return confirm_form(
+      array(
+        'filepath' => array(
+          '#type'  => 'value',
+          '#value' => $filepath,
+        ),
+        'redirect' => array(
+          '#type'  => 'value',
+          '#value' => $form_state['storage']['redirect'],
+        ),
+      ),
+      t('Are you sure you want to touch %filepath?', array('%filepath' => $filepath)),
+      $form_state['storage']['redirect'],
+      t('This action cannot be undone, but is completely harmless. Touching a file merely means that its last modification date will be updated to \'right now\'.'),
+      t('Touch file'),
+      t('Cancel')
+    );
+  }
+}
+
+function cdn_touch_file_form_submit($form, &$form_state) {
+  $filepath = $form_state['values']['filepath'];
+  if (touch($filepath)) {
+    drupal_set_message(t('Successfully touched %filepath.', array('%filepath' => $filepath)));
+  }
+  else {
+    drupal_set_message(t('Failed to touch %filepath. Likely you do not have sufficient permissions.', array('%filepath' => $filepath)));
+  }
+  drupal_goto($form_state['storage']['redirect']);
+}
+
 
 //----------------------------------------------------------------------------
 // Private functions.
