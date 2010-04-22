@@ -4,3 +4,4 @@ description = "Integrates this Drupal site with a CDN (Content Delivery Network)
 
 core = 6.x
 package = Performance
+dependencies[] = ctools

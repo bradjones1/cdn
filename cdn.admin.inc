@@ -28,6 +28,8 @@ function cdn_admin_mode_settings_form_router() {
  * Form definition; general settings.
  */
 function cdn_admin_general_settings_form(&$form_state) {
+  ctools_include('dependent');
+
   // Prevent requirement errors from showing up twice.
   if (empty($form_state['post'])) {
     _cdn_admin_check_requirements();
@@ -82,6 +84,8 @@ function cdn_admin_general_settings_form(&$form_state) {
     ),
     '#return_value'  => CDN_ENABLED,
     '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_STATUS_VARIABLE => array(CDN_DEBUG, CDN_ENABLED)),
   );
 
   return system_settings_form($form);
