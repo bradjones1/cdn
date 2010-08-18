@@ -416,7 +416,7 @@ function cdn_basic_get_url($path) {
 
   $extensions = str_replace(array(' ', '.'), array('|', '\.'), variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT));
 
-  if (preg_match("/($extensions)$/", $path)) {
+  if (preg_match("/($extensions)$/i", $path)) {
     $base_path = base_path();
     $cdn_url = variable_get(CDN_BASIC_URL_VARIABLE, 'http://yourcdn.com');
     return $cdn_url . $base_path . $path;
