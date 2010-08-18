@@ -215,6 +215,13 @@ function cdn_admin_other_settings_form(&$form_state) {
     ),
   );
 
+  $form[CDN_EXCLUSION_LOGGED_IN_VARIABLE] = array(
+    '#type'          => 'textarea',
+    '#title'         => t('Paths excluded from the CDN if logged in'),
+    '#default_value' => variable_get(CDN_EXCLUSION_LOGGED_IN_VARIABLE, CDN_EXCLUSION_LOGGED_IN_DEFAULT),
+    '#description'   => t("Enter one Drupal path per line. Same rules as above apply here."),
+  );
+
   return system_settings_form($form);
 }
 

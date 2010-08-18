@@ -25,6 +25,8 @@ define('CDN_STATS_VARIABLE', 'cdn_stats');
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 define('CDN_EXCLUSION_VARIABLE', 'cdn_exclusion');
 define('CDN_EXCLUSION_DEFAULT', "*.js");
+define('CDN_EXCLUSION_LOGGED_IN_VARIABLE', 'cdn_exclusion_logged_in');
+define('CDN_EXCLUSION_LOGGED_IN_DEFAULT', "*/imagecache/*");
 
 // Variables for basic mode.
 define('CDN_BASIC_URL_VARIABLE', 'cdn_basic_url');
@@ -48,10 +50,12 @@ define('CDN_DAEMON_PID_FILE', 'daemon.pid');
  * Implementation of hook_file_url_alter().
  */
 function cdn_file_url_alter(&$path) {
-  $status     = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
-  $mode       = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-  $stats      = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
-  $exclusions = variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT);
+  $status               = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
+  $mode                 = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+  $stats                = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
+  $exclusions           = variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT);
+  $exclusions_logged_in = variable_get(CDN_EXCLUSION_LOGGED_IN_VARIABLE, CDN_EXCLUSION_LOGGED_IN_DEFAULT);
+  global $user;
 
   // If the current path is an absolute path, return immediately.
   $fragments = parse_url($path);
@@ -61,6 +65,11 @@ function cdn_file_url_alter(&$path) {
   // If the current path matches one of the excluded paths, return immediately.
   if (drupal_match_path($path, $exclusions))
     return;
+
+  // If logged in user, run a second set of exclusions.
+  if ($user->uid > 0 && drupal_match_path($path, $exclusions_logged_in)) {
+    return;
+  }
 
   if ($stats) {
     require_once(drupal_get_path('module', 'cdn') . '/cdn.stats.inc');
