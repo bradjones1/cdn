@@ -103,8 +103,9 @@ function cdn_admin_basic_settings_form(&$form_state) {
   $form[CDN_BASIC_URL_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('CDN URL'),
-    '#description'   => t("The CDN URL prefix that should be used. Only works
-                           for CDNs that support Origin Pull.<br />
+    '#description'   => t("The CDN URL prefix that should be used (do not
+                           include a trailing slash). Only works for CDNs that
+                           support Origin Pull.<br />
                            <strong>WARNING</strong>: do not use subdirectories
                            when you're serving CSS files from the CDN. The
                            references to images and fonts from within the CSS
