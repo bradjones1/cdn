@@ -4,7 +4,7 @@ RCS file: /cvs/drupal/drupal/includes/common.inc,v
 retrieving revision 1.756.2.96
 diff -u -F '^f' -r1.756.2.96 common.inc
 --- includes/common.inc	11 Aug 2010 20:35:47 -0000	1.756.2.96
-+++ includes/common.inc	22 Aug 2010 16:49:55 -0000
++++ includes/common.inc	22 Aug 2010 17:03:31 -0000
 @@ -1880,15 +1880,15 @@ function drupal_get_css($css = NULL) {
              // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
              // regardless of whether preprocessing is on or off.
@@ -57,7 +57,7 @@ RCS file: /cvs/drupal/drupal/includes/file.inc,v
 retrieving revision 1.121.2.13
 diff -u -F '^f' -r1.121.2.13 file.inc
 --- includes/file.inc	11 Aug 2010 17:40:55 -0000	1.121.2.13
-+++ includes/file.inc	22 Aug 2010 16:49:55 -0000
++++ includes/file.inc	22 Aug 2010 17:03:35 -0000
 @@ -35,19 +35,52 @@
  /**
   * Create the download path to a file.
@@ -101,7 +101,7 @@ diff -u -F '^f' -r1.121.2.13 file.inc
 +  }
 +
 +  // Shipped files.
-+  if (preg_match("#/(misc|modules|sites|themes)/(.*)#i", $path)) {
++  if (preg_match("#(/?)(misc|modules|sites|themes)/(.*)#i", $path)) {
 +    return base_path() . $path;
 +  }
 +  // Created files.
@@ -128,7 +128,7 @@ RCS file: /cvs/drupal/drupal/includes/form.inc,v
 retrieving revision 1.265.2.34
 diff -u -F '^f' -r1.265.2.34 form.inc
 --- includes/form.inc	6 Aug 2010 11:02:49 -0000	1.265.2.34
-+++ includes/form.inc	22 Aug 2010 16:49:58 -0000
++++ includes/form.inc	22 Aug 2010 17:03:38 -0000
 @@ -1991,7 +1991,7 @@ function theme_image_button($element) {
      (!empty($element['#value']) ? ('value="'. check_plain($element['#value']) .'" ') : '') .
      'id="'. $element['#id'] .'" '.
@@ -144,7 +144,7 @@ RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.415.2.27
 diff -u -F '^f' -r1.415.2.27 theme.inc
 --- includes/theme.inc	1 Mar 2010 10:02:01 -0000	1.415.2.27
-+++ includes/theme.inc	22 Aug 2010 16:49:59 -0000
++++ includes/theme.inc	22 Aug 2010 17:03:39 -0000
 @@ -1020,24 +1020,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
@@ -190,7 +190,7 @@ RCS file: /cvs/drupal/drupal/themes/garland/template.php,v
 retrieving revision 1.16.2.3
 diff -u -F '^f' -r1.16.2.3 template.php
 --- themes/garland/template.php	11 May 2010 09:41:22 -0000	1.16.2.3
-+++ themes/garland/template.php	22 Aug 2010 16:49:59 -0000
++++ themes/garland/template.php	22 Aug 2010 17:03:40 -0000
 @@ -96,9 +96,9 @@ function phptemplate_node_submitted($nod
  function phptemplate_get_ie_styles() {
    global $language;
