@@ -26,7 +26,7 @@ define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 define('CDN_EXCLUSION_VARIABLE', 'cdn_exclusion');
 define('CDN_EXCLUSION_DEFAULT', "*.js");
 define('CDN_EXCLUSION_LOGGED_IN_VARIABLE', 'cdn_exclusion_logged_in');
-define('CDN_EXCLUSION_LOGGED_IN_DEFAULT', "*/imagecache/*");
+define('CDN_EXCLUSION_LOGGED_IN_DEFAULT', '');
 
 // Variables for basic mode.
 define('CDN_BASIC_URL_VARIABLE', 'cdn_basic_url');
