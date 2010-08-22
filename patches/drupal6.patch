@@ -1,10 +1,10 @@
 Index: includes/common.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/common.inc,v
-retrieving revision 1.756.2.79
-diff -u -F '^f' -r1.756.2.79 common.inc
---- includes/common.inc	4 Mar 2010 00:15:28 -0000	1.756.2.79
-+++ includes/common.inc	22 Apr 2010 21:13:00 -0000
+retrieving revision 1.756.2.96
+diff -u -F '^f' -r1.756.2.96 common.inc
+--- includes/common.inc	11 Aug 2010 20:35:47 -0000	1.756.2.96
++++ includes/common.inc	22 Aug 2010 14:14:20 -0000
 @@ -1880,15 +1880,15 @@ function drupal_get_css($css = NULL) {
              // If a CSS file is not to be preprocessed and it's a module CSS file, it needs to *always* appear at the *top*,
              // regardless of whether preprocessing is on or off.
@@ -33,7 +33,7 @@ diff -u -F '^f' -r1.756.2.79 common.inc
      }
    }
  
-@@ -2234,7 +2234,7 @@ function drupal_get_js($scope = 'header'
+@@ -2288,7 +2288,7 @@ function drupal_get_js($scope = 'header'
          // Additionally, go through any remaining scripts if JS preprocessing is on and output the non-cached ones.
          foreach ($data as $path => $info) {
            if (!$info['preprocess'] || !$is_writable || !$preprocess_js) {
@@ -42,7 +42,7 @@ diff -u -F '^f' -r1.756.2.79 common.inc
            }
            else {
              $files[$path] = $info;
-@@ -2249,7 +2249,7 @@ function drupal_get_js($scope = 'header'
+@@ -2303,7 +2303,7 @@ function drupal_get_js($scope = 'header'
      // starting with "ad*".
      $filename = 'js_'. md5(serialize($files) . $query_string) .'.js';
      $preprocess_file = drupal_build_js_cache($files, $filename);
@@ -54,11 +54,11 @@ diff -u -F '^f' -r1.756.2.79 common.inc
 Index: includes/file.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/file.inc,v
-retrieving revision 1.121.2.11
-diff -u -F '^f' -r1.121.2.11 file.inc
---- includes/file.inc	1 Mar 2010 09:51:16 -0000	1.121.2.11
-+++ includes/file.inc	22 Apr 2010 21:13:01 -0000
-@@ -35,19 +35,50 @@
+retrieving revision 1.121.2.13
+diff -u -F '^f' -r1.121.2.13 file.inc
+--- includes/file.inc	11 Aug 2010 17:40:55 -0000	1.121.2.13
++++ includes/file.inc	22 Aug 2010 14:14:21 -0000
+@@ -35,19 +35,52 @@
  /**
   * Create the download path to a file.
   *
@@ -114,7 +114,9 @@ diff -u -F '^f' -r1.121.2.11 file.inc
 +        // rewritten to be served relatively to system/files (which is a menu
 +        // callback that streams the file) instead of relatively to the file
 +        // directory path.
-+        $path = file_directory_strip($path);
++        if (strpos($path, file_directory_path() . '/') === 0) {
++          $path = trim(substr($path, strlen(file_directory_path())), '\\/');
++        }
 +        return url('system/files/' . $path, array('absolute' => TRUE));
 +    }
    }
@@ -123,11 +125,11 @@ diff -u -F '^f' -r1.121.2.11 file.inc
 Index: includes/form.inc
 ===================================================================
 RCS file: /cvs/drupal/drupal/includes/form.inc,v
-retrieving revision 1.265.2.32
-diff -u -F '^f' -r1.265.2.32 form.inc
---- includes/form.inc	1 Mar 2010 09:24:22 -0000	1.265.2.32
-+++ includes/form.inc	22 Apr 2010 21:13:01 -0000
-@@ -1987,7 +1987,7 @@ function theme_image_button($element) {
+retrieving revision 1.265.2.34
+diff -u -F '^f' -r1.265.2.34 form.inc
+--- includes/form.inc	6 Aug 2010 11:02:49 -0000	1.265.2.34
++++ includes/form.inc	22 Aug 2010 14:14:24 -0000
+@@ -1991,7 +1991,7 @@ function theme_image_button($element) {
      (!empty($element['#value']) ? ('value="'. check_plain($element['#value']) .'" ') : '') .
      'id="'. $element['#id'] .'" '.
      drupal_attributes($element['#attributes']) .
@@ -142,7 +144,7 @@ RCS file: /cvs/drupal/drupal/includes/theme.inc,v
 retrieving revision 1.415.2.27
 diff -u -F '^f' -r1.415.2.27 theme.inc
 --- includes/theme.inc	1 Mar 2010 10:02:01 -0000	1.415.2.27
-+++ includes/theme.inc	22 Apr 2010 21:13:02 -0000
++++ includes/theme.inc	22 Aug 2010 14:14:26 -0000
 @@ -1020,24 +1020,24 @@ function theme_get_setting($setting_name
  
      if ($settings['toggle_logo']) {
@@ -185,11 +187,11 @@ diff -u -F '^f' -r1.415.2.27 theme.inc
 Index: themes/garland/template.php
 ===================================================================
 RCS file: /cvs/drupal/drupal/themes/garland/template.php,v
-retrieving revision 1.16.2.2
-diff -u -F '^f' -r1.16.2.2 template.php
---- themes/garland/template.php	10 Aug 2009 11:32:54 -0000	1.16.2.2
-+++ themes/garland/template.php	22 Apr 2010 21:13:03 -0000
-@@ -90,9 +90,9 @@ function phptemplate_node_submitted($nod
+retrieving revision 1.16.2.3
+diff -u -F '^f' -r1.16.2.3 template.php
+--- themes/garland/template.php	11 May 2010 09:41:22 -0000	1.16.2.3
++++ themes/garland/template.php	22 Aug 2010 14:14:27 -0000
+@@ -96,9 +96,9 @@ function phptemplate_node_submitted($nod
  function phptemplate_get_ie_styles() {
    global $language;
  
