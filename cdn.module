@@ -127,11 +127,11 @@ function cdn_menu() {
     'type'             => MENU_DEFAULT_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',
   );
-  $items['admin/settings/cdn/mode'] = array(
-    'title'            => 'Mode-specific',
-    'description'      => 'Mode-specific settings.',
+  $items['admin/settings/cdn/details'] = array(
+    'title'            => 'Details',
     'access arguments' => array('administer site configuration'),
-    'page callback'    => 'cdn_admin_mode_settings_form_router',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('cdn_admin_details_form'),
     'weight'           => -8,
     'type'             => MENU_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',

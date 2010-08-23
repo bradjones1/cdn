@@ -8,20 +8,6 @@
 
 
 //----------------------------------------------------------------------------
-// Menu system callbacks.
-
-/**
- * Menu callback; mode-specific settings form (automatically load the correct
- * form).
- */
-function cdn_admin_mode_settings_form_router() {
-  $mode = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-  $form_function = ($mode == CDN_MODE_BASIC) ? 'cdn_admin_basic_settings_form' : 'cdn_admin_advanced_settings_form';
-  return drupal_get_form($form_function);
-}
-
-
-//----------------------------------------------------------------------------
 // Form API callbacks.
 
 /**
@@ -56,6 +42,36 @@ function cdn_admin_general_settings_form(&$form_state) {
     '#default_value' => variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED),
   );
 
+  $form[CDN_STATS_VARIABLE] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display statistics'),
+    '#description' => t(
+      'Shows the CDN integration statistics of the current page, to users with
+      the %access-per-page-statistics permission.',
+      array('%access-per-page-statistics' => 'access per-page statistics')
+    ),
+    '#return_value'  => CDN_ENABLED,
+    '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_STATUS_VARIABLE => array(CDN_TESTING, CDN_ENABLED)),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Form definition; details.
+ */
+function cdn_admin_details_form(&$form_state) {
+  ctools_include('dependent');
+
+  // Prevent requirement errors from showing up twice.
+  if (empty($form_state['post'])) {
+    _cdn_admin_check_requirements();
+  }
+
+  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+
   $form[CDN_MODE_VARIABLE] = array(
     '#type' => 'radios',
     '#title' => t('Mode'),
@@ -76,35 +92,19 @@ function cdn_admin_general_settings_form(&$form_state) {
     '#default_value' => variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC),
   );
 
-  $form[CDN_STATS_VARIABLE] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display statistics'),
-    '#description' => t(
-      'Shows the CDN integration statistics of the current page, to users with
-      the %access-per-page-statistics permission.',
-      array('%access-per-page-statistics' => 'access per-page statistics')
-    ),
-    '#return_value'  => CDN_ENABLED,
-    '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_STATUS_VARIABLE => array(CDN_TESTING, CDN_ENABLED)),
+
+  $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Mode-specific settings'),
+    '#description' => t('Settings specific to the mode you have currently selected.'),
   );
 
-  return system_settings_form($form);
-}
 
-/**
- * Form definition; basic settings.
- */
-function cdn_admin_basic_settings_form(&$form_state) {
-  // Prevent requirement errors from showing up twice.
-  if (empty($form_state['post'])) {
-    _cdn_admin_check_requirements();
-  }
+  //
+  // Basic mode settings.
+  //
 
-  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
-
-  $form[CDN_BASIC_URL_VARIABLE] = array(
+  $form['settings'][CDN_BASIC_URL_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('CDN URL'),
     '#description'   => t("The CDN URL prefix that should be used (do not
@@ -118,38 +118,33 @@ function cdn_admin_basic_settings_form(&$form_state) {
     '#required'      => TRUE,
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_URL_VARIABLE, ''),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
   );
-
-  $form[CDN_BASIC_EXTENSIONS_VARIABLE] = array(
+  $form['settings'][CDN_BASIC_EXTENSIONS_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Allowed extensions'),
     '#description'   => t('Only files with these extensions will be served from the CDN.'),
     '#required'      => TRUE,
     '#default_value' => variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
   );
-
-  $form[CDN_BASIC_HTTPS_VARIABLE] = array(
+  $form['settings'][CDN_BASIC_HTTPS_VARIABLE] = array(
     '#type'          => 'checkbox',
     '#title'         => t('CDN supports HTTPS'),
     '#description'   => t('Check this if your CDN supports HTTPS (on the same
                            host) and you would like to serve CDN content via
                            HTTPS if your page is being served via HTTPS.'),
     '#default_value' => variable_get(CDN_BASIC_HTTPS_VARIABLE, FALSE),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
   );
 
-  return system_settings_form($form);
-}
 
-/**
- * Form definition; advanced settings.
- */
-function cdn_admin_advanced_settings_form(&$form_state) {
-  // Prevent requirement errors from showing up twice.
-  if (empty($form_state['post'])) {
-    _cdn_admin_check_requirements();
-  }
-
-  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+  //
+  // Advanced mode settings.
+  //
 
   // Immediately show the user the current status, unless the user is
   // currently editing the values in the form.
@@ -164,23 +159,25 @@ function cdn_admin_advanced_settings_form(&$form_state) {
       }
     }
   }
-
-  $form[CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
+  $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Synced files database'),
     '#description'   => t('Enter the full path to the daemon\'s synced files database file.'),
     '#required'      => TRUE,
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_ADVANCED)),
   );
-
-  $form[CDN_ADVANCED_HTTPS_VARIABLE] = array(
+  $form['settings'][CDN_ADVANCED_HTTPS_VARIABLE] = array(
     '#type'          => 'checkbox',
     '#title'         => t('CDN supports HTTPS'),
     '#description'   => t('Check this if your CDN supports HTTPS (on the same
                            host) and you would like to serve CDN content via
                            HTTPS if your page is being served via HTTPS.'),
     '#default_value' => variable_get(CDN_ADVANCED_HTTPS_VARIABLE, FALSE),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_ADVANCED)),
   );
 
   return system_settings_form($form);
@@ -197,20 +194,22 @@ function cdn_admin_other_settings_form(&$form_state) {
 
   $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
 
-  $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
-    '#type' => 'textfield',
-    '#title' => t('Drupal root directory'),
-    '#description' => t(
-      'In 99% of the cases the default value is sufficient and correct. In
-      some advanced setups that make use of symbolic links however, it is
-      possible that the Drupal root directory is incorrectly detected. In
-      those cases, you should enter it here.<br />
-      <strong>This setting only affects the status report, it does not affect
-      the CDN integration itself in any way.</strong>'
-    ),
-    '#required'      => TRUE,
-    '#default_value' => variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.')),
-  );
+  if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_ADVANCED) {
+    $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
+      '#type' => 'textfield',
+      '#title' => t('Drupal root directory'),
+      '#description' => t(
+        'In 99% of the cases the default value is sufficient and correct. In
+        some advanced setups that make use of symbolic links however, it is
+        possible that the Drupal root directory is incorrectly detected. In
+        those cases, you should enter it here.<br />
+        <strong>This setting only affects the status report, it does not affect
+        the CDN integration itself in any way.</strong>'
+      ),
+      '#required'      => TRUE,
+      '#default_value' => variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.')),
+    );
+  }
 
   $form[CDN_EXCLUSION_VARIABLE] = array(
     '#type' => 'textarea',
