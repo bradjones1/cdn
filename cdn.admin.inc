@@ -35,6 +35,8 @@ function cdn_admin_general_settings_form(&$form_state) {
     _cdn_admin_check_requirements();
   }
 
+  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+
   $form[CDN_STATUS_VARIABLE] = array(
     '#type' => 'radios',
     '#title' => t('Status'),
@@ -100,6 +102,8 @@ function cdn_admin_basic_settings_form(&$form_state) {
     _cdn_admin_check_requirements();
   }
 
+  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+
   $form[CDN_BASIC_URL_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('CDN URL'),
@@ -145,6 +149,8 @@ function cdn_admin_advanced_settings_form(&$form_state) {
     _cdn_admin_check_requirements();
   }
 
+  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+
   // Immediately show the user the current status, unless the user is
   // currently editing the values in the form.
   if (!isset($_POST['form_build_id'])) {
@@ -188,6 +194,8 @@ function cdn_admin_other_settings_form(&$form_state) {
   if (empty($form_state['post'])) {
     _cdn_admin_check_requirements();
   }
+
+  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
 
   $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
     '#type' => 'textfield',
@@ -271,6 +279,26 @@ function cdn_admin_advanced_settings_form_validate($form, &$form_state) {
     $synced_files_db = $form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE];
     _cdn_admin_validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
   }
+}
+
+/**
+ * Submit callback for all settings forms, that shows a warning whenever
+ * settings have been changed: the caches might need to be cleared.
+ */
+function cdn_admin_settings_submit_show_cache_warning($form, &$form_state) {
+  drupal_set_message(t('You have just changed some settings. This might affect
+                        the file URLs that have been cached in nodes, views,
+                        or elsewhere.<br />
+                        You now may want to clear the cached data, to ensure
+                        the new CDN file URLs are used immediately. This can
+                        be done in the <a href="!link">"Clear cached data"
+                        field set</a> in the "Performance" settings form.',
+                        array(
+                          '!link' => url('admin/settings/performance', array('fragment' => 'clear-cache'))
+                        )
+                      ),
+                      'info'
+  );
 }
 
 

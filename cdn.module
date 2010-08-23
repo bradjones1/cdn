@@ -168,6 +168,15 @@ function cdn_perm() {
 }
 
 /**
+ * Implementation of hook_form_alter().
+ */
+function cdn_form_system_performance_settings_alter(&$form, &$form_state) {
+  // Add an id to the "Clear cached data" fieldset in the
+  // "system_performance_settings" form, so we can link to it directly.
+  $form['clear_cache']['#attributes']['id'] = 'clear-cache';
+}
+
+/**
  * Implementation of hook_theme().
  */
 function cdn_theme() {
