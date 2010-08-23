@@ -204,7 +204,6 @@ function cdn_init() {
   }
 }
 
-
 /**
  * Implementation of hook_exit().
  */
