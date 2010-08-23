@@ -32,9 +32,11 @@ define('CDN_EXCLUSION_LOGGED_IN_DEFAULT', '');
 define('CDN_BASIC_URL_VARIABLE', 'cdn_basic_url');
 define('CDN_BASIC_EXTENSIONS_VARIABLE', 'cdn_basic_extensions');
 define('CDN_BASIC_EXTENSIONS_DEFAULT', '.css .js .ico .gif .jpg .jpeg .png .svg .otf .ttf .swf');
+define('CDN_BASIC_HTTPS_VARIABLE', 'cdn_basic_https');
 
 // Variables for advanced mode.
 define('CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE', 'cdn_advanced_synced_files_db');
+define('CDN_ADVANCED_HTTPS_VARIABLE', 'cdn_advanced_https');
 
 // Hardcoded settings for accessing the daemon's metadata, to show statistics.
 define('CDN_DAEMON_SYNCED_FILES_DB', 'synced_files.db');
@@ -428,6 +430,13 @@ function cdn_basic_get_url($path) {
   if (preg_match("/($extensions)$/i", $path)) {
     $base_path = base_path();
     $cdn_url = variable_get(CDN_BASIC_URL_VARIABLE, 'http://yourcdn.com');
+
+    // If the current page is being served via HTTPS, and the CDN supports
+    // HTTPS, then use the HTTPS file URL.
+    if (($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') && variable_get(CDN_BASIC_HTTPS_VARIABLE, FALSE)) {
+      $cdn_url = preg_replace('/^http/', 'https', $cdn_url);
+    }
+
     return $cdn_url . $base_path . $path;
   }
   else {
@@ -480,6 +489,12 @@ function cdn_advanced_get_url($path) {
   else {
     $url    = $servers[0]['url'];
     $server = $servers[0]['server'];
+  }
+
+  // If the current page is being served via HTTPS, and the CDN supports
+  // HTTPS, then use the HTTPS file URL.
+  if (($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') && variable_get(CDN_ADVANCED_HTTPS_VARIABLE, FALSE)) {
+    $url = preg_replace('/^http/', 'https', $url);
   }
 
   return array($url, $server);

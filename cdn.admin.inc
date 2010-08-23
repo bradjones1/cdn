@@ -124,6 +124,15 @@ function cdn_admin_basic_settings_form(&$form_state) {
     '#default_value' => variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT),
   );
 
+  $form[CDN_BASIC_HTTPS_VARIABLE] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('CDN supports HTTPS'),
+    '#description'   => t('Check this if your CDN supports HTTPS (on the same
+                           host) and you would like to serve CDN content via
+                           HTTPS if your page is being served via HTTPS.'),
+    '#default_value' => variable_get(CDN_BASIC_HTTPS_VARIABLE, FALSE),
+  );
+
   return system_settings_form($form);
 }
 
@@ -157,6 +166,15 @@ function cdn_admin_advanced_settings_form(&$form_state) {
     '#required'      => TRUE,
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
+  );
+
+  $form[CDN_ADVANCED_HTTPS_VARIABLE] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('CDN supports HTTPS'),
+    '#description'   => t('Check this if your CDN supports HTTPS (on the same
+                           host) and you would like to serve CDN content via
+                           HTTPS if your page is being served via HTTPS.'),
+    '#default_value' => variable_get(CDN_ADVANCED_HTTPS_VARIABLE, FALSE),
   );
 
   return system_settings_form($form);
