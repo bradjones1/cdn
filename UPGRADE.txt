@@ -11,3 +11,5 @@ The recommended steps to update your Drupal site are:
 6) Apply the 2.x core patch:
     patch -p0 < drupal6.patch
 7) Re-enable CDN integration at admin/settings/cdn.
+
+The ImageCache module patch has remained unchanged since version 1.x.
