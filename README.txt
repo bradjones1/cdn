@@ -18,10 +18,10 @@ my bachelor thesis: File Conveyor [1]. This allows for much more advanced
 setups: files can be processed before they are synced and your CDN doesn't
 *have* to support Origin Pull, any push method is fine. Push always uses
 transfer protocols, either well-established ones (e.g. FTP) or custom ones
-(e.g. Amazon S3 and Mosso CloudFiles). It is thanks to this abstraction layer
-that it can be used for *any* CDN, thereby avoiding vendor lock-in.
+(e.g. Amazon S3 and Rackspace CloudFiles). It is thanks to this abstraction
+layer that it can be used for *any* CDN, thereby avoiding vendor lock-in.
 - File Conveyor includes "transporters" for FTP, Amazon S3, Amazon CloudFront
-  and Mosso CloudFiles.
+  and Rackspace CloudFiles.
 - File Conveyor also allows for any kind of automatic file processing. It
   includes "processors" for: image optimization (using a combination of
   ImageMagick, pngcrush, jpegtran and gifsicle), CSS minification (YUI
@@ -54,8 +54,8 @@ Supported CDNs
 - Basic mode: any Origin Pull CDN.
 - Advanced mode: any Origin Pull CDN and any push CDN that supports FTP.
   Support for other transfer protocols is welcomed and encouraged: your
-  patches are welcome! Amazon S3, Amazon CloudFront and Mosso CloudFiles are
-  also supported.
+  patches are welcome! Amazon S3, Amazon CloudFront and Rackspace CloudFiles
+  are also supported.
 
 
 Installation
