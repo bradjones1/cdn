@@ -111,7 +111,7 @@ function cdn_file_url_alter(&$path) {
 function cdn_menu() {
   $items['admin/settings/cdn'] = array(
     'title'            => 'CDN integration',
-    'description'      => 'Configure various settings for CDN integration.',
+    'description'      => 'Configure CDN integration.',
     'access arguments' => array('administer site configuration'),
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('cdn_admin_general_settings_form'),
