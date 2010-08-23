@@ -433,7 +433,7 @@ function cdn_basic_get_url($path) {
 
     // If the current page is being served via HTTPS, and the CDN supports
     // HTTPS, then use the HTTPS file URL.
-    if (($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') && variable_get(CDN_BASIC_HTTPS_VARIABLE, FALSE)) {
+    if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') && variable_get(CDN_BASIC_HTTPS_VARIABLE, FALSE)) {
       $cdn_url = preg_replace('/^http/', 'https', $cdn_url);
     }
 
@@ -493,7 +493,7 @@ function cdn_advanced_get_url($path) {
 
   // If the current page is being served via HTTPS, and the CDN supports
   // HTTPS, then use the HTTPS file URL.
-  if (($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') && variable_get(CDN_ADVANCED_HTTPS_VARIABLE, FALSE)) {
+  if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') && variable_get(CDN_ADVANCED_HTTPS_VARIABLE, FALSE)) {
     $url = preg_replace('/^http/', 'https', $url);
   }
 
