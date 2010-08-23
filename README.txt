@@ -160,5 +160,5 @@ Author
 ------
 Wim Leers ~ http://wimleers.com/
 
-This module was written as part of the bachelor thesis of Wim Leers at
-Hasselt University.
+Version 1 of this module (for Drupal 6) was written as part of the bachelor
+thesis of Wim Leers at Hasselt University.
