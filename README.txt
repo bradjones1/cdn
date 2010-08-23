@@ -155,6 +155,18 @@ create a variable function, e.g.:
 Then create all file URLs using this variable function. E.g.
   $file_url = $file_create_url(drupal_get_path('module', 'episodes') .'/lib/episodes.js');
 
+When your module already uses file_create_url() (either because it supports
+user-uploaded content or generates files), then there is nothing that you have
+to do. It is recommended though to include the file_directory_path() in the
+$path you're passing. I.e., this is supported, but not recommended and even
+deprecated in Drupal 7 core
+  file_create_url('test.jpg');
+This will return "sites/default/files/test.jpg" (assuming that you've
+configured "sites/default/files" to be your files directory, i.e. the value
+that file_directory_path() returns). But it's recommended to do the following
+instead, since that will make porting to Drupal 7 easier:
+  file_create_url(file_directory_path() . '/test.jpg);
+
 
 Author
 ------
