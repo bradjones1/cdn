@@ -115,7 +115,6 @@ function cdn_admin_details_form(&$form_state) {
                            references to images and fonts from within the CSS
                            files will break because the URLs are no longer
                            valid."),
-    '#required'      => TRUE,
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_URL_VARIABLE, ''),
     '#process'       => array('ctools_dependent_process'),
@@ -125,7 +124,6 @@ function cdn_admin_details_form(&$form_state) {
     '#type'          => 'textfield',
     '#title'         => t('Allowed extensions'),
     '#description'   => t('Only files with these extensions will be served from the CDN.'),
-    '#required'      => TRUE,
     '#default_value' => variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT),
     '#process'       => array('ctools_dependent_process'),
     '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
@@ -146,24 +144,10 @@ function cdn_admin_details_form(&$form_state) {
   // Advanced mode settings.
   //
 
-  // Immediately show the user the current status, unless the user is
-  // currently editing the values in the form.
-  if (!isset($_POST['form_build_id'])) {
-    $synced_files_db = variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, FALSE);
-    if ($synced_files_db !== FALSE) {
-      if (file_exists($synced_files_db) && @fopen($synced_files_db, 'r')) {
-        drupal_set_message(t('The synced files database was found and can be opened for reading.'));
-      }
-      else {
-        drupal_set_message(t('The synced files database could not be opened for reading!', 'error'));
-      }
-    }
-  }
   $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Synced files database'),
     '#description'   => t('Enter the full path to the daemon\'s synced files database file.'),
-    '#required'      => TRUE,
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
     '#process'       => array('ctools_dependent_process'),
@@ -252,29 +236,27 @@ function cdn_admin_other_settings_form(&$form_state) {
 }
 
 /**
- * Default validate callback for the general settings form.
+ * Default validate callback for the details form.
  */
-function cdn_admin_general_settings_form_validate($form, &$form_state) {
-  // Validate the synced files DB whenever advanced mode is enabled. It must
-  // be configured (on the advanced settings form) *before* advanced mode can
-  // be enabled!
-  $enabled  = isset($form_state['values'][CDN_STATUS_VARIABLE]) && $form_state['values'][CDN_STATUS_VARIABLE] != CDN_DISABLED;
-  $advanced = isset($form_state['values'][CDN_MODE_VARIABLE])   && $form_state['values'][CDN_MODE_VARIABLE]   == CDN_MODE_ADVANCED;
-  if ($enabled && $advanced) {
-    $synced_files_db = variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, '');
-    if (!_cdn_admin_validate_synced_files_db($synced_files_db, CDN_STATUS_VARIABLE)) {
-      drupal_set_message(t('Please correct the above error in the <em>Advanced mode</em> settings form first.'), 'error');
+function cdn_admin_details_form_validate($form, &$form_state) {
+  // If ctools_dependent supported required dependent form items, this ugly
+  // piece of code would not be necessary.
+  if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_BASIC) {
+    if (empty($form_state['values'][CDN_BASIC_URL_VARIABLE])) {
+      form_error($form['settings'][CDN_BASIC_URL_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_BASIC_URL_VARIABLE]['#title'])));
+    }
+    if (empty($form_state['values'][CDN_BASIC_EXTENSIONS_VARIABLE])) {
+      form_error($form['settings'][CDN_BASIC_EXTENSIONS_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_BASIC_EXTENSIONS_VARIABLE]['#title'])));
     }
   }
-}
+  else {
+    if (empty($form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE])) {
+      form_error($form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE]['#title'])));
+    }    
+  }
 
-/**
- * Default validate callback for the advanced settings form.
- */
-function cdn_admin_advanced_settings_form_validate($form, &$form_state) {
-  // Validate the synced files DB when it's filled out on the advanced
-  // settings form.
-  if (isset($form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE])) {
+  // When in advanced mode, validate the synced files DB.
+  if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_ADVANCED) {
     $synced_files_db = $form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE];
     _cdn_admin_validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
   }
