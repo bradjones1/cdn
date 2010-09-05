@@ -65,7 +65,7 @@ Installation
      a) Change the directory to the root directory of your Drupal core:
           cd /htdocs/example.com
      b) Copy the patch to this directory
-          cp /htdocs/example.com/sites/all/modules/cdn/patch/drupal6.patch .
+          cp /htdocs/example.com/sites/all/modules/cdn/patches/drupal6.patch .
      c) Apply the patch:
           patch -p0 < drupal6.patch
    This patch effectively backports hook_file_url_alter() from Drupal 7 to
