@@ -94,6 +94,8 @@ Installation
    Then follow the instructions in the included INSTALL.txt and README.txt.
    Use the config.xml file that is included in this module and modify it to
    comply with your setup and to suit your needs.
+   Note: the CDN integration module requires PDO extension for PHP to be
+   installed, as well as the PDO SQLite driver.
 
 7) Go to admin/reports/status. The CDN integration module will report its
    status here. If you've enabled advanced mode and have set up the daemon,
