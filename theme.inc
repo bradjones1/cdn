@@ -33,13 +33,8 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
   $items[] = 'Total number of files on this page: <strong>'. $file_count .'</strong>.';
   $percentage = ($file_count == 0) ? '100' : ($file_count > 0) ? number_format($cdn_file_count / $file_count * 100) : 0;
   $items[] = 'Number of files available on CDNs: <strong>'. $cdn_file_count .'</strong> ('. $percentage . '% coverage).';
-  if ($mode == CDN_MODE_ADVANCED) {
-    foreach (array_keys($synced_files_per_server_count) as $server) {
-      $items[] = t('Number of files served from the server %server: !count', array('%server' => $server, '!count' => $synced_files_per_server_count[$server]));
-    }
-  }
-  else {
-    $items[] = 'All files are being served from a single CDN, because basic mode is being used.';
+  foreach (array_keys($synced_files_per_server_count) as $server) {
+    $items[] = t('Number of files served from the server %server: !count', array('%server' => $server, '!count' => $synced_files_per_server_count[$server]));
   }
   $items[] = t('Total time it took to look up the CDN URLs for these files:
                 !total-time ms, or !avg-time ms on average per file.',
@@ -51,12 +46,14 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
 
 
   // Nested list of unsynced files.
-  if (count($unsynced_files)) {
-    $unsynced_items = array();
-    foreach ($unsynced_files as $file) {
-      $unsynced_items[] = theme('cdn_page_stats_file_link', $file, file_create_url($file), FALSE, $file, NULL);
+  if ($mode != CDN_MODE_BASIC) {
+    if (count($unsynced_files)) {
+      $unsynced_items = array();
+      foreach ($unsynced_files as $file) {
+        $unsynced_items[] = theme('cdn_page_stats_file_link', $file, file_create_url($file), FALSE, $file, NULL);
+      }
+      $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', $unsynced_items);
     }
-    $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', $unsynced_items);
   }
 
   // Nested list of synced files.
@@ -95,14 +92,7 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
  *   The rendered HTML.
  */
 function theme_cdn_page_stats_file_link($file, $absolute_path, $synced, $cdn_url, $server) {
-  static $text_format;
-
-  if (!isset($text_format)) {
-    $mode        = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-    $text_format = ($mode == CDN_MODE_BASIC) ? '!file' : '!file (server: !server)';
-  }
-
-  $file_link  = l(t($text_format, array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
+  $file_link  = l(t('!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
   $touch_link = l('touch', 'admin/cdn/touch/' . $file);
 
   $output = '';

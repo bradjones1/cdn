@@ -123,9 +123,9 @@ entire new File API.
 
 When using multiple servers: picking a specific one based on some criteria
 --------------------------------------------------------------------------
-For this purpose, you can implement the cdn_advanced_pick_server() function:
+For this purpose, you can implement the cdn_pick_server() function:
   /**
-   * Implementation of cdn_advanced_pick_server().
+   * Implementation of cdn_pick_server().
    */
   function cdn_advanced_pick_server($servers_for_file) {
     // The data that you get - one nested array per server from which the file
@@ -141,9 +141,9 @@ For this purpose, you can implement the cdn_advanced_pick_server() function:
 
 So to get the default behavior (pick the first server found), one would write:
   /**
-   * Implementation of cdn_advanced_pick_server().
+   * Implementation of cdn_pick_server().
    */
-  function cdn_advanced_pick_server($servers_for_file) {
+  function cdn_pick_server($servers_for_file) {
     return $servers_for_file[0];
   }
 

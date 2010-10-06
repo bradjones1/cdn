@@ -104,41 +104,42 @@ function cdn_admin_details_form(&$form_state) {
   // Basic mode settings.
   //
 
-  $form['settings'][CDN_BASIC_URL_VARIABLE] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('CDN URL'),
-    '#description'   => t("The CDN URL prefix that should be used (do not
-                           include a trailing slash). Only works for CDNs that
-                           support Origin Pull.<br />
-                           <strong>WARNING</strong>: do not use subdirectories
-                           when you're serving CSS files from the CDN. The
-                           references to images and fonts from within the CSS
-                           files will break because the URLs are no longer
-                           valid."),
-    '#size'          => 35,
-    '#default_value' => variable_get(CDN_BASIC_URL_VARIABLE, ''),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
+  $format_variables = array(
+    '@format-url'        => t('<URL>'),
+    '@format-extensions' => t('<extensions>'),
   );
-  $form['settings'][CDN_BASIC_EXTENSIONS_VARIABLE] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Allowed extensions'),
-    '#description'   => t('Only files with these extensions will be served from the CDN.'),
-    '#default_value' => variable_get(CDN_BASIC_EXTENSIONS_VARIABLE, CDN_BASIC_EXTENSIONS_DEFAULT),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
-  );
-  $form['settings'][CDN_BASIC_HTTPS_VARIABLE] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('CDN supports HTTPS'),
-    '#description'   => t('Check this if your CDN supports HTTPS (on the same
-                           host) and you would like to serve CDN content via
-                           HTTPS if your page is being served via HTTPS.'),
-    '#default_value' => variable_get(CDN_BASIC_HTTPS_VARIABLE, FALSE),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
-  );
+  $form['settings'][CDN_BASIC_MAPPING_VARIABLE] = array(
+    '#type'          => 'textarea',
+    '#title'         => t('CDN mapping'),
+    '#description'   => t("Define which files are mapped to which CDN.<br />
+                           <br />
+                           Enter one mapping per line, in the format <strong>@format-url[|@format-extensions]</strong>:<br />
+                           !format-explanation-list
+                           <br />
+                           Sample mappings:
+                           !example-list", $format_variables + array(
+                             '!format-explanation-list' => theme('item_list', array(
+                               t("<strong>@format-url</strong> is the CDN URL
+                                 that should be used. E.g.: '<code>http://cdn-a.com</code>'.", $format_variables),
+                               t("<strong>@format-extensions</strong> is an
+                                  <strong>optional</strong> setting to limit
+                                  which files should be served from a CDN.
+                                  E.g.: '<code>.css .jpg .jpeg .png</code>'.", $format_variables),
+                             )),
+                             '!example-list' => theme('item_list', array(
+                               t('This would serve <em>all</em> files from a single CDN:
+                               <pre><code>http://cdn-a.com</code></pre>'),
+                               t("This would serve CSS and images from CDN A, .zip files from CDN B and everything else from CDN C:
+                               <pre><code>http://cdn-a.com|.css .jpg .jpeg .png\nhttp://cdn-b.com|.zip\nhttp://cdn-c.com
+                               </code></pre>"),
 
+                             )),
+                          )),
+    '#size'          => 35,
+    '#default_value' => variable_get(CDN_BASIC_MAPPING_VARIABLE, ''),
+    '#process'       => array('ctools_dependent_process'),
+    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
+  );
 
   //
   // Advanced mode settings.
@@ -150,16 +151,6 @@ function cdn_admin_details_form(&$form_state) {
     '#description'   => t('Enter the full path to the daemon\'s synced files database file.'),
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_ADVANCED)),
-  );
-  $form['settings'][CDN_ADVANCED_HTTPS_VARIABLE] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('CDN supports HTTPS'),
-    '#description'   => t('Check this if your CDN supports HTTPS (on the same
-                           host) and you would like to serve CDN content via
-                           HTTPS if your page is being served via HTTPS.'),
-    '#default_value' => variable_get(CDN_ADVANCED_HTTPS_VARIABLE, FALSE),
     '#process'       => array('ctools_dependent_process'),
     '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_ADVANCED)),
   );
@@ -177,6 +168,24 @@ function cdn_admin_other_settings_form(&$form_state) {
   }
 
   $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+
+  $form['https'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('HTTPS'),
+    '#description' => t('When a page is being served via HTTPS and the CDN
+                         does not support HTTPS, then the file will not be
+                         served from the CDN, because it would make the visit
+                         insecure.<br/>
+                         When your CDN <em>does</em> support HTTPS, enable the
+                         corresponding setting below, and your CDN will be
+                         used on HTTPS pages.'),
+  );
+  $form['https'][CDN_HTTPS_SUPPORT_VARIABLE] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('CDN supports HTTPS support'),
+    '#default_value' => variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE),
+    '#process'       => array('ctools_dependent_process'),
+  );
 
   if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_ADVANCED) {
     $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
@@ -242,11 +251,8 @@ function cdn_admin_details_form_validate($form, &$form_state) {
   // If ctools_dependent supported required dependent form items, this ugly
   // piece of code would not be necessary.
   if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_BASIC) {
-    if (empty($form_state['values'][CDN_BASIC_URL_VARIABLE])) {
-      form_error($form['settings'][CDN_BASIC_URL_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_BASIC_URL_VARIABLE]['#title'])));
-    }
-    if (empty($form_state['values'][CDN_BASIC_EXTENSIONS_VARIABLE])) {
-      form_error($form['settings'][CDN_BASIC_EXTENSIONS_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_BASIC_EXTENSIONS_VARIABLE]['#title'])));
+    if (empty($form_state['values'][CDN_BASIC_MAPPING_VARIABLE])) {
+      form_error($form['settings'][CDN_BASIC_MAPPING_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_BASIC_MAPPING_VARIABLE]['#title'])));
     }
   }
   else {
