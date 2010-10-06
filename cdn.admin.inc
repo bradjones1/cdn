@@ -29,8 +29,8 @@ function cdn_admin_general_settings_form(&$form_state) {
     '#description' => t(
       "If you don't want to use the CDN to serve files to your visitors yet,
       but you do want to see if it's working well for your site, then enable
-      testing mode.<br />It will only serve files from the CDN if they have
-      the %cdn-testing-mode-permission permission.",
+      testing mode.<br />Users will only get the files from the CDN if they
+      have the %cdn-testing-mode-permission permission.",
       array('%cdn-testing-mode-permission' => 'access files on CDN when in testing mode')
     ),
     '#required' => TRUE,
@@ -76,18 +76,27 @@ function cdn_admin_details_form(&$form_state) {
     '#type' => 'radios',
     '#title' => t('Mode'),
     '#description' => t(
-      "<strong>Basic mode</strong> will simply prepend another URL to the
-      complete file URL. Therefor, it only works for CDNs that support the
-      Origin Pull technique.<br />
-      <strong>Advanced mode</strong> uses the daemon to synchronize files and
-      can be used with both Origin Pull and Push CDNs. If you've got an Origin
-      Pull CDN and want to process files before they're synced to the CDN, it
-      is also recommended to use this mode."
+      "It is essential that you understand the <a href=\"!cdn-article-url\">key
+      properties of a CDN</a>, most importantly the differences between an
+      <em>Origin Pull CDN</em> and a <em>Push CDN</em>. If you understand that,
+      continue to make a choice between the two supported modes:
+      !mode-explanation-list", array(
+        '!cdn-article-url' => 'http://wimleers.com/article/key-properties-of-a-cdn',
+        '!mode-explanation-list' => theme('item_list', array(
+          t("<strong>Origin Pull mode</strong> replaces your domain name with
+            the Origin Pull CDN's domain name in the file URL."),
+          t("<strong>File Conveyor mode</strong> uses the <a href=\"http://fileconveyor.org\">File Conveyor</a>
+            daemon to synchronize files and can be used with both Origin Pull
+            and Push CDNs. If you're using an Origin Pull CDN and want to
+            optimize files before they're synced to the CDN, it is also
+            recommended to use this mode.")
+        )),
+      )
     ),
     '#required' => TRUE,
     '#options'  => array(
-      CDN_MODE_BASIC    => t('Basic'),
-      CDN_MODE_ADVANCED => t('Advanced'),
+      CDN_MODE_BASIC    => t('Origin Pull'),
+      CDN_MODE_ADVANCED => t('File Conveyor'),
     ),
     '#default_value' => variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC),
   );
@@ -148,7 +157,7 @@ function cdn_admin_details_form(&$form_state) {
   $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Synced files database'),
-    '#description'   => t('Enter the full path to the daemon\'s synced files database file.'),
+    '#description'   => t('Enter the full path to File Conveyor\'s synced files database file.'),
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
     '#process'       => array('ctools_dependent_process'),
