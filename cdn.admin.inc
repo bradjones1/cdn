@@ -178,6 +178,23 @@ function cdn_admin_other_settings_form(&$form_state) {
 
   $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
 
+  if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_ADVANCED) {
+    $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
+      '#type' => 'textfield',
+      '#title' => t('Drupal root directory'),
+      '#description' => t(
+        'In 99% of the cases the default value is sufficient and correct. In
+        some advanced setups that make use of symbolic links however, it is
+        possible that the Drupal root directory is incorrectly detected. In
+        those cases, you should enter it here.<br />
+        <strong>This setting only affects the status report, it does not affect
+        the CDN integration itself in any way.</strong>'
+      ),
+      '#required'      => TRUE,
+      '#default_value' => variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.')),
+    );
+  }
+
   $form['https'] = array(
     '#type' => 'fieldset',
     '#title' => t('HTTPS'),
@@ -196,58 +213,75 @@ function cdn_admin_other_settings_form(&$form_state) {
     '#process'       => array('ctools_dependent_process'),
   );
 
-  if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_ADVANCED) {
-    $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
-      '#type' => 'textfield',
-      '#title' => t('Drupal root directory'),
-      '#description' => t(
-        'In 99% of the cases the default value is sufficient and correct. In
-        some advanced setups that make use of symbolic links however, it is
-        possible that the Drupal root directory is incorrectly detected. In
-        those cases, you should enter it here.<br />
-        <strong>This setting only affects the status report, it does not affect
-        the CDN integration itself in any way.</strong>'
-      ),
-      '#required'      => TRUE,
-      '#default_value' => variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.')),
-    );
-  }
-
-  $form[CDN_EXCLUSION_VARIABLE] = array(
-    '#type' => 'textarea',
-    '#title' => t('Paths excluded from the CDN'),
-    '#default_value' => variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT),
-    '#description' => t(
-      "Enter one page per line as Drupal paths. The '*' character is a
-      wildcard. Example paths are %blog for the blog page and %blog-wildcard
-      for every personal blog. %front is the front page.<br />
-      <strong>JavaScript files are excluded by default. This is necessary to
-      ensure a painless out-of-the-box experience.</strong><br />
-      <strong><u>Full explanation:</u></strong> it's necessary prevent any
-      possible cross-domain AJAX requests, which would violate the <a
-      href=\"http://en.wikipedia.org/wiki/Same_origin_policy\">same origin
-      policy</a> of browsers. Such violations potentially result in broken
-      functionality. Note that <u>even requests to subdomains such as
-      cdn.yourdomain.com count as cross-domain requests!</u><br />
-      You can opt-in to including JavaScript files by default and then exclude
-      problematic ones, but then you should carefully note which JavaScript
-      files perform AJAX requests. You can prevent all potential problems by
-      using <a href=\"http://en.wikipedia.org/wiki/JSON#JSONP\">JSONP</a>,
-      which is a work-around to allow for cross-domain AJAX
-      requests.</strong>",
-      array(
-        '%blog'          => 'blog',
-        '%blog-wildcard' => 'blog/*',
-        '%front'         => '<front>'
-      )
-    ),
+  $path_explanation = t(
+    "Enter one file pattern per line. The '*' character is a wildcard.<br />
+    Example file patterns are <code>*.js</code> for all JavaScript files and
+    <code>mytheme/*.css</code> for all CSS files in the <code>mytheme</code>
+    directory."
   );
 
-  $form[CDN_EXCLUSION_LOGGED_IN_VARIABLE] = array(
+  $form['exceptions'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Exceptions'),
+    '#description' => t('Which files should be served from a CDN is not as
+                         simple as it seems: there are bound to be exceptions.
+                         You can easily define those exceptions here, either
+                         by file URL or for logged in users.'),
+  );
+
+  $form['exceptions']['path'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('File URL'),
+    '#description' => t("Files that are marked to not be served from the CDN
+    because of a match in the blacklist, can be overridden to be served from
+    the CDN after all, if they have a match in the whitelist.<br />
+    <br />
+    <strong>All JavaScript files are excluded by default. This is necessary
+    to ensure a painless out-of-the-box experience.</strong> For maximum
+    performance, you should only exclude problematic JavaScript files.
+    
+    
+    <br />
+    <strong><u>Full explanation:</u></strong> it's necessary prevent any
+    possible cross-domain AJAX requests, which would violate the <a
+    href=\"http://en.wikipedia.org/wiki/Same_origin_policy\">same origin
+    policy</a> of browsers. Such violations potentially result in broken
+    functionality. Note that <u>even requests to subdomains such as
+    cdn.yourdomain.com count as cross-domain requests!</u><br />
+    You can opt-in to including JavaScript files by default and then exclude
+    problematic ones, but then you should carefully note which JavaScript
+    files perform AJAX requests. You can prevent all potential problems by
+    using <a href=\"http://en.wikipedia.org/wiki/JSON#JSONP\">JSONP</a>,
+    which is a work-around to allow for cross-domain AJAX
+    requests.</strong>"),
+    '#collapsible' => TRUE,
+  );
+  
+  $form['exceptions']['path'][CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE] = array(
+    '#type' => 'textarea',
+    '#title' => t('Blacklist'),
+    '#default_value' => variable_get(CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_PATH_BLACKLIST_DEFAULT),
+    '#description' => $path_explanation,
+  );
+  $form['exceptions']['path'][CDN_EXCEPTION_PATH_WHITELIST_VARIABLE] = array(
+    '#type' => 'textarea',
+    '#title' => t('Whitelist'),
+    '#default_value' => variable_get(CDN_EXCEPTION_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_PATH_WHITELIST_DEFAULT),
+    '#description' => $path_explanation,
+  );
+
+  $form['exceptions']['auth_users'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Authenticated users'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['exceptions']['auth_users'][CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE] = array(
     '#type'          => 'textarea',
-    '#title'         => t('Paths excluded from the CDN if logged in'),
-    '#default_value' => variable_get(CDN_EXCLUSION_LOGGED_IN_VARIABLE, CDN_EXCLUSION_LOGGED_IN_DEFAULT),
-    '#description'   => t("Enter one Drupal path per line. Same rules as above apply here."),
+    '#title'         => t('Blacklist'),
+    '#default_value' => variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT),
+    '#description'   => $path_explanation,
   );
 
   return system_settings_form($form);

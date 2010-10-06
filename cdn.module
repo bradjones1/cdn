@@ -23,11 +23,15 @@ define('CDN_MODE_ADVANCED', 'advanced');
 define('CDN_STATUS_VARIABLE', 'cdn_status');
 define('CDN_STATS_VARIABLE', 'cdn_stats');
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
-define('CDN_EXCLUSION_VARIABLE', 'cdn_exclusion');
-define('CDN_EXCLUSION_DEFAULT', "*.js");
-define('CDN_EXCLUSION_LOGGED_IN_VARIABLE', 'cdn_exclusion_logged_in');
-define('CDN_EXCLUSION_LOGGED_IN_DEFAULT', '');
 define('CDN_HTTPS_SUPPORT_VARIABLE', 'cdn_https_support');
+
+// Variables for exceptions.
+define('CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE', 'cdn_exception_path_blacklist');
+define('CDN_EXCEPTION_PATH_BLACKLIST_DEFAULT',  "*.js");
+define('CDN_EXCEPTION_PATH_WHITELIST_VARIABLE', 'cdn_exception_path_whitelist');
+define('CDN_EXCEPTION_PATH_WHITELIST_DEFAULT',  "misc/*.js\nblock/block.js\ncolor/color.js\ncomment/comment.js\nopenid/openid.js\nprofile/profile.js\nsystem/system.js\ntaxonomy/taxonomy.js\nuser/user.js\nadmin_menu/admin_menu.js");
+define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE', 'cdn_exception_auth_users_blacklist');
+define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT', '');
 
 // Variables for basic mode.
 define('CDN_BASIC_MAPPING_VARIABLE', 'cdn_basic_mapping');
@@ -52,8 +56,9 @@ function cdn_file_url_alter(&$path) {
   $status               = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
   $mode                 = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   $stats                = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
-  $exclusions           = variable_get(CDN_EXCLUSION_VARIABLE, CDN_EXCLUSION_DEFAULT);
-  $exclusions_logged_in = variable_get(CDN_EXCLUSION_LOGGED_IN_VARIABLE, CDN_EXCLUSION_LOGGED_IN_DEFAULT);
+  $path_blacklist       = variable_get(CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_PATH_BLACKLIST_DEFAULT);
+  $path_whitelist       = variable_get(CDN_EXCEPTION_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_PATH_WHITELIST_DEFAULT);
+  $auth_users_blacklist = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
   $https_support        = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
   $is_https_page        = ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
   global $user;
@@ -71,13 +76,17 @@ function cdn_file_url_alter(&$path) {
     return;
   }
 
-  // If the current path matches one of the excluded paths, return immediately.
-  if (drupal_match_path($path, $exclusions)) {
-    return;
+  // If the current path matches one of the blacklisted paths, return
+  // immediately, except when the current path also matches one of the
+  // whitelisted paths.
+  if (drupal_match_path($path, $path_blacklist)) {
+    if (!drupal_match_path($path, $path_whitelist)) {
+      return;
+    }
   }
 
-  // If logged in user, run a second set of exclusions.
-  if ($user->uid > 0 && drupal_match_path($path, $exclusions_logged_in)) {
+  // If logged in user, apply a secondary blacklist.
+  if ($user->uid > 0 && drupal_match_path($path, $auth_users_blacklist)) {
     return;
   }
 
@@ -116,7 +125,7 @@ function cdn_file_url_alter(&$path) {
     // If the current page is being served via HTTPS, and the CDN supports
     // HTTPS, then use the HTTPS file URL.
     if ($is_https_page && $https_support) {
-      $url = preg_replace('/^http/', 'https', $url);
+      $cdn_url = preg_replace('/^http/', 'https', $url);
     }
 
     // If the user can access it, add this to the per-page statistics.
