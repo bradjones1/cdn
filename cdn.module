@@ -27,14 +27,13 @@ define('CDN_EXCLUSION_VARIABLE', 'cdn_exclusion');
 define('CDN_EXCLUSION_DEFAULT', "*.js");
 define('CDN_EXCLUSION_LOGGED_IN_VARIABLE', 'cdn_exclusion_logged_in');
 define('CDN_EXCLUSION_LOGGED_IN_DEFAULT', '');
+define('CDN_HTTPS_SUPPORT_VARIABLE', 'cdn_https_support');
 
 // Variables for basic mode.
 define('CDN_BASIC_MAPPING_VARIABLE', 'cdn_basic_mapping');
-define('CDN_BASIC_HTTPS_VARIABLE', 'cdn_basic_https');
 
 // Variables for advanced mode.
 define('CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE', 'cdn_advanced_synced_files_db');
-define('CDN_ADVANCED_HTTPS_VARIABLE', 'cdn_advanced_https');
 
 // Hardcoded settings for accessing the daemon's metadata, to show statistics.
 define('CDN_DAEMON_SYNCED_FILES_DB', 'synced_files.db');
@@ -254,14 +253,8 @@ function cdn_exit($destination = NULL) {
   }
 
   // Try not to break non-HTML pages.
-  if (function_exists('drupal_get_headers')) {
-    $headers = drupal_get_headers();
-    $formats = array('xml', 'javascript', 'json', 'plain', 'image', 'application', 'csv', 'x-comma-separated-values');
-    foreach ($formats as $format) {
-      if (strstr($headers, $format)) {
-        return;
-      }
-    }
+  if (function_exists('drupal_get_headers') && !strstr(drupal_get_headers(), 'html')) {
+    return;
   }
 
   if (!$destination
