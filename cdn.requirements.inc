@@ -177,7 +177,13 @@ function _cdn_requirements_imagecache_patch_patterns() {
  * Checks if the environment is Pressflow or not.
  */
 function _cdn_requirements_check_pressflow() {
-  require_once './profiles/default/default.profile';
+  $profile = realpath('.') . '/profiles/default/default.profile';
+
+  if (!file_exists($profile)) {
+    return FALSE;
+  }
+
+  include_once $profile;
   $default = default_profile_details();
   return $default['name'] == 'Pressflow';
 }
