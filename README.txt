@@ -91,19 +91,18 @@ Installation
 
 5) Visit "admin/settings/cdn" to learn about the various settings.
 
-6) If you want to use advanced mode, install and configure the daemon first.
-   You can install it by performing an svn checkout from
-     svn://wimleers.com/school/bachelor-thesis/code/daemon
+6) If you want to use File Conveyor mode, install and configure the File
+   Conveyor first. You can download it at http://fileconveyor.org/
    Then follow the instructions in the included INSTALL.txt and README.txt.
    Use the config.xml file that is included in this module and modify it to
    comply with your setup and to suit your needs.
    Note: the CDN integration module requires PDO extension for PHP to be
    installed, as well as the PDO SQLite driver.
 
-7) Go to admin/reports/status. The CDN integration module will report its
-   status here. If you've enabled advanced mode and have set up the daemon,
-   you will see some basic stats here as well, and you can check here to see
-   if the daemon is currently running.
+7) Go to admin/reports/status. The CDN module will report its status here. If
+   you've enabled File Conveyor mode and have set up File Conveyor daemon, you
+   will see some basic stats here as well, and you can check here to see if
+   File Conveyor is currently running.
    You can also see here if you've applied the patches correctly!
 
 

@@ -334,9 +334,9 @@ function _cdn_admin_validate_synced_files_db($synced_files_db, $name) {
 }
 
 /**
- * Helper function to check if the requirements of the CDN integration module
- * have been met. If any requirement errors exist, they are aggregated into
- * a single error message and are subsequently displayed.
+ * Helper function to check if the requirements of the CDN module have been
+ * met. If any requirement errors exist, they are aggregated into a single
+ * error message and are subsequently displayed.
  *
  * @return
  *   The number of requirement errors.

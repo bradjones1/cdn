@@ -137,7 +137,7 @@ function cdn_file_url_alter(&$path) {
  */
 function cdn_menu() {
   $items['admin/settings/cdn'] = array(
-    'title'            => 'CDN integration',
+    'title'            => 'CDN',
     'description'      => 'Configure CDN integration.',
     'access arguments' => array('administer site configuration'),
     'page callback'    => 'drupal_get_form',
@@ -293,28 +293,28 @@ function cdn_requirements($phase) {
     case 'runtime' :
       require_once drupal_get_path('module', 'cdn') . '/cdn.requirements.inc';
 
-      // CDN integration core patch.
+      // CDN core patch.
       _cdn_requirements_generate_requirement_for_patch(
         $requirements,
         'core',
-        $t('CDN integration — Drupal core patch')
+        $t('CDN — Drupal core patch')
       );
 
       if (module_exists('imagecache')) {
-        // CDN integration ImageCache patch.
+        // CDN ImageCache patch.
         _cdn_requirements_generate_requirement_for_patch(
           $requirements,
           'imagecache',
-          $t('CDN integration — ImageCache module patch')
+          $t('CDN — ImageCache module patch')
         );
       }
 
 
-      // CDN integration status.
+      // CDN  status.
       $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
       $mode   = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
 
-      $requirements['cdn']['title'] = $t('CDN integration');
+      $requirements['cdn']['title'] = $t('CDN');
 
       // Set the basic info: disabled/testing/enabled.
       if ($status == CDN_DISABLED) {
@@ -332,7 +332,7 @@ function cdn_requirements($phase) {
             array('%cdn-testing-mode-permission' => CDN_PERM_ACCESS_TESTING)
           ),
           'severity' => REQUIREMENT_WARNING,
-          'value'    => $t('In testing mode'),
+          'value'    => $t('Testing'),
         );
       }
       else {
@@ -343,13 +343,13 @@ function cdn_requirements($phase) {
         );
       }
 
-      // When CDN integration is enabled, add on more information.
+      // When enabled, add more information.
       if ($status != CDN_DISABLED) {
         if ($mode == CDN_MODE_BASIC) {
-          $requirements['cdn']['value'] .= ' – '. t('basic mode');
+          $requirements['cdn']['value'] .= ' – '. t('Origin Pull mode');
         }
         else {
-          $requirements['cdn']['value'] .= ' – '. t('advanced mode');
+          $requirements['cdn']['value'] .= ' – '. t('File Conveyor mode');
 
           $items = array();
 
@@ -413,7 +413,7 @@ function cdn_requirements($phase) {
             else {
               $items[] = t("Number of synced files is unknown.");
             }
-            $items[] = ($daemon_pid_file_exists) ? t('The daemon is currently running.') : '<strong>' . t('The daemon is currently not running.') . '</strong>';
+            $items[] = ($daemon_pid_file_exists) ? t('File Conveyor is currently running.') : '<strong>' . t('File Conveyor is currently not running.') . '</strong>';
             if (isset($pipeline_queue_count)) {
               $items[] = t("!pipeline-queue-count files are waiting to be synced.", array('!pipeline-queue-count' => $pipeline_queue_count));
               $items[] = t("!pipeline-list-count files are currently being synced.", array('!pipeline-list-count' => $pipeline_list_count));
