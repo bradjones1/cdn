@@ -103,7 +103,7 @@ function cdn_file_url_alter(&$path) {
     // which the file is available.
     $servers = ($mode == CDN_MODE_BASIC) ? cdn_basic_get_servers($path) : cdn_advanced_get_servers($path);
 
-    // The file is not available on any server. 
+    // The file is not available on any server.
     if (count($servers) == 0) {
       $cdn_url    = FALSE;
       $server = FALSE;
@@ -588,7 +588,7 @@ function _cdn_advanced_get_db_connection() {
     try {
       $db = new PDO('sqlite:' . variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''));
     } catch (PDOException $e) {
-      watchdog('cdn', t("Could not open synced files DB: %error.", array('%error' => $e)));
+      watchdog('cdn', "Could not open synced files DB: %error.", array('%error' => $e));
       $db = FALSE;
     }
   }

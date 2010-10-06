@@ -117,6 +117,20 @@ function cdn_admin_details_form(&$form_state) {
     '@format-url'        => t('<URL>'),
     '@format-extensions' => t('<extensions>'),
   );
+  $format_explanation_list_items = array(
+    t("<strong>@format-url</strong> is the CDN URL that should be used. E.g.:
+      '<code>http://cdn-a.com</code>'.", $format_variables),
+    t("<strong>@format-extensions</strong> is an <strong>optional</strong>
+      setting to limit which files should be served from a CDN. E.g.:
+      '<code>.css .jpg .jpeg .png</code>'.", $format_variables),
+  );
+  $example_list_items = array(
+    t('This would serve <em>all</em> files from a single CDN:
+      <pre><code>http://cdn-a.com</code></pre>'),
+    t("This would serve CSS and images from CDN A, .zip files from CDN B and
+       everything else from CDN C:
+       <pre><code>http://cdn-a.com|.css .jpg .jpeg .png\nhttp://cdn-b.com|.zip\nhttp://cdn-c.com</code></pre>"),
+  );
   $form['settings'][CDN_BASIC_MAPPING_VARIABLE] = array(
     '#type'          => 'textarea',
     '#title'         => t('CDN mapping'),
@@ -127,22 +141,8 @@ function cdn_admin_details_form(&$form_state) {
                            <br />
                            Sample mappings:
                            !example-list", $format_variables + array(
-                             '!format-explanation-list' => theme('item_list', array(
-                               t("<strong>@format-url</strong> is the CDN URL
-                                 that should be used. E.g.: '<code>http://cdn-a.com</code>'.", $format_variables),
-                               t("<strong>@format-extensions</strong> is an
-                                  <strong>optional</strong> setting to limit
-                                  which files should be served from a CDN.
-                                  E.g.: '<code>.css .jpg .jpeg .png</code>'.", $format_variables),
-                             )),
-                             '!example-list' => theme('item_list', array(
-                               t('This would serve <em>all</em> files from a single CDN:
-                               <pre><code>http://cdn-a.com</code></pre>'),
-                               t("This would serve CSS and images from CDN A, .zip files from CDN B and everything else from CDN C:
-                               <pre><code>http://cdn-a.com|.css .jpg .jpeg .png\nhttp://cdn-b.com|.zip\nhttp://cdn-c.com
-                               </code></pre>"),
-
-                             )),
+                             '!format-explanation-list' => theme('item_list', $format_explanation_list_items),
+                             '!example-list' => theme('item_list', $example_list_items),
                           )),
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_MAPPING_VARIABLE, ''),
@@ -239,8 +239,6 @@ function cdn_admin_other_settings_form(&$form_state) {
     <strong>All JavaScript files are excluded by default. This is necessary
     to ensure a painless out-of-the-box experience.</strong> For maximum
     performance, you should only exclude problematic JavaScript files.
-    
-    
     <br />
     <strong><u>Full explanation:</u></strong> it's necessary prevent any
     possible cross-domain AJAX requests, which would violate the <a
@@ -256,7 +254,7 @@ function cdn_admin_other_settings_form(&$form_state) {
     requests.</strong>"),
     '#collapsible' => TRUE,
   );
-  
+
   $form['exceptions']['path'][CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE] = array(
     '#type' => 'textarea',
     '#title' => t('Blacklist'),
@@ -276,7 +274,7 @@ function cdn_admin_other_settings_form(&$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['exceptions']['auth_users'][CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE] = array(
     '#type'          => 'textarea',
     '#title'         => t('Blacklist'),
@@ -301,7 +299,7 @@ function cdn_admin_details_form_validate($form, &$form_state) {
   else {
     if (empty($form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE])) {
       form_error($form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE]['#title'])));
-    }    
+    }
   }
 
   // When in advanced mode, validate the synced files DB.

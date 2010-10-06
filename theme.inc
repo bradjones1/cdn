@@ -93,7 +93,7 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
  */
 function theme_cdn_page_stats_file_link($file, $absolute_path, $synced, $cdn_url, $server) {
   $file_link  = l(t('!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
-  $touch_link = l('touch', 'admin/cdn/touch/' . $file);
+  $touch_link = l(t('touch'), 'admin/cdn/touch/' . $file);
 
   $output = '';
   $output .= '<span class="file-link">' . $file_link;
