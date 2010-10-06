@@ -510,7 +510,6 @@ function _cdn_basic_parse_raw_mapping($mapping_raw) {
   $mapping = array();
 
   if (!empty($mapping_raw)) {
-    $mapping_raw = str_replace('.', '', $mapping_raw);
     $lines = preg_split("/[\n\r]+/", $mapping_raw, -1, PREG_SPLIT_NO_EMPTY);
     foreach ($lines as $line) {
       // Parse this line. It may or may not limit the CDN URL to a list of
@@ -518,7 +517,7 @@ function _cdn_basic_parse_raw_mapping($mapping_raw) {
       if (strpos($line, '|') !== FALSE) {
         $parts = explode('|', $line);
         $cdn_url    = rtrim(trim($parts[0]), '/'); // Remove whitespace and a trailing slash.
-        $extensions = explode(' ', trim($parts[1])); // Remove whitespace and split on ' '.
+        $extensions = explode(' ', trim(str_replace('.', '', $parts[1]))); // Remove periods, whitespace and split on ' '.
       }
       else {
         $cdn_url    = trim($line);
