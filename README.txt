@@ -43,13 +43,8 @@ from your server (the origin server), but you have to push the files manually
 such as MaxCDN, offer both pull- and push-functionality. For more details, see
 the "Key Properties of a CDN" article [2].
 
-Version 1 of this module (for Drupal 6) was written as part of the bachelor
-thesis [3] of Wim Leers at Hasselt University [4].
-
 [1] http://fileconveyor.org/
 [2] http://wimleers.com/article/key-properties-of-a-cdn
-[2] http://wimleers.com/tags/bachelor-thesis
-[3] http://uhasselt.be/
 
 
 Supported CDNs
@@ -157,7 +152,7 @@ create a variable function, e.g.:
   $file_create_url = (module_exists('cdn')) ? 'file_create_url' : 'url';
 
 Then create all file URLs using this variable function. E.g.
-  $file_url = $file_create_url(drupal_get_path('module', 'episodes') .'/lib/episodes.js');
+  $file_url = $file_create_url(drupal_get_path('module', 'episodes') . '/lib/episodes.js');
 
 When your module already uses file_create_url() (either because it supports
 user-uploaded content or generates files), then there is nothing that you have
@@ -189,3 +184,6 @@ Wim Leers ~ http://wimleers.com/
 
 Version 1 of this module (for Drupal 6) was written as part of the bachelor
 thesis of Wim Leers at Hasselt University.
+
+http://wimleers.com/tags/bachelor-thesis
+http://uhasselt.be/
