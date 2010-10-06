@@ -101,7 +101,7 @@ diff -u -F '^f' -r1.121.2.13 file.inc
 +  }
 +
 +  // Shipped files.
-+  if (preg_match("#^(/?)(misc|modules|sites|themes)/#i", $path)) {
++  if (preg_match("#^(/?)(misc|modules|sites|themes)/#i", $path) && (strpos($path, file_directory_path() . '/') !== 0)) {
 +    return base_path() . $path;
 +  }
 +  // Created files.
