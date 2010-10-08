@@ -60,7 +60,7 @@ function cdn_file_url_alter(&$path) {
   $path_whitelist       = variable_get(CDN_EXCEPTION_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_PATH_WHITELIST_DEFAULT);
   $auth_users_blacklist = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
   $https_support        = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
-  $is_https_page        = ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
+  $is_https_page        = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'));
   global $user;
 
   // If the current path is an absolute path, return immediately.
