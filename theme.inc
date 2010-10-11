@@ -92,7 +92,7 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
  *   The rendered HTML.
  */
 function theme_cdn_page_stats_file_link($file, $absolute_path, $synced, $cdn_url, $server) {
-  $file_link  = l(t('!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
+  $file_link  = l(t(($server == NULL) ? '!file' : '!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
   $touch_link = l(t('touch'), 'admin/cdn/touch/' . $file);
 
   $output = '';
