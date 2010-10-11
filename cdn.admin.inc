@@ -15,6 +15,7 @@
  */
 function cdn_admin_general_settings_form(&$form_state) {
   ctools_include('dependent');
+  require_once drupal_get_path('module', 'cdn') . '/cdn.requirements.inc';
 
   // Prevent requirement errors from showing up twice.
   if (empty($form_state['post'])) {
@@ -22,6 +23,31 @@ function cdn_admin_general_settings_form(&$form_state) {
   }
 
   $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
+
+
+  // Check which CDN integration mechanism is being used.
+  $integration_method = _cdn_requirements_get_integration_mechanism();
+  switch ($integration_method) {
+    case 'fallback':
+      $desc = t('No core patch applied — falling back to theme layer to alter
+                 file URLs.<br />
+                 <u>Note:</u> this mechanism is unable to alter all file URLs.
+                 <strong>If you want complete CDN coverage, you should either
+                 apply the included Drupal core patch or switch to
+                 <a href="http://pressflow.org/">Pressflow</a>.</strong>');
+      break;
+    case 'pressflow':
+      $desc = t("This is a Pressflow site — no core patch necessary.");
+      break;
+    case 'core patch':
+      $desc = t("Core patch applied!");
+      break;
+  }
+  $form['integration_method'] = array(
+    '#type' => 'item',
+    '#title' => t('Integration method'),
+    '#value' => $desc,
+  );
 
   $form[CDN_STATUS_VARIABLE] = array(
     '#type' => 'radios',

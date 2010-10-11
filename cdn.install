@@ -8,6 +8,15 @@
 
 
 /**
+ * Implementation of hook_install().
+ */
+function cdn_install() {
+  // CDN must run after JavaScript aggregator (weight 9999) in fallback mode.
+  db_query("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
+  drupal_rebuild_theme_registry();
+}
+
+/**
  * Implementation of hook_uninstall().
  */
 function cdn_uninstall() {
@@ -59,4 +68,16 @@ function cdn_update_6201() {
   $ret[] = array('success' => TRUE, 'query' => 'Updated variables (internal name changes only, for improved consistency).');
 
   return array();
+}
+
+/**
+ * CDN must run after JavaScript aggregator (weight 9999) in fallback mode.
+ */
+function cdn_update_6202() {
+  $ret = array();
+  
+  $ret[] = update_sql("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
+  // update.php runs drupal_rebuild_theme_registry();
+
+  return $ret;
 }

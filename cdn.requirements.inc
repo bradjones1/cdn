@@ -10,7 +10,7 @@
 /**
  * Generates a requirement for the given patch.
  */
-function _cdn_requirements_generate_requirement_for_patch(&$requirements, $patch_name, $title) {
+function _cdn_requirements_generate_requirement_for_patch(&$requirements, $patch_name, $title, $not_properly_applied_severity = REQUIREMENT_ERROR) {
   $t = get_t();
 
   $patterns_function = '_cdn_requirements_' . $patch_name . '_patch_patterns';
@@ -40,7 +40,7 @@ function _cdn_requirements_generate_requirement_for_patch(&$requirements, $patch
   else {
     $requirements[$key] += array(
       'description' => $t('This patch has not been properly applied to the following files (or the patch has been updated):') . '<br />' . theme('item_list', $unpatched_files) . '<br />' . t('Please consult the installation instructions in the included README.txt.'),
-      'severity'    => REQUIREMENT_ERROR,
+      'severity'    => $not_properly_applied_severity,
       'value'       => $t('Not/incompletely applied patch or updated patch.'),
     );
   }
@@ -57,11 +57,8 @@ function _cdn_requirements_check_patch_applied($patterns) {
     foreach ($details as $file_info => $patterns) {
       foreach ($patterns as $pattern) {
         if ($kind == 'core') {
-          // Don't check core patches against Pressflow.
-          if (!_cdn_requirements_check_pressflow()) {
-            $filename = $file_info;
-            $full_path = $drupal_root . '/' . $filename;
-          }
+          $filename = $file_info;
+          $full_path = $drupal_root . '/' . $filename;
         }
         else {
           list($name, $filename) = explode('|', $file_info);
@@ -176,7 +173,7 @@ function _cdn_requirements_imagecache_patch_patterns() {
 /**
  * Checks if the environment is Pressflow or not.
  */
-function _cdn_requirements_check_pressflow() {
+function _cdn_requirements_is_pressflow() {
   $profile = realpath('.') . '/profiles/default/default.profile';
 
   if (!file_exists($profile)) {
@@ -186,4 +183,52 @@ function _cdn_requirements_check_pressflow() {
   include_once $profile;
   $default = default_profile_details();
   return $default['name'] == 'Pressflow';
+}
+
+/**
+ * Detect whether the fallback mechanism (to alter file URLs, the best
+ * mechanism is the core patch, but a fallback to the theme layer is included)
+ * should be enabled or disabled, and actually enable/disable it, too.
+ */
+function _cdn_requirements_detect_fallback() {
+  // Check if the core patch is applied properly (i.e. no core files don't
+  // properly match the core patch). If it is properly applied, then the
+  // fallback will be (or remain) disabled, if not, then the fallback will be
+  // (or remain) enabled.
+  $fallback_currently_enabled = variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE);
+  if (count(_cdn_requirements_check_patch_applied(_cdn_requirements_core_patch_patterns())) > 0) {
+    if (!$fallback_currently_enabled) {
+      variable_set(CDN_THEME_LAYER_FALLBACK_VARIABLE, TRUE);
+      drupal_rebuild_theme_registry();
+      drupal_set_message(t("Drupal CDN integration status changed: core patch not (properly) applied; fallback mechanism enabled."), 'warning');
+      watchdog('cdn', "Drupal CDN integration status changed: core patch not (properly) applied; fallback mechanism enabled.");
+    }
+  }
+  else {
+    if ($fallback_currently_enabled) {
+      variable_set(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE);
+      drupal_rebuild_theme_registry();
+      drupal_set_message("Drupal CDN integration status changed: core patch properly applied; fallback mechanism disabled.", 'warning');
+      watchdog('cdn', "Drupal CDN integration status changed: core patch properly applied; fallback mechanism disabled.");
+    }
+  }
+}
+
+/**
+ * Get the integration mechanism that is currently being used by the CDN
+ * integration module.
+ *
+ * @return
+ *   One of the following: 'fallback', 'pressflow', 'core patch'.
+ */
+function _cdn_requirements_get_integration_mechanism() {
+  if (variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE)) {
+    return 'fallback';
+  }
+  elseif (_cdn_requirements_is_pressflow()) {
+    return 'pressflow';
+  }
+  else {
+    return 'core patch';
+  }
 }
