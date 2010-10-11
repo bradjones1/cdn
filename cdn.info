@@ -3,5 +3,5 @@ name = CDN
 description = "Integrates your site with a CDN, through altering file URLs."
 
 core = 6.x
-package = Performance
+package = Performance and scalability
 dependencies[] = ctools
