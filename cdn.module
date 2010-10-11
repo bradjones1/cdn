@@ -579,7 +579,7 @@ function cdn_advanced_get_servers($path) {
   // In case no connection to the database could be made, pretend the file was
   // not found in the synced files database.
   if (!$db) {
-    return array(FALSE, FALSE);
+    return array();
   }
 
   // Get the real path to the file (resolves symbolic links).
