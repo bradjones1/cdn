@@ -597,6 +597,56 @@ function cdn_advanced_get_servers($path) {
   return $servers;
 }
 
+/**
+ * Get all domains from which files might be served. This information is
+ * necessary for some modules, e.g. Boost.
+ *
+ * @return
+ *   An array of domain names.
+ */
+function cdn_get_domains() {
+  $domains = array();
+
+  // Origin Pull mode domains.
+  if (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_BASIC) {
+    $mapping = variable_get(CDN_BASIC_MAPPING_VARIABLE, '');
+    $lines = preg_split("/[\n\r]+/", $mapping, -1, PREG_SPLIT_NO_EMPTY);
+    foreach ($lines as $line) {
+      // Parse this line. It may or may not limit the CDN URL to a list of
+      // file extensions.
+      if (strpos($line, '|') !== FALSE) {
+        $parts = explode('|', $line);
+        $domains[] = parse_url(trim($parts[0]), PHP_URL_HOST);
+      }
+      else {
+        $domains[] = parse_url(trim($line), PHP_URL_HOST);
+      }
+    }
+  }
+  // File Conveyor mode domains.
+  elseif (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_ADVANCED) {
+    $db = _cdn_advanced_get_db_connection();
+
+    // In case no connection to the database could be made, pretend no
+    // domains are being used.
+    if (!$db) {
+      return array();
+    }
+
+    // Retrieve all unique domains (by retrieving one URL per server) and then
+    // parsing the domain names in those URLs.
+    $sql = "SELECT url FROM synced_files GROUP BY server";
+    $stmt = $db->prepare($sql);
+    $stmt->execute();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $row) {
+      $domains[] = parse_url($row['url'], PHP_URL_HOST);
+    }
+  }
+
+  return array_unique($domains);
+}
+
 
 //----------------------------------------------------------------------------
 // Private functions.
