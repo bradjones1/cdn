@@ -308,6 +308,50 @@ function cdn_admin_other_settings_form(&$form_state) {
     '#description'   => $path_explanation,
   );
 
+
+  $form['cdn_pick_server'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'cdn_pick_server()',
+    '#description' => t('It is possible to achieve very advanced types of CDN
+                         integration by implementing the
+                         <code>cdn_pick_server()</code> function (consult the
+                         included README for examples). However, to lower the
+                         barrier to start using it, it has been made possible
+                         to just enter the body of that function right here,
+                         in the settings of the CDN module, so you would not
+                         have to create a small module for it.'),
+  );
+  if (function_exists('cdn_pick_server')) {
+    $form['cdn_pick_server']['defined_in_code'] = array(
+      '#type' => 'item',
+      '#title' => t('Defined in code'),
+      '#value' => 'The <code>cdn_pick_server()</code> function is already defined in code.',
+    );
+  }
+  else {
+    $php_code = variable_get(CDN_PICK_SERVER_PHP_CODE_VARIABLE, '');
+    $form['cdn_pick_server'][CDN_PICK_SERVER_PHP_CODE_VARIABLE] = array(
+      '#type' => 'textarea',
+      '#title' => t('PHP code for cdn_pick_server()'),
+      '#description' => t('The parameter <code>$servers_for_file</code> is
+                           available to you (which is an array of servers),
+                           you should return one of them (or return an empty
+                           array if you do not want any of them to be used).
+                           <br />
+                           Internally, <code>$servers_for_file</code> looks
+                           like this:
+                           <pre><code>$servers_for_file[0] = array(\'url\' => \'http://cdn1.com/image.jpg\', \'server\' => \'cdn1.com\');
+$servers_for_file[1] = array(\'url\' => \'http://cdn2.net/image.jpg\', \'server\' => \'cdn2.net\');</code></pre>
+                           Eventually, you should always end your code with
+                           something like
+                           <pre><code>return $servers_for_file[$some_index];</code></pre>
+                           '),
+      '#cols' => 60,
+      '#rows' => ($php_code != '') ? count(explode("\n", $php_code)) + 1 : 5,
+      '#default_value' => $php_code,
+    );
+  }
+
   return system_settings_form($form);
 }
 
@@ -332,6 +376,19 @@ function cdn_admin_details_form_validate($form, &$form_state) {
   if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_ADVANCED) {
     $synced_files_db = $form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE];
     _cdn_admin_validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
+  }
+}
+
+/**
+ * Default validate callback for the other settings form.
+ */
+function cdn_admin_other_settings_form_validate($form, &$form_state) {
+  if ($form_state['values'][CDN_PICK_SERVER_PHP_CODE_VARIABLE] !== '') {
+    $php_code = $form_state['values'][CDN_PICK_SERVER_PHP_CODE_VARIABLE];
+    $servers = array();
+    if (_cdn_eval_pick_server($php_code, $servers) === FALSE) {
+      form_error($form['cdn_pick_server'][CDN_PICK_SERVER_PHP_CODE_VARIABLE], t('Your <code>cdn_pick_server()</code> cannot be evaluated. Please correct it or leave it empty.'));
+    }
   }
 }
 

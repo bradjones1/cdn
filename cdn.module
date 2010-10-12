@@ -25,6 +25,7 @@ define('CDN_STATS_VARIABLE', 'cdn_stats');
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 define('CDN_HTTPS_SUPPORT_VARIABLE', 'cdn_https_support');
 define('CDN_THEME_LAYER_FALLBACK_VARIABLE', 'cdn_theme_layer_fallback');
+define('CDN_PICK_SERVER_PHP_CODE_VARIABLE', 'CDN_PICK_SERVER_PHP_CODE_VARIABLE');
 
 // Variables for exceptions.
 define('CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE', 'cdn_exception_path_blacklist');
@@ -681,4 +682,22 @@ function _cdn_advanced_get_db_connection() {
   }
 
   return $db;
+}
+
+/**
+ * Helper function to evaluate CDN_PICK_SERVER_PHP_CODE_VARIABLE, when that is
+ * being used instead of an actual cdn_pick_server() function.
+ *
+ * @param $php_code
+ *   The PHP code to be evaluated.
+ * @param $servers_for_file
+ *   The $servers_for_file parameter, as it will be available to the eval()'d
+ *   $php_code. This variable is not passed by reference, hence it will not be
+ *   changed outside the scope of this function.
+ */
+function _cdn_eval_pick_server($php_code, $servers_for_file) {
+  ob_start();
+  $result = @eval($php_code);
+  ob_end_clean();
+  return $result;
 }

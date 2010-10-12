@@ -154,6 +154,11 @@ picking the CDN based purely on filetype, one could write:
     return $servers_for_file[$unique_file_id % count($servers_for_file)];
   }
 
+Note: if you don't want to create a small module for this function, or if you
+      would just like to experiment with this function, you can also enter the
+      body of this function at admin/settings/cdn/other — it will work exactly
+      the same!
+
 
 Supporting the CDN integration module in your modules
 -----------------------------------------------------
