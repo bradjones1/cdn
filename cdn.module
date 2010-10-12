@@ -242,9 +242,14 @@ function cdn_theme() {
  */
 function cdn_init() {
   // When the fallback mechanism to alter file URLs (i.e. using the theme
-  // layer) is enabled, load cdn.fallback.inc.
-  if (variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE) == TRUE) {
-      require_once drupal_get_path('module', 'cdn') . '/cdn.fallback.inc';
+  // layer) is enabled, load cdn.fallback.inc. But only load it when the
+  // CDN integration is enabled or if testing mode is enabled and the current
+  // user has access to that.
+  $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
+  if (($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING)))
+      && variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE) == TRUE
+  ) {
+    require_once drupal_get_path('module', 'cdn') . '/cdn.fallback.inc';
   }
 
   // When per-page statistics are enabled, add the CSS that will be used to
