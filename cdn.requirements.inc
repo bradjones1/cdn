@@ -208,7 +208,7 @@ function _cdn_requirements_detect_fallback() {
     if ($fallback_currently_enabled) {
       variable_set(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE);
       drupal_rebuild_theme_registry();
-      drupal_set_message("Drupal CDN integration status changed: core patch properly applied; fallback mechanism disabled.", 'warning');
+      drupal_set_message(t("Drupal CDN integration status changed: core patch properly applied; fallback mechanism disabled."), 'warning');
       watchdog('cdn', "Drupal CDN integration status changed: core patch properly applied; fallback mechanism disabled.");
     }
   }

@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -36,7 +37,7 @@ function cdn_theme_registry_alter(&$theme_registry) {
  * @param &$variables
  *   Array containing various page elements.
  */
-function cdn_preprocess_page(&$variables) {  
+function cdn_preprocess_page(&$variables) {
   global $base_url;
   $root = preg_quote(base_path()) . '|' . preg_quote($base_url);
 
@@ -62,7 +63,7 @@ function cdn_preprocess_page(&$variables) {
 
 /**
  * Helper function for cdn_preprocess_page().
- * 
+ *
  * @param &$html
  *   The HTML in which file URLs will be altered.
  * @param $pattern
@@ -77,7 +78,7 @@ function cdn_preprocess_page(&$variables) {
  *   $search_index will be replaced by $prefix, plus the altered file URL,
  *   plus the @suffix.
  * @param $suffix
- *   @see $prefix
+ *   See $prefix.
  */
 function _cdn_preprocess_page_helper(&$html, $pattern, $search_index, $path_index, $querystring_index, $prefix, $suffix) {
   // Find a match against the given pattern.
@@ -91,7 +92,7 @@ function _cdn_preprocess_page_helper(&$html, $pattern, $search_index, $path_inde
     $path = $matches[$path_index][$i];
     cdn_file_url_alter($path);
     $searches[]     = $search;
-    $replacements[] = $prefix . $path . $matches[$querystring_index][$i] . $suffix;    
+    $replacements[] = $prefix . $path . $matches[$querystring_index][$i] . $suffix;
   }
 
   // Apply the generated replacements ton the subject.

@@ -75,7 +75,7 @@ function cdn_update_6201() {
  */
 function cdn_update_6202() {
   $ret = array();
-  
+
   $ret[] = update_sql("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
   // update.php runs drupal_rebuild_theme_registry();
 

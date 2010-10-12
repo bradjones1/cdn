@@ -140,8 +140,8 @@ function cdn_admin_details_form(&$form_state) {
   //
 
   $format_variables = array(
-    '@format-url'        => t('<URL>'),
-    '@format-extensions' => t('<extensions>'),
+    '@format-url'        => '<' . t('URL') . '>',
+    '@format-extensions' => '<' . t('extensions') . '>',
   );
   $format_explanation_list_items = array(
     t("<strong>@format-url</strong> is the CDN URL that should be used. E.g.:

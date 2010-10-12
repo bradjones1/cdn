@@ -641,7 +641,9 @@ function cdn_get_domains() {
 
     // Retrieve all unique domains (by retrieving one URL per server) and then
     // parsing the domain names in those URLs.
-    $sql = "SELECT url FROM synced_files GROUP BY server";
+    $sql = "SELECT url
+            FROM synced_files
+            GROUP BY server";
     $stmt = $db->prepare($sql);
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
