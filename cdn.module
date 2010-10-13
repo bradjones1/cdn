@@ -127,7 +127,7 @@ function cdn_file_url_alter(&$path) {
     // If the current page is being served via HTTPS, and the CDN supports
     // HTTPS, then use the HTTPS file URL.
     if ($is_https_page && $https_support) {
-      $cdn_url = preg_replace('/^http/', 'https', $url);
+      $cdn_url = preg_replace('/^http/', 'https', $cdn_url);
     }
 
     // If the user can access it, add this to the per-page statistics.
