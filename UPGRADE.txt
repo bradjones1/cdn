@@ -22,3 +22,5 @@ The recommended steps to update your Drupal site are:
 The ImageCache module patch has remained unchanged since version 1.x. When you
 did not apply the core patch and thus want to rely on the theme layer fallback
 mechanism, you don't have to apply the ImageCache module patch either.
+But when you update to an ImageCache version that's newer than 2.0 beta 10,
+you will have to apply the alternative patch: patches/imagecache_6--2.patch.

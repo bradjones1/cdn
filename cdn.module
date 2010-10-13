@@ -337,11 +337,21 @@ function cdn_requirements($phase) {
       // integration method is *not* 'fallback' (thus either 'pressflow' or
       // 'core patch') *and* when the ImageCache module is enabled.
       if ($integration_method != 'fallback' && module_exists('imagecache')) {
+        // Check if either of the patches is applied, then remove the
+        // requirements for the last one if neither patch is applied.
         _cdn_requirements_generate_requirement_for_patch(
           $requirements,
           'imagecache',
           $t('CDN — ImageCache module patch')
         );
+        _cdn_requirements_generate_requirement_for_patch(
+          $requirements,
+          'imagecache_6--2',
+          $t('CDN — ImageCache module patch')
+        );
+        if ($requirements['cdn_imagecache_patch']['value'] != REQUIREMENT_OK && $requirements['cdn_imagecache_6--2_patch']['value'] != REQUIREMENT_OK) {
+          unset($requirements['cdn_imagecache_6--2_patch']);
+        }
       }
 
 
