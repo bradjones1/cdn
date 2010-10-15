@@ -53,6 +53,8 @@ function cdn_update_6200() {
  * More consistent variable names: upgrade path.
  */
 function cdn_update_6201() {
+  $ret = array();
+
   $cdn_exception_path_blacklist = variable_get('cdn_exclusion', NULL);
   variable_del('cdn_exclusion');
   if (isset($cdn_exception_path_blacklist)) {
@@ -67,7 +69,7 @@ function cdn_update_6201() {
 
   $ret[] = array('success' => TRUE, 'query' => 'Updated variables (internal name changes only, for improved consistency).');
 
-  return array();
+  return $ret;
 }
 
 /**
@@ -78,6 +80,18 @@ function cdn_update_6202() {
 
   $ret[] = update_sql("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
   // update.php runs drupal_rebuild_theme_registry();
+
+  return $ret;
+}
+
+/**
+ * More consistent variable names: upgrade path.
+ */
+function cdn_update_6203() {
+  $ret = array();
+
+  $ret[] = update_sql("UPDATE {variable} SET name = 'cdn_exception_file_path_blacklist' WHERE name = 'cdn_exception_path_blacklist'");
+  $ret[] = update_sql("UPDATE {variable} SET name = 'cdn_exception_file_path_whitelist' WHERE name = 'cdn_exception_path_whitelist'");
 
   return $ret;
 }

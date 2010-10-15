@@ -255,7 +255,7 @@ function cdn_admin_other_settings_form(&$form_state) {
                          by file URL or for logged in users.'),
   );
 
-  $form['exceptions']['path'] = array(
+  $form['exceptions']['file_path'] = array(
     '#type' => 'fieldset',
     '#title' => t('File URL'),
     '#description' => t("Files that are marked to not be served from the CDN
@@ -280,18 +280,39 @@ function cdn_admin_other_settings_form(&$form_state) {
     requests.</strong>"),
     '#collapsible' => TRUE,
   );
-
-  $form['exceptions']['path'][CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE] = array(
+  $form['exceptions']['file_path'][CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE] = array(
     '#type' => 'textarea',
     '#title' => t('Blacklist'),
-    '#default_value' => variable_get(CDN_EXCEPTION_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_PATH_BLACKLIST_DEFAULT),
+    '#default_value' => variable_get(CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT),
     '#description' => $path_explanation,
   );
-  $form['exceptions']['path'][CDN_EXCEPTION_PATH_WHITELIST_VARIABLE] = array(
+  $form['exceptions']['file_path'][CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE] = array(
     '#type' => 'textarea',
     '#title' => t('Whitelist'),
-    '#default_value' => variable_get(CDN_EXCEPTION_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_PATH_WHITELIST_DEFAULT),
+    '#default_value' => variable_get(CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT),
     '#description' => $path_explanation,
+  );
+
+  $form['exceptions']['drupal_path'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Drupal path'),
+    '#description' => t(""),
+    '#collapsible' => TRUE,
+  );
+  $form['exceptions']['drupal_path'][CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE] = array(
+    '#type' => 'textarea',
+    '#title' => t('Blacklist'),
+    '#default_value' => variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT),
+    '#description' => t("Enter one page per line as Drupal paths. The '*'
+                         character is a wildcard. Example paths are %blog for
+                         the blog page and %blog-wildcard for every personal
+                         blog. %front is the front page.",
+                         array(
+                           '%blog'          => 'blog',
+                           '%blog-wildcard' => 'blog/*',
+                           '%front'         => '<front>',
+                          )
+     ),
   );
 
   $form['exceptions']['auth_users'] = array(
@@ -300,7 +321,6 @@ function cdn_admin_other_settings_form(&$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-
   $form['exceptions']['auth_users'][CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE] = array(
     '#type'          => 'textarea',
     '#title'         => t('Blacklist'),
