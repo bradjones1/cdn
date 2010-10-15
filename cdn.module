@@ -342,15 +342,15 @@ function cdn_requirements($phase) {
         _cdn_requirements_generate_requirement_for_patch(
           $requirements,
           'imagecache',
-          $t('CDN — ImageCache module patch')
+          $t('CDN — ImageCache patch')
         );
         _cdn_requirements_generate_requirement_for_patch(
           $requirements,
-          'imagecache_6--2',
-          $t('CDN — ImageCache module patch')
+          'imagecache_6_2',
+          $t('CDN — ImageCache patch')
         );
-        if ($requirements['cdn_imagecache_patch']['value'] != REQUIREMENT_OK && $requirements['cdn_imagecache_6--2_patch']['value'] != REQUIREMENT_OK) {
-          unset($requirements['cdn_imagecache_6--2_patch']);
+        if ($requirements['cdn_imagecache_patch']['value'] == $requirements['cdn_imagecache_6_2_patch']['value']) {
+          unset($requirements['cdn_imagecache_6_2_patch']);
         }
       }
 

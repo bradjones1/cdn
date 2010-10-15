@@ -171,6 +171,14 @@ function _cdn_requirements_imagecache_patch_patterns() {
 }
 
 /**
+ * Generates the patterns for the ImageCache 6.2 branch patch.
+ */
+function _cdn_requirements_imagecache_6_2_patch_patterns() {
+  return _cdn_requirements_generate_patterns_for_patch(drupal_get_path('module', 'cdn') . '/patches/imagecache_6--2.patch');
+}
+
+
+/**
  * Checks if the environment is Pressflow or not.
  */
 function _cdn_requirements_is_pressflow() {
