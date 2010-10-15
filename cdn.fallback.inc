@@ -90,7 +90,17 @@ function _cdn_preprocess_page_helper(&$html, $pattern, $search_index, $path_inde
   for ($i = 0; $i < count($matches[0]); $i++) {
     $search = $matches[$search_index][$i];
     $path = $matches[$path_index][$i];
-    cdn_file_url_alter($path);
+
+    // Store the current path as the old path, then let cdn_file_url_alter()
+    // do its magic by invoking all file_url_alter hooks. When the path hasn't
+    // changed and is not already root-relative or protocol-relative, then
+    // generate a file URL as Drupal core would: prepend the base path.
+    $old_path = $path;
+    drupal_alter('file_url', $path);
+    if ($path == $old_path && drupal_substr($path, 0, 1) != '/' && drupal_substr($path, 0, 2) != '//') {
+      $path = base_path() . $path;
+    }
+
     $searches[]     = $search;
     $replacements[] = $prefix . $path . $matches[$querystring_index][$i] . $suffix;
   }
