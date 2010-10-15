@@ -252,7 +252,8 @@ function cdn_admin_other_settings_form(&$form_state) {
     '#description' => t('Which files should be served from a CDN is not as
                          simple as it seems: there are bound to be exceptions.
                          You can easily define those exceptions here, either
-                         by file URL or for logged in users.'),
+                         by file URL, Drupal path or by Drupal path for
+                         authenticated users.'),
   );
 
   $form['exceptions']['file_path'] = array(
@@ -296,8 +297,11 @@ function cdn_admin_other_settings_form(&$form_state) {
   $form['exceptions']['drupal_path'] = array(
     '#type' => 'fieldset',
     '#title' => t('Drupal path'),
-    '#description' => t(""),
+    '#description' => t("Drupal paths entered in this blacklist will not serve
+                         any files from the CDN. This blacklist is applied for
+                         <em>all</em> users."),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
   $form['exceptions']['drupal_path'][CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE] = array(
     '#type' => 'textarea',
@@ -317,7 +321,10 @@ function cdn_admin_other_settings_form(&$form_state) {
 
   $form['exceptions']['auth_users'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Authenticated users'),
+    '#title' => t('Drupal path for authenticated users'),
+    '#description' => t("Drupal paths entered in this blacklist will not serve
+                         any files from the CDN. This blacklist is applied for
+                         <em>authenticated users only</em>."),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
