@@ -485,7 +485,7 @@ function _cdn_admin_validate_synced_files_db($synced_files_db, $name) {
  */
 function _cdn_admin_check_requirements() {
   // Check run-time requirements of the CDN integration module.
-  include_once './includes/install.inc';
+  module_load_install('cdn');
   $requirements = cdn_requirements('runtime');
 
   // Filter out the requirement errors and display these, with links back to
