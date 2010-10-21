@@ -204,7 +204,7 @@ function _cdn_requirements_detect_fallback() {
   // fallback will be (or remain) disabled, if not, then the fallback will be
   // (or remain) enabled.
   $fallback_currently_enabled = variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE);
-  if (count(_cdn_requirements_check_patch_applied(_cdn_requirements_core_patch_patterns())) > 0) {
+  if (!_cdn_requirements_is_pressflow() && count(_cdn_requirements_check_patch_applied(_cdn_requirements_core_patch_patterns())) > 0) {
     if (!$fallback_currently_enabled) {
       variable_set(CDN_THEME_LAYER_FALLBACK_VARIABLE, TRUE);
       drupal_rebuild_theme_registry();
