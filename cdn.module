@@ -102,13 +102,17 @@ function cdn_file_url_alter(&$path) {
   }
 
   if ($stats) {
-    require_once(drupal_get_path('module', 'cdn') . '/cdn.stats.inc');
+    cdn_load_include('stats');
   }
 
   if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
     if ($stats) {
       $start = microtime();
     }
+
+    // Load the include file that contains the logic for the mode that's
+    // currently enabled.
+    cdn_load_include(($mode == CDN_MODE_BASIC) ? 'basic' : 'advanced');
 
     // Depending on the mode, use a different function to get the servers on
     // which the file is available.
@@ -259,7 +263,7 @@ function cdn_init() {
   if (($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING)))
       && variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE) == TRUE
   ) {
-    require_once drupal_get_path('module', 'cdn') . '/cdn.fallback.inc';
+    cdn_load_include('fallback');
   }
 
   // When per-page statistics are enabled, add the CSS that will be used to
@@ -318,118 +322,6 @@ function cdn_exit($destination = NULL) {
 // Public functions.
 
 /**
- * Gets the servers on which a file is available when basic mode is enabled.
- *
- * @param $path
- *   The path to get the servers for.
- */
-function cdn_basic_get_servers($path) {
-  static $mapping;
-  $servers = array();
-
-  // We only need to parse the textual CDN mapping once into a lookup table.
-  if (!isset($mapping)) {
-    $mapping = _cdn_basic_parse_raw_mapping(variable_get(CDN_BASIC_MAPPING_VARIABLE, ''));
-  }
-
-  // Parse the file extension from the given path.
-  $file_extension = pathinfo($path, PATHINFO_EXTENSION);
-
-  // Based on the file extension, determine which key should be used to find
-  // the CDN URLs in the mapping lookup table, if any.
-  if (array_key_exists($file_extension, $mapping)) {
-    $key = $file_extension;
-  }
-  elseif (array_key_exists('*', $mapping)) {
-    $key = '*';
-  }
-  else {
-    $key = NULL;
-  }
-
-  // If there is a key to look up the CDN URLs in the mapping lookup table,
-  // then build the list of servers.
-  if (isset($key)) {
-    $base_path = base_path();
-    foreach ($mapping[$key] as $cdn_url) {
-      $servers[] = array(
-        'server' => $cdn_url,
-        'url'    => $cdn_url . $base_path . $path,
-      );
-    }
-  }
-
-  return $servers;
-}
-
-/**
- * Parse the raw (textual) mapping into a lookup table, where the key is the
- * file extension and the value is a list of CDN URLs that serve the file.
- *
- * @param $mapping_raw
- *   A raw (textual) mapping.
- * @return
- *   The corresponding mapping lookup table.
- */
-function _cdn_basic_parse_raw_mapping($mapping_raw) {
-  $mapping = array();
-
-  if (!empty($mapping_raw)) {
-    $lines = preg_split("/[\n\r]+/", $mapping_raw, -1, PREG_SPLIT_NO_EMPTY);
-    foreach ($lines as $line) {
-      // Parse this line. It may or may not limit the CDN URL to a list of
-      // file extensions.
-      if (strpos($line, '|') !== FALSE) {
-        $parts = explode('|', $line);
-        $cdn_url    = rtrim(trim($parts[0]), '/'); // Remove whitespace and a trailing slash.
-        $extensions = explode(' ', trim(str_replace('.', '', $parts[1]))); // Remove periods, whitespace and split on ' '.
-      }
-      else {
-        $cdn_url    = trim($line);
-        $extensions = array('*'); // Use the asterisk as a wildcard.
-      }
-
-      // Create the mapping lookup table.
-      foreach ($extensions as $extension) {
-        $mapping[$extension][] = $cdn_url;
-      }
-    }
-  }
-
-  return $mapping;
-}
-
-/**
- * Gets the servers on which a file is available when advanced mode is enabled.
- *
- * @param $path
- *   The path to get the servers for.
- */
-function cdn_advanced_get_servers($path) {
-  $db = _cdn_advanced_get_db_connection();
-
-  // In case no connection to the database could be made, pretend the file was
-  // not found in the synced files database.
-  if (!$db) {
-    return array();
-  }
-
-  // Get the real path to the file (resolves symbolic links).
-  $input_file = realpath('./' . $path);
-
-  // Retrieve the URLs of the file on the CDN.
-  $sql = "SELECT url, server
-          FROM synced_files
-          WHERE input_file = :input_file";
-  $stmt = $db->prepare($sql);
-  $stmt->bindParam(':input_file', $input_file, PDO::PARAM_STR);
-  $stmt->execute();
-  $servers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-  return $servers;
-}
-
-/**
  * Get all domains from which files might be served. This information is
  * necessary for some modules, e.g. Boost.
  *
@@ -481,36 +373,27 @@ function cdn_get_domains() {
   return array_unique($domains);
 }
 
+/**
+ * Helper function to efficiently load include files for this module.
+ */
+function cdn_load_include($basename) {
+  static $used = array();
+  static $base_path;
+
+  if (!isset($base_path)) {
+    $base_path = './' . drupal_get_path('module', 'cdn');
+  }
+
+  if (!isset($used[$basename])) {
+    require $base_path . "/cdn.$basename.inc";
+  }
+
+  $used[$basename] = TRUE;
+}
+
 
 //----------------------------------------------------------------------------
 // Private functions.
-
-/**
- * Get a connection to the database. The resulting PDO object is statically
- * cached.
- *
- * @return
- *   A database connection (through PDO), or FALSE in case of failure.
- */
-function _cdn_advanced_get_db_connection() {
-  static $db;
-
-  $synced_files_db = variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, FALSE);
-
-  if ($synced_files_db === FALSE || !file_exists($synced_files_db) || filesize($synced_files_db) == 0) {
-    $db = FALSE;
-  }
-  elseif (!isset($db)) {
-    try {
-      $db = new PDO('sqlite:' . variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''));
-    } catch (PDOException $e) {
-      watchdog('cdn', "Could not open synced files DB: %error.", array('%error' => $e));
-      $db = FALSE;
-    }
-  }
-
-  return $db;
-}
 
 /**
  * Helper function to evaluate CDN_PICK_SERVER_PHP_CODE_VARIABLE, when that is

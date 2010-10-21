@@ -15,7 +15,7 @@
  */
 function cdn_admin_general_settings_form(&$form_state) {
   ctools_include('dependent');
-  require_once drupal_get_path('module', 'cdn') . '/cdn.requirements.inc';
+  cdn_load_include('requirements');
 
   // Prevent requirement errors from showing up twice.
   if (empty($form_state['post'])) {

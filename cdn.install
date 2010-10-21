@@ -27,7 +27,7 @@ function cdn_uninstall() {
  * Implementation of hook_requirements().
  */
 function cdn_requirements($phase) {
-  require_once drupal_get_path('module', 'cdn') . '/cdn.fallback.inc';
+  cdn_load_include('fallback');
   
   $requirements = array();
   $t = get_t();
@@ -35,7 +35,7 @@ function cdn_requirements($phase) {
   switch ($phase) {
     case 'install' :
     case 'runtime' :
-      require_once drupal_get_path('module', 'cdn') . '/cdn.requirements.inc';
+      cdn_load_include('requirements');
 
       // Detect whether the fallback should be enabled or not.
       _cdn_requirements_detect_fallback();
