@@ -27,6 +27,7 @@ function cdn_uninstall() {
  * Implementation of hook_requirements().
  */
 function cdn_requirements($phase) {
+  module_load_include('module', 'cdn');
   cdn_load_include('fallback');
   
   $requirements = array();
@@ -132,6 +133,7 @@ function cdn_requirements($phase) {
             $persistent_data_db_readable = @fopen($persistent_data_db, 'r');
             $daemon_pid_file_exists      = file_exists($daemon_pid_file);
 
+            cdn_load_include('advanced');
             $db = _cdn_advanced_get_db_connection();
             if ($db !== FALSE) {
               $input_file_mask = $drupal_root_path .'%';
