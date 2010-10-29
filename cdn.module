@@ -68,45 +68,42 @@ function cdn_file_url_alter(&$path) {
   $is_https_page         = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'));
   global $user;
 
-  // If the current path is an absolute path, return immediately.
-  $fragments = parse_url($path);
-  if (isset($fragments['host'])) {
-    return;
-  }
-
-  // If the current page is being served via HTTPS, and the CDN does not
-  // support HTTPS, then don't rewrite the file URL, because it would make the
-  // visit insecure.
-  if ($is_https_page && !$https_support) {
-    return;
-  }
-
-  // If the current file path matches one of the blacklisted file paths,
-  // return immediately, except when the current file path also matches one of
-  // the whitelisted file paths.
-  if (drupal_match_path($path, $file_path_blacklist)) {
-    if (!drupal_match_path($path, $file_path_whitelist)) {
+  if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
+    // If the current path is an absolute path, return immediately.
+    $fragments = parse_url($path);
+    if (isset($fragments['host'])) {
       return;
     }
-  }
 
-  // If the current Drupal path matches one of the blacklisted Drupal paths,
-  // return immediately.
-  if (drupal_match_path($_GET['q'], $drupal_path_blacklist)) {
-    return;
-  }
+    // If the current page is being served via HTTPS, and the CDN does not
+    // support HTTPS, then don't rewrite the file URL, because it would make the
+    // visit insecure.
+    if ($is_https_page && !$https_support) {
+      return;
+    }
 
-  // If logged in user, apply a secondary blacklist.
-  if ($user->uid > 0 && drupal_match_path($path, $auth_users_blacklist)) {
-    return;
-  }
+    // If the current file path matches one of the blacklisted file paths,
+    // return immediately, except when the current file path also matches one of
+    // the whitelisted file paths.
+    if (drupal_match_path($path, $file_path_blacklist)) {
+      if (!drupal_match_path($path, $file_path_whitelist)) {
+        return;
+      }
+    }
+  
+    // If the current Drupal path matches one of the blacklisted Drupal paths,
+    // return immediately.
+    if (drupal_match_path($_GET['q'], $drupal_path_blacklist)) {
+      return;
+    }
 
-  if ($stats) {
-    cdn_load_include('stats');
-  }
+    // If logged in user, apply a secondary blacklist.
+    if ($user->uid > 0 && drupal_match_path($path, $auth_users_blacklist)) {
+      return;
+    }
 
-  if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
     if ($stats) {
+      cdn_load_include('stats');
       $start = microtime();
     }
 
