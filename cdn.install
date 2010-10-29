@@ -28,7 +28,6 @@ function cdn_uninstall() {
  */
 function cdn_requirements($phase) {
   module_load_include('module', 'cdn');
-  cdn_load_include('fallback');
   
   $requirements = array();
   $t = get_t();
