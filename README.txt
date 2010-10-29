@@ -161,6 +161,16 @@ Note: if you don't want to create a small module for this function, or if you
       would just like to experiment with this function, you can also enter the
       body of this function at admin/settings/cdn/other — it will work exactly
       the same!
+      If you don't know what the "body" of a function is, it's the part
+      between the curly brackets:
+        function doSomething() {
+          BODY
+        }
+      So, in the case of the cdn_pick_server() function, this is the body that
+      you would enter:
+        $filename = basename($servers_for_file[0]['url']);
+        $unique_file_id = hexdec(substr(md5($filename), 0, 5));
+        return $servers_for_file[$unique_file_id % count($servers_for_file)];
 
 
 Supporting the CDN integration module in your modules
