@@ -339,6 +339,7 @@ function cdn_get_domains() {
 
   // Origin Pull mode domains.
   if (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_BASIC) {
+    cdn_load_include('basic');
     $mapping = variable_get(CDN_BASIC_MAPPING_VARIABLE, '');
     $lines = preg_split("/[\n\r]+/", $mapping, -1, PREG_SPLIT_NO_EMPTY);
     foreach ($lines as $line) {
@@ -355,6 +356,7 @@ function cdn_get_domains() {
   }
   // File Conveyor mode domains.
   elseif (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_ADVANCED) {
+    cdn_load_include('advanced');
     $db = _cdn_advanced_get_db_connection();
 
     // In case no connection to the database could be made, pretend no
