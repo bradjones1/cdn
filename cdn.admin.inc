@@ -234,7 +234,7 @@ function cdn_admin_other_settings_form(&$form_state) {
   );
   $form['https'][CDN_HTTPS_SUPPORT_VARIABLE] = array(
     '#type'          => 'checkbox',
-    '#title'         => t('CDN supports HTTPS support'),
+    '#title'         => t('CDN supports HTTPS'),
     '#default_value' => variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE),
     '#process'       => array('ctools_dependent_process'),
   );
