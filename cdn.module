@@ -235,6 +235,25 @@ function cdn_form_system_performance_settings_alter(&$form, &$form_state) {
 }
 
 /**
+ * Implementation of hook_nodeapi().
+ */
+function cdn_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  // We implement hook_nodeapi() for $op == 'alter', to alter the final HTML,
+  // to ensure that all file URLs (notably for images) in nodes also point to
+  // the CDN.
+  if ($op == 'alter') {
+    cdn_load_include('fallback');
+    if (isset($node->body)) {
+      cdn_html_alter_image_urls($node->body);
+    }
+    else if (isset($node->teaser)) {
+      cdn_html_alter_image_urls($node->teaser);
+    }
+  }
+}
+
+
+/**
  * Implementation of hook_theme().
  */
 function cdn_theme() {
