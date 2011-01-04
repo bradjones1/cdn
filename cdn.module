@@ -222,7 +222,17 @@ function cdn_menu() {
  * Implementation of hook_perm().
  */
 function cdn_perm() {
-  return array(CDN_PERM_ACCESS_STATS, CDN_PERM_ACCESS_TESTING, CDN_PERM_TOUCH);
+  return array(
+    CDN_PERM_ACCESS_STATS => array(
+      'title' => t('Access per-page statistics')
+    ),
+    CDN_PERM_ACCESS_TESTING => array(
+      'title' => t('Access files on the CDN when in testing mode.')
+    ),
+    CDN_PERM_TOUCH => array(
+      'title' => t('Touch files.')
+    )
+  );
 }
 
 /**
