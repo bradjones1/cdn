@@ -324,7 +324,7 @@ function cdn_exit($destination = NULL) {
   }
 
   // Try not to break non-HTML pages.
-  if (function_exists('drupal_get_headers') && !strstr(drupal_get_headers(), 'html')) {
+  if (function_exists('drupal_get_http_header') && !strstr(drupal_get_http_header('Content-Type'), 'html')) {
     return;
   }
 
