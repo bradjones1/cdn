@@ -63,7 +63,7 @@ function theme_cdn_page_stats($variables) {
           'server'        => NULL,
         ));
       }
-      $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', array('items' => $unsynced_items));
+      $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', array('items' => $unsynced_items, 'attributes' => array('class' => 'file-list')));
     }
   }
 
@@ -83,7 +83,7 @@ function theme_cdn_page_stats($variables) {
         'server'        => $server,
       ));
     }
-    $items[] = t('The files that are synchronized to the CDN:') . theme('item_list', array('items' => $synced_items));
+    $items[] = t('The files that are synchronized to the CDN:') . theme('item_list', array('items' => $synced_items, 'attributes' => array('class' => 'file-list')));
   }
 
   $output .= theme('item_list', array('items' => $items, 'title' => '<strong>'. t('CDN integration statistics for %drupal_path', array('%drupal_path' => $_GET['q'])) .'</strong>'));
