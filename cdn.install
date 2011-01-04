@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Install file.
+ * Install, update and uninstall functions for the CDN module.
  */
 
 
