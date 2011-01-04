@@ -251,13 +251,13 @@ function cdn_update_6200() {
 function cdn_update_6201() {
   $ret = array();
 
-  $cdn_exception_path_blacklist = variable_get('cdn_exclusion', NULL);
+  $cdn_exception_path_blacklist = variable_get('cdn_exclusion');
   variable_del('cdn_exclusion');
   if (isset($cdn_exception_path_blacklist)) {
     variable_set('cdn_exception_path_blacklist', $cdn_exception_path_blacklist);
   }
 
-  $cdn_exception_auth_users_blacklist = variable_get('cdn_exclusion_logged_in', NULL);
+  $cdn_exception_auth_users_blacklist = variable_get('cdn_exclusion_logged_in');
   variable_del('cdn_exclusion_logged_in');
   if (isset($cdn_exception_auth_users_blacklist)) {
     variable_set('cdn_exception_auth_users_blacklist', $cdn_exception_auth_users_blacklist);
