@@ -30,7 +30,7 @@ define('CDN_PICK_SERVER_PHP_CODE_VARIABLE', 'CDN_PICK_SERVER_PHP_CODE_VARIABLE')
 define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE', 'cdn_exception_file_path_blacklist');
 define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT',  "*.js\n*/image_captcha/*");
 define('CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE', 'cdn_exception_file_path_whitelist');
-define('CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT',  "misc/*.js\nmodules/block/block.js\nmodules/color/color.js\nmodules/comment/comment.js\nmodules/openid/openid.js\nmodules/profile/profile.js\nmodules/system/system.js\nmodules/taxonomy/taxonomy.js\nmodules/user/user.js\n*/admin_menu/admin_menu.js");
+define('CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT',  "misc/*.js\nmodules/*.js");
 define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE', 'cdn_exception_drupal_path_blacklist');
 define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT',  'admin*');
 define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE', 'cdn_exception_auth_users_blacklist');
