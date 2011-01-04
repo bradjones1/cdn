@@ -241,23 +241,12 @@ function cdn_permission() {
 }
 
 /**
- * Implements hook_nodeapi().
+ * Implements hook_node_view_alter().
  */
-function cdn_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  // We implement hook_nodeapi() for $op == 'alter', to alter the final HTML,
-  // to ensure that all file URLs (notably for images) in nodes also point to
-  // the CDN.
-  if ($op == 'alter') {
-    cdn_load_include('fallback');
-    if (isset($node->body)) {
-      cdn_html_alter_image_urls($node->body);
-    }
-    else if (isset($node->teaser)) {
-      cdn_html_alter_image_urls($node->teaser);
-    }
-  }
+function cdn_node_view_alter(&$build) {
+  cdn_load_include('fallback');
+  $build['#post_render'][] = 'cdn_post_render_html_alter';
 }
-
 
 /**
  * Implements hook_theme().
@@ -417,6 +406,16 @@ function cdn_load_include($basename) {
   }
 
   $used[$basename] = TRUE;
+}
+
+/**
+ * Alter file URLs in the given HTML (currently only image file URLs).
+ *
+ * Can be used as a #post_render callback.
+ */
+function cdn_post_render_html_alter($html, $elements) {
+  cdn_html_alter_image_urls($html);
+  return $html;
 }
 
 
