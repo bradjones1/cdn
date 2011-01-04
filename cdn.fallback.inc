@@ -14,7 +14,7 @@
 
 
 /**
- * Implementation of hook_theme_registry_alter().
+ * Implements hook_theme_registry_alter().
  *
  * Make CDN's page preprocess function run *after* everything else's, so that
  * a theme can't call drupal_get_js() and mess everything up.
@@ -34,7 +34,7 @@ function cdn_theme_registry_alter(&$theme_registry) {
 }
 
 /**
- * Implementation of template_preprocess_page().
+ * Implements template_preprocess_page().
  */
 function cdn_preprocess_page(&$variables) {
   // CSS.

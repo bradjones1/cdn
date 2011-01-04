@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Implementation of the core hooks, defines, public and private functions.
+ * Implements the core hooks, defines, public and private functions.
  */
 
 
@@ -54,7 +54,7 @@ define('CDN_DAEMON_PID_FILE', 'daemon.pid');
 // Drupal core.
 
 /**
- * Implementation of hook_file_url_alter().
+ * Implements hook_file_url_alter().
  */
 function cdn_file_url_alter(&$path) {
   $status                = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
@@ -164,7 +164,7 @@ function cdn_file_url_alter(&$path) {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function cdn_menu() {
   $items['admin/settings/cdn'] = array(
@@ -219,7 +219,7 @@ function cdn_menu() {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function cdn_perm() {
   return array(
@@ -236,7 +236,7 @@ function cdn_perm() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function cdn_form_system_performance_settings_alter(&$form, &$form_state) {
   // Add an id to the "Clear cached data" fieldset in the
@@ -245,7 +245,7 @@ function cdn_form_system_performance_settings_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  */
 function cdn_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   // We implement hook_nodeapi() for $op == 'alter', to alter the final HTML,
@@ -264,7 +264,7 @@ function cdn_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function cdn_theme() {
   return array(
@@ -287,7 +287,7 @@ function cdn_theme() {
 }
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function cdn_init() {
   // When the fallback mechanism to alter file URLs (i.e. using the theme
@@ -312,7 +312,7 @@ function cdn_init() {
 }
 
 /**
- * Implementation of hook_exit().
+ * Implements hook_exit().
  */
 function cdn_exit($destination = NULL) {
   // When the _cdn_devel_page_stats() function does not exist, there are no

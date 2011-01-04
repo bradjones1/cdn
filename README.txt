@@ -108,7 +108,7 @@ When using multiple servers/CDNs: picking one based on some criteria
 ---------------------------------------------------------------------
 For this purpose, you can implement the cdn_pick_server() function:
   /**
-   * Implementation of cdn_pick_server().
+   * Implements cdn_pick_server().
    */
   function cdn_pick_server($servers_for_file) {
     // The data that you get - one nested array per server from which the file
@@ -124,7 +124,7 @@ For this purpose, you can implement the cdn_pick_server() function:
 
 So to get the default behavior (pick the first server found), one would write:
   /**
-   * Implementation of cdn_pick_server().
+   * Implements cdn_pick_server().
    */
   function cdn_pick_server($servers_for_file) {
     return $servers_for_file[0];
@@ -134,7 +134,7 @@ Or if you want to balance the number of files served by each CDN (i.e. on
 average, each CDN serves the same amount of files on a page) instead of
 picking the CDN based purely on filetype, one could write:
   /**
-   * Implementation of cdn_pick_server().
+   * Implements cdn_pick_server().
    */
   function cdn_pick_server($servers_for_file) {
     $filename = basename($servers_for_file[0]['url']);

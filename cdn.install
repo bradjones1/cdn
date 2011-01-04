@@ -8,7 +8,7 @@
 
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function cdn_install() {
   // CDN must run after JavaScript aggregator (weight 9999) in fallback mode.
@@ -17,14 +17,14 @@ function cdn_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function cdn_uninstall() {
   db_query("DELETE FROM {variable} WHERE name LIKE 'cdn_%%'");
 }
 
 /**
- * Implementation of hook_requirements().
+ * Implements hook_requirements().
  */
 function cdn_requirements($phase) {
   module_load_include('module', 'cdn');
