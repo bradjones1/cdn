@@ -24,7 +24,6 @@ define('CDN_STATUS_VARIABLE', 'cdn_status');
 define('CDN_STATS_VARIABLE', 'cdn_stats');
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 define('CDN_HTTPS_SUPPORT_VARIABLE', 'cdn_https_support');
-define('CDN_THEME_LAYER_FALLBACK_VARIABLE', 'cdn_theme_layer_fallback');
 define('CDN_PICK_SERVER_PHP_CODE_VARIABLE', 'CDN_PICK_SERVER_PHP_CODE_VARIABLE');
 
 // Variables for exceptions.
@@ -296,17 +295,6 @@ function cdn_theme() {
  * Implements hook_init().
  */
 function cdn_init() {
-  // When the fallback mechanism to alter file URLs (i.e. using the theme
-  // layer) is enabled, load cdn.fallback.inc. But only load it when the
-  // CDN integration is enabled or if testing mode is enabled and the current
-  // user has access to that.
-  $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
-  if (($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING)))
-      && variable_get(CDN_THEME_LAYER_FALLBACK_VARIABLE, FALSE) == TRUE
-  ) {
-    cdn_load_include('fallback');
-  }
-
   // When per-page statistics are enabled, add the CSS that will be used to
   // make these statistics more usable.
   if (variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED) != CDN_DISABLED

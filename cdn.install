@@ -8,15 +8,6 @@
 
 
 /**
- * Implements hook_install().
- */
-function cdn_install() {
-  // CDN must run after JavaScript aggregator (weight 9999) in fallback mode.
-  db_query("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
-  drupal_rebuild_theme_registry();
-}
-
-/**
  * Implements hook_uninstall().
  */
 function cdn_uninstall() {
@@ -36,45 +27,6 @@ function cdn_requirements($phase) {
     case 'install' :
     case 'runtime' :
       cdn_load_include('requirements');
-
-      // Detect whether the fallback should be enabled or not.
-      _cdn_requirements_detect_fallback();
-
-      $integration_method = _cdn_requirements_get_integration_mechanism();
-
-      // Only check if the CDN Drupal core patch is properly applied if the
-      // integration methis is *not* 'pressflow'. Show as a warning when the
-      // integration method is 'fallback'.
-      if (!_cdn_requirements_is_pressflow()) {
-        _cdn_requirements_generate_requirement_for_patch(
-          $requirements,
-          'core',
-          ($integration_method == 'fallback') ? $t('CDN — Drupal core patch (for complete CDN coverage)') : $t('CDN — Drupal core patch'),
-          REQUIREMENT_WARNING
-        );
-      }
-
-      // Only check if the CDN ImageCache patch is properly applied if the
-      // integration method is *not* 'fallback' (thus either 'pressflow' or
-      // 'core patch') *and* when the ImageCache module is enabled.
-      if ($integration_method != 'fallback' && module_exists('imagecache')) {
-        // Check if either of the patches is applied, then remove the
-        // requirements for the last one if neither patch is applied.
-        _cdn_requirements_generate_requirement_for_patch(
-          $requirements,
-          'imagecache',
-          $t('CDN — ImageCache patch')
-        );
-        _cdn_requirements_generate_requirement_for_patch(
-          $requirements,
-          'imagecache_6_2',
-          $t('CDN — ImageCache patch')
-        );
-        if ($requirements['cdn_imagecache_patch']['value'] == $requirements['cdn_imagecache_6_2_patch']['value']) {
-          unset($requirements['cdn_imagecache_6_2_patch']);
-        }
-      }
-
 
       // CDN  status.
       $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
@@ -200,20 +152,6 @@ function cdn_requirements($phase) {
           $requirements['cdn']['description'] .= '<br />' . theme('item_list', array('items' => $items));
         }
       }
-
-      // Finally, add very brief info about the integration mechanism in use.
-      switch ($integration_method) {
-        case 'fallback':
-          $requirements['cdn']['value'] .= ' — ' . $t('Fallback mechanism');
-          $requirements['cdn']['description'] .= '<br /><br />' . t('If you want complete CDN coverage, you should either apply the included Drupal core patch or switch to <a href="http://pressflow.org/">Pressflow</a>.');
-          break;
-        case 'pressflow':
-          $requirements['cdn']['value'] .= ' — ' . $t('Pressflow');
-          break;
-        case 'core patch':
-          $requirements['cdn']['value'] .= ' — ' . $t('Core patch');
-          break;
-      }
   }
 
   return $requirements;
@@ -280,4 +218,12 @@ function cdn_update_6203() {
   db_query("UPDATE {variable} SET name = 'cdn_exception_file_path_whitelist' WHERE name = 'cdn_exception_path_whitelist'");
 
   return t('Updated variables (internal name changes only, for improved consistency).');
+}
+
+/**
+ * Fallback mode is not needed in Drupal 7, hence also no more need for an
+ * altered module weight.
+ */
+function cdn_update_7200() {
+  db_query("UPDATE {system} SET weight = 0 WHERE name = 'cdn'");
 }

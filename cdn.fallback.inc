@@ -14,64 +14,6 @@
 
 
 /**
- * Implements hook_theme_registry_alter().
- *
- * Make CDN's page preprocess function run *after* everything else's, so that
- * a theme can't call drupal_get_js() and mess everything up.
- *
- * @param &$theme_registry
- *   The entire cache of theme registry information, post-processing.
- */
-function cdn_theme_registry_alter(&$theme_registry) {
-  if (isset($theme_registry['page'])) {
-    // If CDN's preprocess function is there already, remove it.
-    if ($key = array_search('cdn_preprocess_page', $theme_registry['page']['preprocess functions'])) {
-      unset($theme_registry['page']['preprocess functions'][$key]);
-    }
-    // Now tack it on at the end so it runs after everything else.
-    $theme_registry['page']['preprocess functions'][] = 'cdn_preprocess_page';
-  }
-}
-
-/**
- * Implements template_preprocess_page().
- */
-function cdn_preprocess_page(&$variables) {
-  // CSS.
-  cdn_html_alter_css_urls($variables['styles']);
-
-  // JS.
-  cdn_html_alter_js_urls($variables['scripts']);
-  cdn_html_alter_js_urls($variables['closure']);
-
-  // Images.
-  $skip_keys = array('styles', 'scripts', 'zebra', 'id', 'directory', 'layout', 'head_title', 'base_path', 'front_page', 'head', 'body_classes');
-  foreach ($variables as $key => $value) {
-    if (!in_array($key, $skip_keys) && is_string($value) && !empty($value)) {
-      cdn_html_alter_image_urls($variables[$key]);
-    }
-  }
-}
-
-/**
- * Alter CSS file URLs in a piece of HTML.
- */
-function cdn_html_alter_css_urls(&$html) {
-  $url_prefix_regex = _cdn_generate_url_prefix_regex();
-  $pattern = "#href=\"(($url_prefix_regex)(.*?\.css)(\?.*)?)\"#";
-  _cdn_html_alter_file_url($html, $pattern, 0, 3, 4, 'href="', '"');  
-}
-
-/**
- * Alter JS file URLs in a piece of HTML.
- */
-function cdn_html_alter_js_urls(&$html) {
-  $url_prefix_regex = _cdn_generate_url_prefix_regex();
-  $pattern = "#src=\"(($url_prefix_regex)(.*?\.js)(\?.*)?)\"#";
-  _cdn_html_alter_file_url($html, $pattern, 0, 3, 4, 'src="', '"');
-}
-
-/**
  * Alter image file URLs in a piece of HTML.
  */
 function cdn_html_alter_image_urls(&$html) {
