@@ -407,12 +407,12 @@ function cdn_admin_settings_submit_show_cache_warning($form, &$form_state) {
   drupal_set_message(t('You have just changed some settings. This might affect
                         the file URLs that have been cached in nodes, views,
                         or elsewhere.<br />
-                        You now may want to clear the cached data, to ensure
+                        You now may want to clear all caches, to ensure that
                         the new CDN file URLs are used immediately. This can
-                        be done in the <a href="!link">"Clear cached data"
-                        field set</a> in the "Performance" settings form.',
+                        be done in the <a href="!link">"Clear cache"
+                        field set</a> on the "Performance" settings form.',
                         array(
-                          '!link' => url('admin/settings/performance', array('fragment' => 'clear-cache'))
+                          '!link' => url('admin/config/development/performance')
                         )
                       ),
                       'info'
