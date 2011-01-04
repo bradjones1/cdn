@@ -25,7 +25,7 @@
 function theme_cdn_page_stats($variables) {
   $file_count                    = $variables['file_count'];
   $cdn_file_count                = $variables['cdn_file_count'];
-  $synced_files_per_server_count = $variables['synced_files_per_server_count']
+  $synced_files_per_server_count = $variables['synced_files_per_server_count'];
   $total_time                    = $variables['total_time'];
   $synced_files                  = $variables['synced_files'];
   $unsynced_files                = $variables['unsynced_files'];
@@ -61,7 +61,7 @@ function theme_cdn_page_stats($variables) {
           'synced'        => FALSE,
           'cdn_url'       => $file,
           'server'        => NULL,
-        );
+        ));
       }
       $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', array('items' => $unsynced_items));
     }
@@ -81,7 +81,7 @@ function theme_cdn_page_stats($variables) {
         'synced'        => TRUE,
         'cdn_url'       => $cdn_url,
         'server'        => $server,
-      );
+      ));
     }
     $items[] = t('The files that are synchronized to the CDN:') . theme('item_list', array('items' => $synced_items));
   }
