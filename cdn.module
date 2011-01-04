@@ -307,7 +307,7 @@ function cdn_init() {
       && variable_get(CDN_STATS_VARIABLE, FALSE)
       && user_access(CDN_PERM_ACCESS_STATS)
   ) {
-    drupal_add_css(drupal_get_path('module', 'cdn') . '/cdn.css');
+    drupal_add_css(drupal_get_path('module', 'cdn') . '/cdn.css', array('every_page' => TRUE));
   }
 }
 
