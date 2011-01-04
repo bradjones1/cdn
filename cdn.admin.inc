@@ -13,7 +13,7 @@
 /**
  * Form definition; general settings.
  */
-function cdn_admin_general_settings_form(&$form_state) {
+function cdn_admin_general_settings_form($form, &$form_state) {
   ctools_include('dependent');
   cdn_load_include('requirements');
 
@@ -88,7 +88,7 @@ function cdn_admin_general_settings_form(&$form_state) {
 /**
  * Form definition; details.
  */
-function cdn_admin_details_form(&$form_state) {
+function cdn_admin_details_form($form, &$form_state) {
   ctools_include('dependent');
 
   // Prevent requirement errors from showing up twice.
@@ -196,7 +196,7 @@ function cdn_admin_details_form(&$form_state) {
 /**
  * Form definition; other settings.
  */
-function cdn_admin_other_settings_form(&$form_state) {
+function cdn_admin_other_settings_form($form, &$form_state) {
   // Prevent requirement errors from showing up twice.
   if (empty($form_state['post'])) {
     _cdn_admin_check_requirements();

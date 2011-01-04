@@ -6,7 +6,7 @@
  * Per-page CDN integration statistics functionality.
  */
 
-function cdn_touch_file_form(&$form_state) {
+function cdn_touch_file_form($form, &$form_state) {
   // All arguments after the first are in fact the different parts of the file
   // path that is being passed in.
   $additional_args = func_get_args();
