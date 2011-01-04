@@ -15,3 +15,5 @@ files[] = cdn.fallback.inc
 files[] = cdn.requirements.inc
 files[] = cdn.stats.inc
 files[] = theme.inc
+
+configure = admin/settings/cdn
