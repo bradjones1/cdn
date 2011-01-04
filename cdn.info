@@ -2,6 +2,16 @@
 name = CDN
 description = "Integrates your site with a CDN, through altering file URLs."
 
-core = 6.x
+core = 7.x
 package = Performance and scalability
 dependencies[] = ctools
+
+files[] = cdn.module
+files[] = cdn.install
+files[] = cdn.admin.inc
+files[] = cdn.advanced.inc
+files[] = cdn.basic.inc
+files[] = cdn.fallback.inc
+files[] = cdn.requirements.inc
+files[] = cdn.stats.inc
+files[] = theme.inc
