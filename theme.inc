@@ -9,22 +9,27 @@
 /**
  * Render the CDN integration page statistics.
  *
- * @param $file_count
- *   The number of files detected on this page.
- * @param $cdn_file_count
- *   The number of files on this page that are served from a CDN.
- * @param $synced_files_per_server_count
- *   The number of files synced to each server.
- * @param $total_time
- *   The total time it took to get all current CDN URLs.
- * @param $synced_files
- *   Array of synchronized files.
- * @param $unsynced_files
- *   Array of unsynchronized files.
+ * @param $variables
+ *   An associative array containing:
+ *   - file_count: The number of files detected on this page.
+ *   - cdn_file_count: The number of files on this page that are served from a
+ *     CDN.
+ *   - synced_files_per_server_count: The number of files synced to each
+ *     server.
+ *   - total_time: The total time it took to get all current CDN URLs.
+ *   - synced_files: Array of synchronized files.
+ *   - unsynced_files: Array of unsynchronized files.
  * @return
  *   The rendered HTML.
  */
-function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_server_count, $total_time, $synced_files, $unsynced_files) {
+function theme_cdn_page_stats($variables) {
+  $file_count                    = $variables['file_count'];
+  $cdn_file_count                = $variables['cdn_file_count'];
+  $synced_files_per_server_count = $variables['synced_files_per_server_count']
+  $total_time                    = $variables['total_time'];
+  $synced_files                  = $variables['synced_files'];
+  $unsynced_files                = $variables['unsynced_files'];
+
   $output = '';
   $items = array();
   $mode = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
@@ -50,9 +55,15 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
     if (count($unsynced_files)) {
       $unsynced_items = array();
       foreach ($unsynced_files as $file) {
-        $unsynced_items[] = theme('cdn_page_stats_file_link', $file, file_create_url($file), FALSE, $file, NULL);
+        $unsynced_items[] = theme('cdn_page_stats_file_link', array(
+          'file'          => $file,
+          'absolute_path' => file_create_url($file),
+          'synced'        => FALSE,
+          'cdn_url'       => $file,
+          'server'        => NULL,
+        );
       }
-      $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', $unsynced_items);
+      $items[] = t('The files that are not (yet?) synchronized to the CDN:') . theme('item_list', array('items' => $unsynced_items));
     }
   }
 
@@ -64,12 +75,18 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
       $cdn_url = $synced_file['cdn_url'];
       $server  = $synced_file['server'];
 
-      $synced_items[] = theme('cdn_page_stats_file_link', $file, $synced_file['absolute path'], TRUE, $cdn_url, $server);
+      $synced_items[] = theme('cdn_page_stats_file_link', array(
+        'file'          => $file,
+        'absolute_path' => $synced_file['absolute path'],
+        'synced'        => TRUE,
+        'cdn_url'       => $cdn_url,
+        'server'        => $server,
+      );
     }
-    $items[] = t('The files that are synchronized to the CDN:') . theme('item_list', $synced_items);
+    $items[] = t('The files that are synchronized to the CDN:') . theme('item_list', array('items' => $synced_items));
   }
 
-  $output .= theme('item_list', $items, '<strong>'. t('CDN integration statistics for %drupal_path', array('%drupal_path' => $_GET['q'])) .'</strong>');
+  $output .= theme('item_list', array('items' => $items, 'title' => '<strong>'. t('CDN integration statistics for %drupal_path', array('%drupal_path' => $_GET['q'])) .'</strong>'));
   $output .= '</div>';
   return $output;
 }
@@ -77,21 +94,25 @@ function theme_cdn_page_stats($file_count, $cdn_file_count, $synced_files_per_se
 /**
  * Render a file link in the CDN integration page statistics.
  *
- * @param $file
- *   A string containing the Drupal path (i.e. path relative to the Drupal
- *   root directory) of the file to generate the URL for.
- * @param $absolute_path
- *   The absolute path (on the filesystem) to the file.
- * @param $synced
- *   Whether this file has been synced to the CDN or not.
- * @param $cdn_url
- *   The CDN URL of the file, or the normal URL when the file is not on a CDN.
- * @param $server
- *   The server on which the file resides.
+ * @param $variables
+ *   An associative array containing:
+ *   - file: A string containing the Drupal path (i.e. path relative to the
+ *     Drupal root directory) of the file to generate the URL for.
+ *   - absolute_path: The absolute path (on the filesystem) to the file.
+ *   - synced: Whether this file has been synced to the CDN or not.
+ *   - cdn_url: The CDN URL of the file, or the normal URL when the file is
+ *     not on a CDN.
+ *   - server: The server on which the file resides.
  * @return
  *   The rendered HTML.
  */
-function theme_cdn_page_stats_file_link($file, $absolute_path, $synced, $cdn_url, $server) {
+function theme_cdn_page_stats_file_link($variables) {
+  $file          = $variables['file'];
+  $absolute_path = $variables['absolute_path'];
+  $synced        = $variables['synced'];
+  $cdn_url       = $variables['cdn_url'];
+  $server        = $variables['server'];
+  
   $file_link  = l(t(($server == NULL) ? '!file' : '!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
   $touch_link = l(t('touch'), 'admin/cdn/touch/' . $file);
 

@@ -270,18 +270,24 @@ function cdn_theme() {
   return array(
     'cdn_page_stats' => array(
       'file'      => 'theme.inc',
-      'arguments' => array(
-          'file_count'                    => NULL,
-          'cdn_file_count'                => NULL,
-          'synced_files_per_server_count' => NULL,
-          'total_time'                    => NULL,
-          'synced_files'                  => NULL,
-          'unsynced_files'                => NULL,
+      'variables' => array(
+        'file_count'                    => NULL,
+        'cdn_file_count'                => NULL,
+        'synced_files_per_server_count' => NULL,
+        'total_time'                    => NULL,
+        'synced_files'                  => NULL,
+        'unsynced_files'                => NULL,
       ),
     ),
     'cdn_page_stats_file_link' => array(
       'file'      => 'theme.inc',
-      'arguments' => array('file' => NULL),
+      'variables' => array(
+        'file'          => NULL,
+        'absolute_path' => NULL,
+        'synced'        => NULL,
+        'cdn_url'       => NULL,
+        'server'        => NULL,
+      ),
     ),
   );
 }
@@ -341,14 +347,14 @@ function cdn_exit($destination = NULL) {
       $synced_files,
       $unsynced_files,
     ) = _cdn_devel_page_stats();
-    print theme('cdn_page_stats',
-      $file_count,
-      $cdn_file_count,
-      $synced_files_per_server_count,
-      $total_time,
-      $synced_files,
-      $unsynced_files
-    );
+    print theme('cdn_page_stats', array(
+      'file_count'                    => $file_count,
+      'cdn_file_count'                => $cdn_file_count,
+      'synced_files_per_server_count' => $synced_files_per_server_count,
+      'total_time'                    => $total_time,
+      'synced_files'                  => $synced_files,
+      'unsynced_files'                => $unsynced_files
+    ));
   }
 }
 

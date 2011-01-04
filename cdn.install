@@ -197,7 +197,7 @@ function cdn_requirements($phase) {
             $requirements['cdn']['severity'] = REQUIREMENT_ERROR;
           }
 
-          $requirements['cdn']['description'] .= '<br />' . theme('item_list', $items);
+          $requirements['cdn']['description'] .= '<br />' . theme('item_list', array('items' => $items));
         }
       }
 

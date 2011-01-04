@@ -108,7 +108,7 @@ function cdn_admin_details_form(&$form_state) {
       continue to make a choice between the two supported modes:
       !mode-explanation-list", array(
         '!cdn-article-url' => 'http://wimleers.com/article/key-properties-of-a-cdn',
-        '!mode-explanation-list' => theme('item_list', array(
+        '!mode-explanation-list' => theme('item_list', array('items' => array(
           t("<strong>Origin Pull mode</strong> replaces your domain name with
             the Origin Pull CDN's domain name in the file URL."),
           t("<strong>File Conveyor mode</strong> uses the <a href=\"http://fileconveyor.org\">File Conveyor</a>
@@ -116,7 +116,7 @@ function cdn_admin_details_form(&$form_state) {
             and Push CDNs. If you're using an Origin Pull CDN and want to
             optimize files before they're synced to the CDN, it is also
             recommended to use this mode.")
-        )),
+        ))),
       )
     ),
     '#required' => TRUE,
@@ -167,8 +167,8 @@ function cdn_admin_details_form(&$form_state) {
                            <br />
                            Sample mappings:
                            !example-list", $format_variables + array(
-                             '!format-explanation-list' => theme('item_list', $format_explanation_list_items),
-                             '!example-list' => theme('item_list', $example_list_items),
+                             '!format-explanation-list' => theme('item_list', array('items' => $format_explanation_list_items)),
+                             '!example-list' => theme('item_list', array('items' => $example_list_items)),
                           )),
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_MAPPING_VARIABLE, ''),
@@ -498,7 +498,7 @@ function _cdn_admin_check_requirements() {
   }
   if (!empty($errors)) {
     $args = array(
-      '!error-list' => theme('item_list', $errors),
+      '!error-list' => theme('item_list', array('items' => $errors)),
     );
     drupal_set_message(t('Please fix the following problems with the installation of the CDN integration module:<br />!error-list', $args), 'error');
   }
