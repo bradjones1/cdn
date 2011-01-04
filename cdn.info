@@ -4,7 +4,6 @@ description = "Integrates your site with a CDN, through altering file URLs."
 
 core = 7.x
 package = Performance and scalability
-dependencies[] = ctools
 
 files[] = cdn.module
 files[] = cdn.install

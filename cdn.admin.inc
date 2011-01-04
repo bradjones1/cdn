@@ -14,7 +14,6 @@
  * Form definition; general settings.
  */
 function cdn_admin_general_settings_form($form, &$form_state) {
-  ctools_include('dependent');
   cdn_load_include('requirements');
 
   // Prevent requirement errors from showing up twice.
@@ -53,8 +52,11 @@ function cdn_admin_general_settings_form($form, &$form_state) {
     ),
     '#return_value'  => CDN_ENABLED,
     '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_STATUS_VARIABLE => array(CDN_TESTING, CDN_ENABLED)),
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="' . CDN_STATUS_VARIABLE . '"]' => array('value' => '' . CDN_DISABLED),
+      ),
+    ),
   );
 
   return system_settings_form($form);
@@ -64,8 +66,6 @@ function cdn_admin_general_settings_form($form, &$form_state) {
  * Form definition; details.
  */
 function cdn_admin_details_form($form, &$form_state) {
-  ctools_include('dependent');
-
   // Prevent requirement errors from showing up twice.
   if (empty($form_state['post'])) {
     _cdn_admin_check_requirements();
@@ -147,8 +147,11 @@ function cdn_admin_details_form($form, &$form_state) {
                           )),
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_MAPPING_VARIABLE, ''),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_BASIC)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_BASIC),
+      )
+    ),
   );
 
   //
@@ -161,8 +164,11 @@ function cdn_admin_details_form($form, &$form_state) {
     '#description'   => t('Enter the full path to File Conveyor\'s synced files database file.'),
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
-    '#process'       => array('ctools_dependent_process'),
-    '#dependency'    => array('radio:' . CDN_MODE_VARIABLE => array(CDN_MODE_ADVANCED)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_ADVANCED),
+      ),
+    ),
   );
 
   return system_settings_form($form);
@@ -211,7 +217,6 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     '#type'          => 'checkbox',
     '#title'         => t('CDN supports HTTPS'),
     '#default_value' => variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE),
-    '#process'       => array('ctools_dependent_process'),
   );
 
   $path_explanation = t(
