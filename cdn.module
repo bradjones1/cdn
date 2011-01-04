@@ -166,7 +166,7 @@ function cdn_file_url_alter(&$path) {
  * Implements hook_menu().
  */
 function cdn_menu() {
-  $items['admin/settings/cdn'] = array(
+  $items['admin/config/development/cdn'] = array(
     'title'            => 'CDN',
     'description'      => 'Configure CDN integration.',
     'access arguments' => array('administer site configuration'),
@@ -176,7 +176,7 @@ function cdn_menu() {
     'file'             => 'cdn.admin.inc',
   );
 
-  $items['admin/settings/cdn/general'] = array(
+  $items['admin/config/development/cdn/general'] = array(
     'title'            => 'General',
     'description'      => 'General settings.',
     'access arguments' => array('administer site configuration'),
@@ -184,7 +184,7 @@ function cdn_menu() {
     'type'             => MENU_DEFAULT_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',
   );
-  $items['admin/settings/cdn/details'] = array(
+  $items['admin/config/development/cdn/details'] = array(
     'title'            => 'Details',
     'access arguments' => array('administer site configuration'),
     'page callback'    => 'drupal_get_form',
@@ -193,7 +193,7 @@ function cdn_menu() {
     'type'             => MENU_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',
   );
-  $items['admin/settings/cdn/other'] = array(
+  $items['admin/config/development/cdn/other'] = array(
     'title'            => 'Other',
     'description'      => 'Other settings.',
     'access arguments' => array('administer site configuration'),

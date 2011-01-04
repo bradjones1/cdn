@@ -16,4 +16,4 @@ files[] = cdn.requirements.inc
 files[] = cdn.stats.inc
 files[] = theme.inc
 
-configure = admin/settings/cdn
+configure = admin/config/development/cdn
