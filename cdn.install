@@ -269,7 +269,7 @@ function cdn_update_6202() {
   db_query("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
   // update.php runs drupal_rebuild_theme_registry();
 
-  return t('Ensured the CDN module runs after the JavaScript aggregator module.')
+  return t('Ensured the CDN module runs after the JavaScript aggregator module.');
 }
 
 /**
