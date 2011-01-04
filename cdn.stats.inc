@@ -28,12 +28,12 @@ function cdn_touch_file_form(&$form_state) {
     return confirm_form(
       array(
         'filepath' => array(
-          '#type'  => 'value',
-          '#value' => $filepath,
+          '#type'   => 'value',
+          '#markup' => $filepath,
         ),
         'redirect' => array(
-          '#type'  => 'value',
-          '#value' => $form_state['storage']['redirect'],
+          '#type'   => 'value',
+          '#markup' => $form_state['storage']['redirect'],
         ),
       ),
       t('Are you sure you want to touch %filepath?', array('%filepath' => $filepath)),

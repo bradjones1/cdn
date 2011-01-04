@@ -46,7 +46,7 @@ function cdn_admin_general_settings_form(&$form_state) {
   $form['integration_method'] = array(
     '#type' => 'item',
     '#title' => t('Integration method'),
-    '#value' => $desc,
+    '#markup' => $desc,
   );
 
   $form[CDN_STATUS_VARIABLE] = array(
@@ -352,7 +352,7 @@ function cdn_admin_other_settings_form(&$form_state) {
     $form['cdn_pick_server']['defined_in_code'] = array(
       '#type' => 'item',
       '#title' => t('Defined in code'),
-      '#value' => 'The <code>cdn_pick_server()</code> function is already defined in code.',
+      '#markup' => 'The <code>cdn_pick_server()</code> function is already defined in code.',
     );
   }
   else {
