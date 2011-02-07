@@ -46,11 +46,15 @@ importantly the differences between an Origin Pull CDN and a Push CDN. A good
 
 Supported CDNs
 --------------
-- Origin Pull mode: any Origin Pull CDN.
+- Origin Pull mode: any Origin Pull CDN (or alternatively: domains that point
+  to your main domain, by using so called "CNAME" DNS records).
 - File Conveyor mode: any Origin Pull CDN and any push CDN that supports FTP.
   Support for other transfer protocols is welcomed and encouraged: your
   patches are welcome! Amazon S3, Amazon CloudFront and Rackspace CloudFiles
   are also supported.
+
+To learn more about parallelizing downloads by using subdomains (or CDNs!), 
+see http://drupal.org/project/parallel.
 
 
 Installation
