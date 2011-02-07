@@ -57,6 +57,30 @@ To learn more about parallelizing downloads by using subdomains (or CDNs!),
 see http://drupal.org/project/parallel.
 
 
+No cookies should be sent to the CDN
+------------------------------------
+Please note though that you should ensure no cookies are sent to the CDN: this 
+would slow down HTTP requests to the CDN (since the requests become larger:
+they piggyback the cookie data).
+You can achieve this in two ways:
+  1) When you are using cookies that are bound to your www subdomain only
+     (i.e. not an example.com, but on www.example.com), you can safely use
+     another subdomain for your CDN.
+  2) When you are using cookies on your main domain (example.com), you'll have 
+     to use a completely different domain for the CDN if you don't want 
+     cookies to be sent.
+     So then you should use the CDN's URL (e.g. myaccount.cdn.com). But now 
+     you should be careful to avoid JavaScript issues: you may run into "same 
+     origin policy" problems. See admin/settings/cdn/other for details.
+
+Drupal 7 no longer sets cookies for anonymous users. To achieve this in Drupal
+6, you can use the "No Anonymous Sessions" module by kbahey
+(http://drupal.org/project/no_anon).
+
+If you just use the CDN's URL (e.g. myaccount.cdn.com), all cookie issues are
+avoided automatically.
+
+
 Installation
 ------------
 1) Note: skip this step if you want to rely on the fallback mechanism!
