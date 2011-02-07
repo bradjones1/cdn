@@ -104,8 +104,12 @@ Installation
    You can also see here if you've applied the patches correctly!
 
 
-When using multiple servers/CDNs: picking one based on some criteria
----------------------------------------------------------------------
+When using multiple servers/CDNs: picking one based on advanced criteria
+------------------------------------------------------------------------
+You only need this when you're using multiple servers/CDNs and you can't rely
+on picking a server/CDN based on the file extension, i.e. if you need more
+advanced criteria than only file extension.
+
 For this purpose, you can implement the cdn_pick_server() function:
   /**
    * Implements cdn_pick_server().
