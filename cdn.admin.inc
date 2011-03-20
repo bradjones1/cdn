@@ -208,9 +208,11 @@ function cdn_admin_other_settings_form($form, &$form_state) {
                          does not support HTTPS, then the file will not be
                          served from the CDN, because it would make the visit
                          insecure.<br/>
-                         When your CDN <em>does</em> support HTTPS, enable the
-                         corresponding setting below, and your CDN will be
-                         used on HTTPS pages.'),
+                         If your CDN <em>does</em> support HTTPS, and if you
+                         are <em>not</em> masking the original URL\'s domain
+                         with another (sub)domain (using a CNAME record),
+                         enable the corresponding setting below, and your CDN
+                         will also be used on HTTPS pages.'),
   );
   $form['https'][CDN_HTTPS_SUPPORT_VARIABLE] = array(
     '#type'          => 'checkbox',
