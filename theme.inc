@@ -112,7 +112,7 @@ function theme_cdn_page_stats_file_link($variables) {
   $cdn_url       = $variables['cdn_url'];
   $server        = $variables['server'];
   
-  $file_link  = l(t(($server == NULL) ? '!file' : '!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('attributes' => array('title' => $absolute_path)));
+  $file_link  = l(t(($server == NULL) ? '!file' : '!file (server: !server)', array('!file' => $file, '!server' => $server)), $cdn_url, array('external' => TRUE, 'attributes' => array('title' => $absolute_path)));
   $touch_link = l(t('touch'), 'admin/cdn/touch/' . $file);
 
   $output = '';
