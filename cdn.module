@@ -54,7 +54,7 @@ define('CDN_DAEMON_PID_FILE', 'daemon.pid');
 /**
  * Implements hook_file_url_alter().
  */
-function cdn_file_url_alter(&$path) {
+function cdn_file_url_alter(&$uri) {
   $status                = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
   $mode                  = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   $stats                 = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
@@ -67,10 +67,20 @@ function cdn_file_url_alter(&$path) {
   global $user;
 
   if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
+    $scheme = file_uri_scheme($uri);
+
     // If the current path is an absolute path, return immediately.
-    $fragments = parse_url($path);
-    if (isset($fragments['host'])) {
+    if ($scheme && ($scheme == 'http' || $scheme == 'https')) {
       return;
+    }
+    else if ($scheme) {
+      // Attempt to get an external URL using the appropriate wrapper.
+      if ($wrapper = file_stream_wrapper_get_instance_by_uri($uri)) {
+        $uri = str_replace($GLOBALS['base_url'] . base_path(), '', $wrapper->getExternalUrl());
+      }
+      else {
+        return;
+      }
     }
 
     // If the current page is being served via HTTPS, and the CDN does not
@@ -80,11 +90,11 @@ function cdn_file_url_alter(&$path) {
       return;
     }
 
-    // If the current file path matches one of the blacklisted file paths,
-    // return immediately, except when the current file path also matches one of
-    // the whitelisted file paths.
-    if (drupal_match_path($path, $file_path_blacklist)) {
-      if (!drupal_match_path($path, $file_path_whitelist)) {
+    // If the current file URI matches one of the blacklisted file paths,
+    // return immediately, except when the current file URI also matches one
+    // of the whitelisted file paths.
+    if (drupal_match_path($uri, $file_path_blacklist)) {
+      if (!drupal_match_path($uri, $file_path_whitelist)) {
         return;
       }
     }
@@ -96,7 +106,7 @@ function cdn_file_url_alter(&$path) {
     }
 
     // If logged in user, apply a secondary blacklist.
-    if ($user->uid > 0 && drupal_match_path($path, $auth_users_blacklist)) {
+    if ($user->uid > 0 && drupal_match_path($uri, $auth_users_blacklist)) {
       return;
     }
 
@@ -111,7 +121,7 @@ function cdn_file_url_alter(&$path) {
 
     // Depending on the mode, use a different function to get the servers on
     // which the file is available.
-    $servers = ($mode == CDN_MODE_BASIC) ? cdn_basic_get_servers($path) : cdn_advanced_get_servers($path);
+    $servers = ($mode == CDN_MODE_BASIC) ? cdn_basic_get_servers($uri) : cdn_advanced_get_servers($uri);
 
     // The file is not available on any server.
     if (count($servers) == 0) {
@@ -150,13 +160,13 @@ function cdn_file_url_alter(&$path) {
     // If the user can access it, add this to the per-page statistics.
     if ($stats) {
       $end = microtime();
-      _cdn_devel_page_stats($path, $cdn_url, $server, $end - $start);
+      _cdn_devel_page_stats($uri, $cdn_url, $server, $end - $start);
     }
 
     // Override the path with the corresponding CDN URL, *if* the file is
     // available on the CDN (it may only be not available in advanced mode).
     if ($cdn_url !== FALSE) {
-      $path = $cdn_url;
+      $uri = $cdn_url;
     }
   }
 }
