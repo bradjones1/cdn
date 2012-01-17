@@ -17,6 +17,18 @@
  */
 function cdn_html_alter_image_urls(&$html) {
   $url_prefix_regex = _cdn_generate_url_prefix_regex();
+
+  // TRICKY: order matters!
+
+  // Image file URLs of <a> tags that wrap <img> tags.
+  $pattern = "#((<a\s+|<a\s+[^>]*\s+)href\s*=\s*[\"|\'])($url_prefix_regex)([^\"|^\']*)";
+  $pattern .= "("; // Capture everything after the path.
+  $pattern .= "([\"|\'][^>]*)>"; // End of opening <a> tag.
+  $pattern .= "((<img\s+|<img\s+[^>]*\s+)src\s*=\s*[\"|\'])([^\"|^\']*)([\"|\'])"; // Wrapped <img> tag.
+  $pattern .= ")#i";
+  _cdn_html_alter_file_url($html, $pattern, 0, 4, 5, 1, '');
+
+  // Image file URLs in <img> tags.
   $pattern = "#((<img\s+|<img\s+[^>]*\s+)src\s*=\s*[\"|\'])($url_prefix_regex)([^\"|^\']*)([\"|\'])#i";
   _cdn_html_alter_file_url($html, $pattern, 0, 4, 5, 1, '');
 }
