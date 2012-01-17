@@ -70,10 +70,10 @@ function cdn_requirements($phase) {
 
           $items = array();
 
+          $daemon_pid_file = variable_get(CDN_ADVANCED_PID_FILE_VARIABLE, FALSE);
           $synced_files_db = variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, FALSE);
 
           if ($synced_files_db !== FALSE) {
-            $daemon_pid_file = str_replace(CDN_DAEMON_SYNCED_FILES_DB, CDN_DAEMON_PID_FILE, $synced_files_db);
             $persistent_data_db = str_replace(CDN_DAEMON_SYNCED_FILES_DB, CDN_DAEMON_PERSISTENT_DATA_DB, $synced_files_db);
             $drupal_root_path = variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.'));
 
@@ -225,4 +225,25 @@ function cdn_update_6203() {
  */
 function cdn_update_7200() {
   db_query("UPDATE {system} SET weight = 0 WHERE name = 'cdn'");
+}
+
+/**
+ * New: File Conveyor PID file variable.
+ */
+function cdn_update_7210() {
+  $ret = array();
+
+  if (variable_get('cdn_mode', FALSE) == 'advanced') {
+    // Only do this if cdn_update_6210() for the Drupal 6 version of this
+    // module hasn't run.
+    if (variable_get('cdn_advanced_pid_file', FALSE) != FALSE) {
+      $synced_files_db = variable_get('cdn_advanced_synced_files_db', FALSE);
+      $daemon_pid_file = str_replace('synced_files.db', 'daemon.pid', $synced_files_db);
+      variable_set('cdn_advanced_pid_file', $daemon_pid_file);
+
+      $ret[] = array('success' => TRUE, 'query' => 'Created File Conveyor PID file variable.');
+    }
+  }
+
+  return $ret;
 }
