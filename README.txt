@@ -62,6 +62,9 @@ Installation
    Suppose this is `http://d85nwn7m5gl3y.cloudfront.net`.
    (It acts like a globally distributed, super fast proxy server.)
 
+   Relevant links:
+   - Amazon CloudFront: http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/CreatingDistributions.html?r=4212
+
 5) Optionally, you can create a CNAME alias to the delivery address on your
    DNS server. This way, it's not immediately obvious from the links in the
    HTMl that you're using an external service (that's why it's also called a
