@@ -64,6 +64,7 @@ function cdn_file_url_alter(&$original_uri) {
   $auth_users_blacklist  = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
   $https_support         = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
   $is_https_page         = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'));
+  $module_blacklist      = cdn_get_blacklist();
   global $user;
 
   if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
@@ -96,10 +97,15 @@ function cdn_file_url_alter(&$original_uri) {
     // If the current file URI matches one of the blacklisted file paths,
     // return immediately, except when the current file URI also matches one
     // of the whitelisted file paths.
-    if (drupal_match_path($uri, $file_path_blacklist)) {
-      if (!drupal_match_path($uri, $file_path_whitelist)) {
+    if ((
+          drupal_match_path($uri, $file_path_blacklist)
+          ||
+          drupal_match_path($uri, $module_blacklist)
+        )
+        && !drupal_match_path($uri, $file_path_whitelist)
+      )
+    {
         return;
-      }
     }
   
     // If the current Drupal path matches one of the blacklisted Drupal paths,
@@ -344,6 +350,33 @@ function cdn_exit($destination = NULL) {
   }
 }
 
+/**
+ * Implementation of hook_flush_caches().
+ */
+function cdn_flush_caches() {
+  // Force refresh of the blacklist.
+  cdn_get_blacklist(TRUE);
+}
+
+/**
+ * Implementation of hook_cdn_blacklist().
+ */
+function cdn_cdn_blacklist() {
+  $blacklist = array();
+
+  // Blacklist wysiwyg library files.
+  if (module_exists('wysiwyg')) {
+    foreach (wysiwyg_get_all_editors() as $editor) {
+      if (!$editor['installed']) {
+        continue;
+      }
+      $blacklist[] = $editor['library path'] . '/*';
+    }
+  }
+
+  return $blacklist;
+}
+
 
 //----------------------------------------------------------------------------
 // Public functions.
@@ -400,6 +433,49 @@ function cdn_get_domains() {
   }
 
   return array_unique($domains);
+}
+
+/**
+ * See if any installed modules need to exclude certain files from being
+ * accessed from the CDN. List gets updated on cron runs.
+ *
+ * Typically, files that are loaded by JS through AJAX violate the same origin
+ * policy browsers have to comply with. Hence the browser refuses to load the
+ * file, causing a broken website. This blacklist allows module developers to
+ * specify which files should not be loaded from the CDN.
+ *
+ * @param $reset
+ *   Whether to force the stored blacklist to be regenerated.
+ * @return string
+ *   Every line is a path pattern (@see drupal_match_path()).
+ */
+function cdn_get_blacklist($reset = FALSE) {
+  static $blacklist = NULL;
+
+  if (is_null($blacklist) || $reset) {
+    $cache = cache_get('cdn_blacklist');
+    if (!isset($cache->data) || $reset) {
+      // Query modules for a list of files to be included into the blacklist.
+      $blacklist = module_invoke_all('cdn_blacklist');
+
+      // Invoke hook_cdn_blacklist_alter.
+      drupal_alter('cdn_blacklist', $blacklist);
+
+      // Remove duplicates.
+      $blacklist = array_unique($blacklist);
+
+      // Convert array to string.
+      $blacklist = implode("\n", $blacklist);
+
+      // Save to the cache.
+      cache_set('cdn_blacklist', $blacklist, 'cache', CACHE_TEMPORARY);
+    }
+    else {
+      $blacklist = $cache->data;
+    }
+  }
+
+  return $blacklist;
 }
 
 /**

@@ -280,6 +280,26 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     '#default_value' => variable_get(CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT),
     '#description' => $path_explanation,
   );
+  $blacklist_modules = module_implements('cdn_blacklist');
+  $blacklist_modules = array_unique(array_merge($blacklist_modules, module_implements('cdn_blacklist_alter')));
+  $blacklist_modules_string = '';
+  for ($i = 0; $i < count($blacklist_modules); $i++) {
+    $blacklist_modules_string .= '<code>' . $blacklist_modules[$i] . '</code>';
+    if ($i < count($blacklist_modules) - 1) {
+      $blacklist_modules_string .= ', ';
+    }
+  }
+  $form['exceptions']['file_path']['cdn_hook_blacklist'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Blacklist from modules'),
+    '#default_value' => cdn_get_blacklist(TRUE),
+    '#description' => t('Blacklist from <code>hook_cdn_blacklist()</code> and
+                        <code>hook_cdn_blacklist_alter()</code>. Automatically
+                        updated when cron runs. Generated from the following
+                        modules: !module-list.',
+                        array('!module-list' => $blacklist_modules_string)),
+    '#disabled' => TRUE,
+  );
   $form['exceptions']['file_path'][CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE] = array(
     '#type' => 'textarea',
     '#title' => t('Whitelist'),
@@ -410,6 +430,9 @@ function cdn_admin_other_settings_form_validate($form, &$form_state) {
       form_error($form['cdn_pick_server'][CDN_PICK_SERVER_PHP_CODE_VARIABLE], t('Your <code>cdn_pick_server()</code> cannot be evaluated. Please correct it or leave it empty.'));
     }
   }
+
+  // Remove the non-variable.
+  unset($form_state['values']['cdn_hook_blacklist']);
 }
 
 /**
