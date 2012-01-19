@@ -53,20 +53,52 @@ Installation
 
 3) Visit "admin/config/development/cdn" to learn about the various settings.
 
-4) Note: skip this step if you don't want to use File Conveyor mode!
-   If you want to use File Conveyor mode, install and configure the File
+4) Go to your CDN provider's control panel and set up a "CDN instance" (Amazon
+   CloudFront calls this a "distribution"). There, you will have to specify
+   the origin server (Amazon CloudFront calls this a "custom origin"), which
+   is simply the domain name of your Drupal site.
+   The CDN will provide you with a "delivery address", this is the address
+   that we'll use to download files from the CDN instead of the Drupal server.
+   Suppose this is `http://d85nwn7m5gl3y.cloudfront.net`.
+   (It acts like a globally distributed, super fast proxy server.)
+
+5) Optionally, you can create a CNAME alias to the delivery address on your
+   DNS server. This way, it's not immediately obvious from the links in the
+   HTMl that you're using an external service (that's why it's also called a
+   vanity domain name).
+   However, if you're going to use your CDN in HTTPS mode, then using vanity
+   domains will break things (because SSL certificates are bound to domain
+   names).
+
+6) Enter the domain name (`http://d85nwn7m5gl3y.cloudfront.net`, or the vanity
+   domain/CNAME if you used that instead) at admin/settings/cdn/details. If
+   you want to support HTTPS transparently, it is recommended to enter it as
+   `//d85nwn7m5gl3y.cloudfront.net` instead — this is a protocol-relative URL.
+
+7) Go to "admin/reports/status". The CDN module will report its status here.
+
+8) Enable the display of statistics at "admin/config/development/cdn", browse
+   your site with your root/admin (user id 1) account. The statistics will
+   show which files are served from the CDN!
+
+
+File Conveyor mode
+------------------
+
+1) If you want to use File Conveyor mode, install and configure the File
    Conveyor first. You can download it at http://fileconveyor.org/
    Then follow the instructions in the included INSTALL.txt and README.txt.
    Use the sample config.xml file that is included in this module, copy it to
    your File Conveyor installation and modify it to comply with your setup and
-   to suit your needs.
+   to suit your needs. You will always need to modify this file to suit your
+   needs.
    Note: the CDN integration module requires PDO extension for PHP to be
    installed, as well as the PDO SQLite driver.
 
-7) Go to admin/reports/status. The CDN module will report its status here. If
-   you've enabled File Conveyor mode and have set up File Conveyor daemon, you
-   will see some basic stats here as well, and you can check here to see if
-   File Conveyor is currently running.
+2) Go to "admin/reports/status". The CDN module will report its status here.
+   If you've enabled File Conveyor mode and have set up File Conveyor daemon,
+   you will see some basic stats here as well, and you can check here to see
+   if File Conveyor is currently running.
    You can also see here if you've applied the patches correctly!
 
 
@@ -76,10 +108,18 @@ Q: Is the CDN module compatible with Drupal's page caching?
 A: Yes.
 
 Q: Why are JavaScript files not being served from the CDN?
-A: The answer can be found at admin/config/development/cdn/other.
+A: The answer can be found at "admin/config/development/cdn/other".
 
 Q: Why are CSS files not being served from the CDN?
 A: This may be caused by your theme: http://drupal.org/node/1061588.
+
+Q: Does this module only work with Apache or also with nginx, lighttpd, etc.?
+A: This module only affects HTML, so it doesn't matter which web server you
+   use!
+
+Q: What does the config.xml file of the CDN module do?
+A: Nothing. It only serves as a sample for using File Conveyor. It's used for
+   nothing and can safely be deleted.
 
 
 No cookies should be sent to the CDN
