@@ -27,7 +27,7 @@ define('CDN_PICK_SERVER_PHP_CODE_VARIABLE', 'CDN_PICK_SERVER_PHP_CODE_VARIABLE')
 
 // Variables for exceptions.
 define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE', 'cdn_exception_file_path_blacklist');
-define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT',  "*.js\n*image_captcha/*");
+define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT',  "*image_captcha/*");
 define('CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE', 'cdn_exception_file_path_whitelist');
 define('CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT',  "misc/*.js\nmodules/*.js");
 define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE', 'cdn_exception_drupal_path_blacklist');
