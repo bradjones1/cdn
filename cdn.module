@@ -184,6 +184,7 @@ function cdn_file_url_alter(&$original_uri) {
  * Implements hook_menu().
  */
 function cdn_menu() {
+  // Admin UI.
   $items['admin/config/development/cdn'] = array(
     'title'            => 'CDN',
     'description'      => 'Configure CDN integration.',
@@ -193,7 +194,6 @@ function cdn_menu() {
     'type'             => MENU_NORMAL_ITEM,
     'file'             => 'cdn.admin.inc',
   );
-
   $items['admin/config/development/cdn/general'] = array(
     'title'            => 'General',
     'description'      => 'General settings.',
@@ -222,6 +222,7 @@ function cdn_menu() {
     'file'             => 'cdn.admin.inc',
   );
 
+  // Statistics: file touch support.
   $items['admin/cdn/touch/%'] = array(
     'title'            => 'Touch file',
     'description'      => 'Touch a file to force a resync with File Conveyor.',
