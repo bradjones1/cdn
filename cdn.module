@@ -262,7 +262,6 @@ function cdn_permission() {
  * Implements hook_node_view_alter().
  */
 function cdn_node_view_alter(&$build) {
-  cdn_load_include('fallback');
   $build['#post_render'][] = 'cdn_post_render_html_alter';
 }
 
@@ -502,6 +501,7 @@ function cdn_load_include($basename) {
  * Can be used as a #post_render callback.
  */
 function cdn_post_render_html_alter($html, $elements) {
+  cdn_load_include('fallback');
   cdn_html_alter_image_urls($html);
   return $html;
 }
