@@ -115,7 +115,7 @@ function cdn_file_url_alter(&$original_uri) {
     }
 
     // If logged in user, apply a secondary blacklist.
-    if ($user->uid > 0 && drupal_match_path($uri, $auth_users_blacklist)) {
+    if ($user->uid > 0 && drupal_match_path($_GET['q'], $auth_users_blacklist)) {
       return;
     }
 
