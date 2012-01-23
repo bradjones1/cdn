@@ -25,6 +25,20 @@ Note: It is essential that you understand the key properties of a CDN, most
 importantly the differences between an Origin Pull CDN and a Push CDN. A good 
 (and compact!) reference is the "Key Properties of a CDN" article [5].
 
+The CDN module aims to do only one thing and do it well: altering URLs to
+point to files on CDNs. But in some cases, simply altering the URL is not
+enough, that's where the AdvAgg module comes in."
+
+If you've ever had any issues with CSS or JS files not behaving as desired,
+check out AdvAgg. The "Advanced CSS/JS Aggregation" module solves all issues
+that arise from having CSS/JS served from a CDN. Keeping track of changes to
+CSS/JS files, smart aggregate names, 404 protection, on-demand generation,
+works with private file system, Google CDN integration, CSS/JS compression,
+GZIP compression, caching, and smart bundling are some of the things AdvAgg
+does. It's also faster then core's file aggregation. Also, if using AdvAgg
+there is the "Parallel CSS - AdvAgg Plugin" module. It can alter the url()'s
+in CSS files so they reference CDN domains.
+
 [1] http://fileconveyor.org/
 [2] http://smushit.com/
 [3] http://developer.yahoo.com/yui/compressor/
@@ -204,6 +218,12 @@ Note: if you don't want to create a small module for this function, or if you
         $filename = basename($servers_for_file[0]['url']);
         $unique_file_id = hexdec(substr(md5($filename), 0, 5));
         return $servers_for_file[$unique_file_id % count($servers_for_file)];
+
+
+Sponsors
+--------
+* Port of Far Future expiration functionality to Drupal 7:
+   ONE Agency, http://www.one-agency.be.
 
 
 Author

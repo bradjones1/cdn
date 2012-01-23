@@ -105,6 +105,72 @@ function cdn_admin_details_form($form, &$form_state) {
       )
     ),
   );
+  $form['settings'][CDN_BASIC_FARFUTURE_VARIABLE] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Far Future expiration'),
+    '#description' => t('Mark all files served from the CDN to expire in the far future — improves client-side cacheability.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-pull-far-future')),
+    '#default_value' => variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_BASIC),
+      )
+    ),
+  );
+
+  $format_variables = array(
+    '@format-directory'                => '<' . t('directory') . '>',
+    '@format-extensions'               => '<' . t('extensions') . '>',
+    '@format-unique-identifier-method' => '<' . t('unique identifier method') . '>',
+  );
+
+  $methods = array();
+  $ufi_info = module_invoke_all('cdn_unique_file_identifier_info');
+  foreach ($ufi_info as $ufi) {
+    $methods[] = $ufi['label']
+                 . ' (<code>' . $ufi['machine_name'] . '</code>): '
+                 . $ufi['description'];
+  }
+  $format_variables['!ufi-methods'] = theme('item_list', array('items' => $methods));
+
+  $form['settings'][CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE] = array(
+    '#type'          => 'textarea',
+    '#title'         => t('Unique file identifier generation'),
+    '#description'   => theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-pull-ufi')) . '&nbsp;' . t('Define how unique file identifiers (UFIs) are generated.'),
+    '#size'          => 35,
+    '#default_value' => variable_get(CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE, CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_BASIC),
+        ':input[name="' . CDN_BASIC_FARFUTURE_VARIABLE . '"]' => array('checked' => TRUE),
+      )
+    ),
+  );
+
+  $form['settings']['ufis'] = array(
+    '#type'   => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title'  => t('Available UFI methods'),
+    '#input' => true,
+    '#id'     => 'ufi-fs-id',
+    '#prefix' => '<div id="ufi-fs-id-wrapper">',
+    '#suffix' => '</div>',
+    '#states' => array(
+      'visible' => array(
+        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_BASIC),
+        ':input[name="' . CDN_BASIC_FARFUTURE_VARIABLE . '"]' => array('checked' => TRUE),
+      )
+    ),
+  );
+
+  $form['settings']['ufis']['content'] = array(
+    '#markup' => t('Available UFI methods: !ufi-methods', $format_variables) .
+                '<p>' . t('Note that if no UFI method is specified for a file
+                          (because no rule matches), the CDN module will fall
+                          back to the mtime method.') . '</p>',
+    '#prefix' => '<div>',
+    '#suffix' => '</div>',
+  );
 
   //
   // File Conveyor mode settings.
