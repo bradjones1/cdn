@@ -438,17 +438,17 @@ function _cdn_admin_check_requirements() {
 }
 
 function _cdn_settings_form_prepare(&$form, $form_state) {
-  // Check requirements.
-  cdn_load_include('requirements');
-  // Prevent requirement errors from showing up twice.
-  if (empty($form_state['post'])) {
+  // Do some checks, but prevent them from showing up twice.
+  if (empty($form_state['input'])) {
+    // Check requirements.
+    cdn_load_include('requirements');
     _cdn_admin_check_requirements();
-  }
 
-  // Advanced help.
-  _cdn_check_advanced_help();
-  $form['#attributes']['class'] = 'cdn-settings';
-  $form['#attached']['css'][] = drupal_get_path('module', 'cdn') . '/cdn.admin.css';
+    // Advanced help.
+    _cdn_check_advanced_help();
+    $form['#attributes']['class'] = 'cdn-settings';
+    $form['#attached']['css'][] = drupal_get_path('module', 'cdn') . '/cdn.admin.css';
+  }
 
   // Form.
   $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
