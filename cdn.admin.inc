@@ -75,7 +75,7 @@ function cdn_admin_details_form($form, &$form_state) {
   $form[CDN_MODE_VARIABLE] = array(
     '#type' => 'radios',
     '#title' => t('Mode'),
-    '#description' => t('Choose a CDN integration mode.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode')),
+    '#description' => _cdn_help('admin-details-mode') . t('Choose a CDN integration mode.'),
     '#required' => TRUE,
     '#options'  => array(
       CDN_MODE_BASIC    => t('Origin Pull'),
@@ -96,7 +96,7 @@ function cdn_admin_details_form($form, &$form_state) {
   $form['settings'][CDN_BASIC_MAPPING_VARIABLE] = array(
     '#type'          => 'textarea',
     '#title'         => t('CDN mapping'),
-    '#description'   => t("Define which files are mapped to which CDN.") . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-pull-cdn-mapping')),
+    '#description'   => _cdn_help('admin-details-mode-pull-cdn-mapping') . t("Define which files are mapped to which CDN."),
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_MAPPING_VARIABLE, ''),
     '#states' => array(
@@ -108,7 +108,7 @@ function cdn_admin_details_form($form, &$form_state) {
   $form['settings'][CDN_BASIC_FARFUTURE_VARIABLE] = array(
     '#type' => 'checkbox',
     '#title' => t('Far Future expiration'),
-    '#description' => t('Mark all files served from the CDN to expire in the far future — improves client-side cacheability.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-pull-far-future')),
+    '#description' => _cdn_help('admin-details-mode-pull-far-future') . t('Mark all files served from the CDN to expire in the far future — improves client-side cacheability.'),
     '#default_value' => variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT),
     '#states' => array(
       'visible' => array(
@@ -135,7 +135,7 @@ function cdn_admin_details_form($form, &$form_state) {
   $form['settings'][CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE] = array(
     '#type'          => 'textarea',
     '#title'         => t('Unique file identifier generation'),
-    '#description'   => theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-pull-ufi')) . '&nbsp;' . t('Define how unique file identifiers (UFIs) are generated.'),
+    '#description'   => _cdn_help('admin-details-mode-pull-ufi') . t('Define how unique file identifiers (UFIs) are generated.'),
     '#size'          => 35,
     '#default_value' => variable_get(CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE, CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT),
     '#states' => array(
@@ -179,7 +179,7 @@ function cdn_admin_details_form($form, &$form_state) {
   $form['settings'][CDN_ADVANCED_PID_FILE_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('PID file'),
-    '#description'   => t('Full path to File Conveyor\'s PID file.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-fc-pid')),
+    '#description'   => _cdn_help('admin-details-mode-fc-pid') . t('Full path to File Conveyor\'s PID file.'),
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_PID_FILE_VARIABLE, ''),
     '#states' => array(
@@ -191,7 +191,7 @@ function cdn_admin_details_form($form, &$form_state) {
   $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
     '#type'          => 'textfield',
     '#title'         => t('Synced files database'),
-    '#description'   => t('Full path to File Conveyor\'s synced files database file.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-details-mode-fc-db')),
+    '#description'   => _cdn_help('admin-details-mode-fc-db') . t('Full path to File Conveyor\'s synced files database file.'),
     '#size'          => 60,
     '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
     '#states' => array(
@@ -236,7 +236,7 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     '#type'          => 'checkbox',
     '#title'         => t('CDN supports HTTPS'),
     '#default_value' => variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE),
-    '#description' => t('Enable if you use HTTPS and your CDN supports it too.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-other-https')),
+    '#description' => _cdn_help('admin-other-https') . t('Enable if you use HTTPS and your CDN supports it too.'),
   );
 
   $path_explanation = t(
@@ -249,8 +249,7 @@ function cdn_admin_other_settings_form($form, &$form_state) {
   $form['exceptions'] = array(
     '#type' => 'fieldset',
     '#title' => t('Exceptions'),
-    '#description' => theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-other-exceptions'))
-                      . '&nbsp;' .
+    '#description' => _cdn_help('admin-other-exceptions') .
                       t('Which files should be served from a CDN is not as
                          simple as it seems: there are bound to be exceptions.
                          You can easily define those exceptions here, either
@@ -366,7 +365,7 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     $form['cdn_pick_server'][CDN_PICK_SERVER_PHP_CODE_VARIABLE] = array(
       '#type' => 'textarea',
       '#title' => t('PHP code for cdn_pick_server()'),
-      '#description' => t('PHP code to select the most appropriate CDN server.') . '&nbsp;' . theme('advanced_help_topic', array('module' => 'cdn', 'topic' => 'admin-other-cdn-pick-server')),
+      '#description' => _cdn_help('admin-other-cdn-pick-server') . t('PHP code to select the most appropriate CDN server.'),
       '#cols' => 60,
       '#rows' => ($php_code != '') ? count(explode("\n", $php_code)) + 1 : 5,
       '#default_value' => $php_code,
@@ -529,5 +528,17 @@ function _cdn_check_advanced_help() {
     else {
       drupal_set_message(t('If you install the advanced help module from !href, CDN will provide more and better help.', array('!href' => l('http://drupal.org/project/advanced_help', 'http://drupal.org/project/advanced_help'))));
     }
+  }
+}
+
+function _cdn_help($topic) {
+  if (!module_exists('advanced_help')) {
+    return '';
+  }
+  else {
+    return theme(
+      'advanced_help_topic',
+      array('module' => 'cdn', 'topic' => $topic)
+    );
   }
 }
