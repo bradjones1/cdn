@@ -73,6 +73,7 @@ function cdn_file_url_alter(&$original_uri) {
   $drupal_path_blacklist = variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT);
   $auth_users_blacklist  = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
   $https_support         = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
+  $maintenance_mode      = variable_get('maintenance_mode', FALSE);
   $is_https_page         = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'));
   $module_blacklist      = cdn_get_blacklist();
   global $user;
@@ -136,7 +137,7 @@ function cdn_file_url_alter(&$original_uri) {
 
     // Alter the file path when using Origin Pull mode and using that mode's
     // Far Future setting.
-    if ($mode == CDN_MODE_BASIC && $farfuture) {
+    if ($mode == CDN_MODE_BASIC && $farfuture && !$maintenance_mode) {
       $uri = urldecode($uri);
       // If the file does not yet exist, perform a normal HTTP request to this
       // file, to generate it. (E.g. when ImageCache is used, this will
