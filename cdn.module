@@ -177,7 +177,7 @@ function cdn_file_url_alter(&$original_uri) {
     // Allow this special function to be defined as a Drupal variable; this
     // Drupal variable then contains the body of this function. This is handy
     // for experimentation and novice Drupal users.
-    elseif (count($servers) > 1 && !empty(variable_get(CDN_PICK_SERVER_PHP_CODE_VARIABLE, ''))) {
+    elseif (count($servers) > 1 && variable_get(CDN_PICK_SERVER_PHP_CODE_VARIABLE, '') !== '') {
       $php_code = variable_get(CDN_PICK_SERVER_PHP_CODE_VARIABLE, '');
       $picked_server = _cdn_eval_pick_server($php_code, $servers);
       $cdn_url = $picked_server['url'];
