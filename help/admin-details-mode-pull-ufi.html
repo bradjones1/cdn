@@ -3,7 +3,7 @@
 <p>To be able to use Far Future expiration, we need to make sure that the URL of a file changes whenever the file changes. Otherwise, visitors will continue to use the old version of the file, that they've cached.<br />
 Depending on the type of file, it is usually better to use a different <em>unique file identifier (UFI)</em> method. Overall, you will want to minimize the number of times that the file system needs to be accessed.</p>
 
-<p>That's why the <tt>perpetual</tt>, <tt>drupal_version</tt> and <tt>deployment_id</tt> methods are the most efficient: they don't touch the file system at all. However, <tt>perpetual</tt> will never detect file changes, so only use that if you're absolutely certain a file will never change (e.g. for video files). <tt>drupal_version</tt> should only be used for Drupal core files. And <tt>deployment_id</tt> should probably only be used for files that are managed through version control.</p>
+<p>That's why the <tt>perpetual</tt>, <tt>drupal_version</tt>, <tt>drupal_cache</tt> and <tt>deployment_id</tt> methods are the most efficient: they don't touch the file system at all. However, <tt>perpetual</tt> will never detect file changes, so only use that if you're absolutely certain a file will never change (e.g. for video files). <tt>drupal_version</tt> should only be used for Drupal core files. <tt>drupal_cache</tt> is useful while doing development and for validating your cache stack. And <tt>deployment_id</tt> should probably only be used for files that are managed through version control.</p>
 
 <h2>Format</h2>
 <p>Enter one rule per line, in the format <strong>&lt;directory&gt;[|&lt;extensions&gt;]|&lt;unique file identifier (UFI) method&gt;</strong>:</p>

@@ -259,6 +259,19 @@ function cdn_cdn_unique_file_identifier_info() {
       'filesystem'   => FALSE,
       'value'        => VERSION,
     ),
+    'drupal_cache' => array(
+      'label'        => t('Drupal cache'),
+      'machine_name' => 'drupal_cache',
+      'prefix'       => 'drupal-cache',
+      'description'  => t('Uses the current Drupal cache ID
+                          (<code>css_js_query_string</code>). This ID is
+                          updated automatically whenever the Drupal cache is
+                          flushed (e.g. when you submit the modules form). Be
+                          aware that this can change relatively often, forcing
+                          redownloads by your visitors.'),
+      'filesystem'   => FALSE,
+      'value'        => variable_get('css_js_query_string', 0),
+    ),
     'deployment_id' => array(
       'label'        => t('Deployment ID'),
       'machine_name' => 'deployment_id',
