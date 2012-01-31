@@ -36,6 +36,7 @@ define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT', 'admin*');
 
 // Variables for basic mode.
 define('CDN_BASIC_MAPPING_VARIABLE', 'cdn_basic_mapping');
+define('CDN_BASIC_MAPPING_HTTPS_VARIABLE', 'cdn_basic_mapping_https');
 define('CDN_BASIC_FARFUTURE_VARIABLE', 'cdn_farfuture_status');
 define('CDN_BASIC_FARFUTURE_DEFAULT', TRUE);
 define('CDN_BASIC_FARFUTURE_EXTENSIONS_VARIABLE', "cdn_farfuture_extensions");
@@ -74,7 +75,7 @@ function cdn_file_url_alter(&$original_uri) {
   $auth_users_blacklist  = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
   $https_support         = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
   $maintenance_mode      = variable_get('maintenance_mode', FALSE);
-  $is_https_page         = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'));
+  $is_https_page         = cdn_request_is_https();
   $module_blacklist      = cdn_get_blacklist();
   global $user;
 
@@ -493,7 +494,7 @@ function cdn_get_domains() {
   // Origin Pull mode domains.
   if (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_BASIC) {
     cdn_load_include('basic');
-    $mapping = variable_get(CDN_BASIC_MAPPING_VARIABLE, '');
+    $mapping = cdn_basic_get_mapping();
     $lines = preg_split("/[\n\r]+/", $mapping, -1, PREG_SPLIT_NO_EMPTY);
     foreach ($lines as $line) {
       // Parse this line. It may or may not limit the CDN URL to a list of
@@ -575,6 +576,31 @@ function cdn_get_blacklist($reset = FALSE) {
   }
 
   return $blacklist;
+}
+
+/**
+ * Check if CDN module should serve files from a HTTPS location.
+ *
+ * @return bool
+ */
+function cdn_serve_from_https() {
+  return variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE)
+         && cdn_request_is_https();
+}
+
+/**
+ * Check if the current request is over HTTPS.
+ *
+ * @return bool
+ */
+function cdn_request_is_https() {
+  return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')
+         ||
+         (
+           isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+           &&
+           $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
+         );
 }
 
 /**

@@ -21,7 +21,7 @@ function cdn_basic_get_servers($path) {
 
   // We only need to parse the textual CDN mapping once into a lookup table.
   if (!isset($mapping)) {
-    $mapping = _cdn_basic_parse_raw_mapping(variable_get(CDN_BASIC_MAPPING_VARIABLE, ''));
+    $mapping = _cdn_basic_parse_raw_mapping(cdn_basic_get_mapping());
   }
 
   // Parse the file extension from the given path; convert it to lower case.
@@ -52,6 +52,25 @@ function cdn_basic_get_servers($path) {
   }
 
   return $servers;
+}
+
+/**
+ * Returns the CDN mapping for HTTP or HTTPS.
+ *
+ * @return array
+ */
+function cdn_basic_get_mapping() {
+  $https_mapping = variable_get(CDN_BASIC_MAPPING_HTTPS_VARIABLE, '');
+  if (!empty($https_mapping) && cdn_serve_from_https()) {
+    // if we have https mapping enabled and we are on a HTTPS page
+    $mapping = $https_mapping;
+  }
+  else {
+    // otherwise use the non-https mapping
+    $mapping = variable_get(CDN_BASIC_MAPPING_VARIABLE, '');
+  }
+
+  return $mapping;
 }
 
 

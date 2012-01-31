@@ -238,6 +238,21 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     '#default_value' => variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE),
     '#description' => _cdn_help('admin-other-https') . t('Enable if you use HTTPS and your CDN supports it too.'),
   );
+  if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_BASIC) {
+    $form['https'][CDN_BASIC_MAPPING_HTTPS_VARIABLE] = array(
+      '#type'          => 'textarea',
+      '#title'         => t('CDN mapping for HTTPS'),
+      '#description'   => t('If your CDN supports HTTPS, but requires you to
+                            use different URLs, then you can define an
+                            alternative CDN mapping here. This overrides the
+                            "regular" CDN mapping completely, when using
+                            HTTPS.'),
+      '#size'          => 35,
+      '#default_value' => variable_get(CDN_BASIC_MAPPING_HTTPS_VARIABLE, ''),
+      '#process'       => array('ctools_dependent_process'),
+      '#dependency'    => array('edit-cdn-https-support' => array('1')),
+    );
+  }
 
   $path_explanation = t(
     "Enter one file pattern per line. The '*' character is a wildcard.<br />
