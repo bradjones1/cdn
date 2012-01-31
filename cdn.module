@@ -144,7 +144,16 @@ function cdn_file_url_alter(&$original_uri) {
       // file, to generate it. (E.g. when ImageCache is used, this will
       // generate the derivative file.)
       if (!file_exists($uri)) {
-        drupal_http_request(url($uri, array('absolute' => TRUE)));
+        drupal_http_request(
+          url($uri, array('absolute' => TRUE)),
+          array(
+            'headers' => array(
+              // Make sure we hit the server and do not end up with a stale
+              // cached version.
+              'Cache-Control' => 'no-cache',
+              'Pragma'        => 'no-cache',
+            ),
+          ));
       }
       // Generate a unique file identifier (UFI).
       cdn_load_include('basic.farfuture');
