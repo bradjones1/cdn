@@ -42,11 +42,21 @@ function _cdn_generate_url_prefix_regex() {
   static $url_prefix_regex;
 
   if (!isset($url_prefix_regex)) {
-    $url_prefix_regex = implode('|', array_map('preg_quote', array(
+    $url_prefixes = array_map('preg_quote', array(
       base_path(),                                // Root-relative URL.
       '//' . $_SERVER['HTTP_HOST'] . base_path(), // Protocol-relative URL.
       $base_url . '/',                            // Absolute URL.
-    )));
+    ));
+
+    $regexes = array();
+    $farfuture = preg_quote('cdn/farfuture/');
+    foreach ($url_prefixes as $url_prefix) {
+      $regexes[] = $url_prefix . '(?!' . $farfuture . ')';
+    }
+
+    // The URL prefix regex that will match all URLs to the current site,
+    // except for those that already point to Far Future expiration URLs.
+    $url_prefix_regex = implode('|', $regexes);
   }
 
   return $url_prefix_regex;
