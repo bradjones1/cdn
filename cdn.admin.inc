@@ -249,8 +249,11 @@ function cdn_admin_other_settings_form($form, &$form_state) {
                             HTTPS.'),
       '#size'          => 35,
       '#default_value' => variable_get(CDN_BASIC_MAPPING_HTTPS_VARIABLE, ''),
-      '#process'       => array('ctools_dependent_process'),
-      '#dependency'    => array('edit-cdn-https-support' => array('1')),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="' . CDN_HTTPS_SUPPORT_VARIABLE . '"]' => array('checked' => TRUE),
+        )
+      ),
     );
   }
 
