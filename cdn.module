@@ -418,6 +418,8 @@ function cdn_theme() {
  * Implements hook_init().
  */
 function cdn_init() {
+  _cdn_prefetch_dns();
+
   // When per-page statistics are enabled, add the CSS that will be used to
   // make these statistics more usable.
   if (variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED) != CDN_DISABLED
@@ -684,4 +686,30 @@ function _cdn_eval_pick_server($php_code, $servers_for_file) {
   $result = @eval($php_code);
   ob_end_clean();
   return $result;
+}
+
+/**
+ * Helper function to add DNS prefetching to the page.
+ *
+ * @see http://drupal.org/node/1247078.
+ */
+function _cdn_prefetch_dns() {
+  $domains = cdn_get_domains();
+  if (count($domains)) {
+    // Enable prefetching.
+    drupal_add_html_head(array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'http-equiv' => 'x-dns-prefetch-control',
+        'content'    => 'on',
+      ),
+    ), 'cdn_dns_prefetch_meta');
+    // The domain names to prefetch. Use protocol-relative URLs.
+    foreach ($domains as $domain) {
+      drupal_add_html_head_link(array(
+        'rel'  => 'dns-prefetch',
+        'href' => "//$domain",
+      ));
+    }
+  }
 }
