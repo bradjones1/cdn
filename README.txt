@@ -119,6 +119,27 @@ File Conveyor mode
    You can also see here if you've applied the patches correctly!
 
 
+Cross-Origin Resource Sharing (CORS)
+------------------------------------
+By integrating a CDN, and depending on your actual configuration, resources
+might be served from (a) domain(s) different than your site's domain. This
+could cause browsers to refuse to use certain resources since they violate the
+same-origin policy. This primarily affects font and JavaScript files.
+
+To circumvent this, you can configure your server to serve those files with an
+additional Access-Control-Allow-Origin header, containing a space-separated
+list of domains that are allowed to make cross-domain use of a resource. Note
+that this will only work if your CDN provider does not strip this header.
+
+For server-specific instructions on adding this header, see
+http://www.w3.org/wiki/CORS_Enabled#At_the_HTTP_Server_level...
+
+If you are unable to add this header, or if your CDN provider ignores it, you
+can add the files to the CDN module's blacklist to exclude them being served
+by the CDN, or in the case of fonts, you can embed them in stylesheets via
+data URIs (see https://developer.mozilla.org/en/data_URIs).
+
+
 FAQ
 ---
 Q: Is the CDN module compatible with Drupal's page caching?

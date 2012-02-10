@@ -91,6 +91,11 @@ function cdn_basic_farfuture_download() {
   header("Content-Type: " . _cdn_basic_farfuture_get_mimetype(basename($path)));
   // Support partial content requests.
   header("Accept-Ranges: bytes");
+  // Browsers that implement the W3C Access Control specification might refuse
+  // to use certain resources such as fonts if those resources violate the
+  // same-origin policy. Send a header to explicitly allow cross-domain use of
+  // those resources. (This is called Cross-Origin Resource Sharing, or CORS.)
+  header("Access-Control-Allow-Origin: *");
 
   // If the extension of the file that's being served is one of the far future
   // extensions (by default: images, fonts and flash content), then cache it
