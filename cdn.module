@@ -208,7 +208,7 @@ function cdn_file_url_alter(&$original_uri) {
     // If the user can access it, add this to the per-page statistics.
     if ($stats) {
       $end = microtime();
-      $source_uri = ($mode == CDN_MODE_BASIC && $farfuture) ? $uri_before_farfuture : $original_uri;
+      $source_uri = ($mode == CDN_MODE_BASIC && $farfuture && !$maintenance_mode) ? $uri_before_farfuture : $original_uri;
       _cdn_devel_page_stats($source_uri, $cdn_url, $server, $end - $start);
     }
 
