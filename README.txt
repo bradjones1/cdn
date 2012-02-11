@@ -145,6 +145,14 @@ FAQ
 Q: Is the CDN module compatible with Drupal's page caching?
 A: Yes.
 
+Q: Is the CDN module compatible with Drupal's "private files" functionality?
+A: Yes. The CDN module won't break private files, they will continue to work
+   the same way. However, it cannot serve private files from a CDN. Not every
+   CDN supports protected/secured/authenticated file access, and those that do
+   each have their own way of doing this (there is no standard). So private
+   files will continue to be served by Drupal, which may or may not be
+   acceptable for your use case.
+
 Q: Why are JavaScript files not being served from the CDN?
 A: The answer can be found at "admin/config/development/cdn/other".
 
