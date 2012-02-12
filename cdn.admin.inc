@@ -125,9 +125,9 @@ function cdn_admin_details_form($form, &$form_state) {
 
   $methods = array();
   $ufi_info = module_invoke_all('cdn_unique_file_identifier_info');
-  foreach ($ufi_info as $ufi) {
+  foreach ($ufi_info as $ufi_method => $ufi) {
     $methods[] = $ufi['label']
-                 . ' (<code>' . $ufi['machine_name'] . '</code>): '
+                 . ' (<code>' . $ufi_method . '</code>): '
                  . $ufi['description'];
   }
   $format_variables['!ufi-methods'] = theme('item_list', array('items' => $methods));

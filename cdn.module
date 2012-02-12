@@ -227,10 +227,10 @@ function cdn_file_url_alter(&$original_uri) {
  * Implementation of hook_cdn_unique_file_identifier_info().
  */
 function cdn_cdn_unique_file_identifier_info() {
+  // Keys are machine names.
   return array(
     'md5_hash' => array(
       'label'        => t('MD5 hash'),
-      'machine_name' => 'md5_hash',
       'prefix'       => 'md5',
       'description'  => t('MD5 hash of the file.'),
       'filesystem'   => TRUE,
@@ -238,7 +238,6 @@ function cdn_cdn_unique_file_identifier_info() {
     ),
     'mtime' => array(
       'label'        => t('Last modification time'),
-      'machine_name' => 'mtime',
       'prefix'       => 'mtime',
       'description'  => t('Last modification time of the file.'),
       'filesystem'   => TRUE,
@@ -246,7 +245,6 @@ function cdn_cdn_unique_file_identifier_info() {
     ),
     'perpetual' => array(
       'label'        => t('Perpetual'),
-      'machine_name' => 'perpetual',
       'prefix'       => 'perpetual',
       'description'  => t('Perpetual files never change (or are never cached
                           by the browser, e.g. video files).'),
@@ -255,7 +253,6 @@ function cdn_cdn_unique_file_identifier_info() {
     ),
     'drupal_version' => array(
       'label'        => t('Drupal version'),
-      'machine_name' => 'drupal_version',
       'prefix'       => 'drupal',
       'description'  => t('Drupal core version — this should only be applied
                           to files that ship with Drupal core.'),
@@ -264,7 +261,6 @@ function cdn_cdn_unique_file_identifier_info() {
     ),
     'drupal_cache' => array(
       'label'        => t('Drupal cache'),
-      'machine_name' => 'drupal_cache',
       'prefix'       => 'drupal-cache',
       'description'  => t('Uses the current Drupal cache ID
                           (<code>css_js_query_string</code>). This ID is
@@ -277,7 +273,6 @@ function cdn_cdn_unique_file_identifier_info() {
     ),
     'deployment_id' => array(
       'label'        => t('Deployment ID'),
-      'machine_name' => 'deployment_id',
       'prefix'       => 'deployment',
       'description'  => t('A developer-defined deployment ID. Can be an
                           arbitrary string or number, as long as it uniquely
