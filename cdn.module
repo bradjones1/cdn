@@ -79,6 +79,11 @@ function cdn_file_url_alter(&$original_uri) {
   $module_blacklist      = cdn_get_blacklist();
   global $user;
 
+  // Don't alter file URLs when running update.php.
+  if (defined('MAINTENANCE_MODE')) {
+    return;
+  }
+
   if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
     $scheme = file_uri_scheme($original_uri);
 
