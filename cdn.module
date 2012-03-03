@@ -69,15 +69,9 @@ function cdn_file_url_alter(&$original_uri) {
   $mode                  = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   $farfuture             = variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT);
   $stats                 = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
-  $file_path_blacklist   = variable_get(CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT);
-  $file_path_whitelist   = variable_get(CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT);
-  $drupal_path_blacklist = variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT);
-  $auth_users_blacklist  = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
   $https_support         = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
   $maintenance_mode      = variable_get('maintenance_mode', FALSE);
   $is_https_page         = cdn_request_is_https();
-  $module_blacklist      = cdn_get_blacklist();
-  global $user;
 
   // Don't alter file URLs when running update.php.
   if (defined('MAINTENANCE_MODE')) {
@@ -104,35 +98,13 @@ function cdn_file_url_alter(&$original_uri) {
       $uri = $original_uri;
     }
 
-    // If the current page is being served via HTTPS, and the CDN does not
-    // support HTTPS, then don't rewrite the file URL, because it would make the
-    // visit insecure.
-    if ($is_https_page && !$https_support) {
+    if (!cdn_check_protocol()) {
       return;
     }
-
-    // If the current file URI matches one of the blacklisted file paths,
-    // return immediately, except when the current file URI also matches one
-    // of the whitelisted file paths.
-    if ((
-          drupal_match_path($uri, $file_path_blacklist)
-          ||
-          drupal_match_path($uri, $module_blacklist)
-        )
-        && !drupal_match_path($uri, $file_path_whitelist)
-      )
-    {
-        return;
-    }
-  
-    // If the current Drupal path matches one of the blacklisted Drupal paths,
-    // return immediately.
-    if (drupal_match_path($_GET['q'], $drupal_path_blacklist)) {
+    if (!cdn_check_drupal_path($_GET['q'])) {
       return;
     }
-
-    // If logged in user, apply a secondary blacklist.
-    if ($user->uid > 0 && drupal_match_path($_GET['q'], $auth_users_blacklist)) {
+    if (!cdn_check_file($uri)) {
       return;
     }
 
@@ -648,6 +620,76 @@ function cdn_request_is_https() {
            &&
            $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
          );
+}
+
+/**
+ * Check if the current protocol is supported by the CDN.
+ *
+ * Note: currently only checks HTTPS, in the future possibly also SPDY.
+ */
+function cdn_check_protocol() {
+  $https_support = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
+
+  // If the current page is being served via HTTPS, and the CDN does not
+  // support HTTPS, then don't rewrite the file URL, because it would make the
+  // visit insecure.
+  if (cdn_request_is_https() && !$https_support) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Check if a Drupal path should serve files from the CDN (i.e.: is the Drupal
+ * path blacklisted?).
+ *
+ * @param $path
+ *   A Drupal path.
+ */
+function cdn_check_drupal_path($path) {
+  global $user;
+  $blacklist       = variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT);
+  $auth_blacklist  = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
+
+  // Check if the Drupal path matches one of the blacklisted Drupal paths.
+  if (drupal_match_path($path, $blacklist)) {
+    return FALSE;
+  }
+
+  // If logged in user, apply a secondary blacklist.
+  if ($user->uid > 0 && drupal_match_path($path, $auth_blacklist)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Check if a file should be served from the CDN.
+ *
+ * @param $uri
+ *   A file URI.
+ */
+function cdn_check_file($uri) {
+  $file_path_blacklist = variable_get(CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT);
+  $file_path_whitelist = variable_get(CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT);
+  $module_blacklist    = cdn_get_blacklist();
+
+  // A file should not be served from a CDN when it matches one of the
+  // blacklists, except when it matches the whitelist.
+  if ((
+        drupal_match_path($uri, $file_path_blacklist)
+        ||
+        drupal_match_path($uri, $module_blacklist)
+      )
+      && !drupal_match_path($uri, $file_path_whitelist)
+    )
+  {
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 /**

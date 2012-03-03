@@ -14,6 +14,12 @@
  * Changes: call _cdn_build_css_cache() instead of drupal_build_css_cache().
  */
 function _cdn_aggregate_css(&$css_groups) {
+  // Don't override Drupal core's aggregation if this page is not going to use
+  // a CDN anyway.
+  if (!cdn_check_protocol() && !cdn_check_drupal_path($_GET['q'])) {
+    return;
+  }
+
   $preprocess_css = (variable_get('preprocess_css', FALSE) && (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update'));
 
   // For each group that needs aggregation, aggregate its items.
@@ -22,8 +28,17 @@ function _cdn_aggregate_css(&$css_groups) {
       // If a file group can be aggregated into a single file, do so, and set
       // the group's data property to the file path of the aggregate file.
       case 'file':
-        if ($group['preprocess'] && $preprocess_css) {
-          $css_groups[$key]['data'] = _cdn_build_css_cache($group['items']);
+        if ($preprocess_css) {
+          if ($group['preprocess']) {
+            $css_groups[$key]['data'] = _cdn_build_css_cache($group['items']);
+          }
+          else {
+            $suffix = '';
+            if (count($group['items']) == 1) {
+              $suffix .= '_' . basename($group['items'][0]['data']);
+            }
+            $css_groups[$key]['data'] = _cdn_build_css_cache($group['items'], $suffix);
+          }
         }
         break;
       // Aggregate all inline CSS content into the group's data property.
@@ -44,7 +59,7 @@ function _cdn_aggregate_css(&$css_groups) {
  * - the inner loop is modified
  * - uses _cdn_build_css_path() instead of drupal_build_css_path().
  */
-function _cdn_build_css_cache($css) {
+function _cdn_build_css_cache($css, $suffix = '') {
   $data = '';
   $uri = '';
   $map = variable_get('drupal_css_cache_files', array());
@@ -78,7 +93,7 @@ function _cdn_build_css_cache($css) {
 
     // Prefix filename to prevent blocking by firewalls which reject files
     // starting with "ad*".
-    $filename = 'css_' . drupal_hash_base64($data) . '.css';
+    $filename = 'cdn_css_' . drupal_hash_base64($data) . $suffix . '.css';
     // Create the css/ within the files folder.
     $csspath = 'public://css';
     $uri = $csspath . '/' . $filename;
