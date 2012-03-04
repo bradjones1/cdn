@@ -38,7 +38,7 @@ define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT', 'admin*');
 define('CDN_BASIC_MAPPING_VARIABLE', 'cdn_basic_mapping');
 define('CDN_BASIC_MAPPING_HTTPS_VARIABLE', 'cdn_basic_mapping_https');
 define('CDN_BASIC_FARFUTURE_VARIABLE', 'cdn_farfuture_status');
-define('CDN_BASIC_FARFUTURE_DEFAULT', TRUE);
+define('CDN_BASIC_FARFUTURE_DEFAULT', FALSE);
 define('CDN_BASIC_FARFUTURE_EXTENSIONS_VARIABLE', "cdn_farfuture_extensions");
 define('CDN_BASIC_FARFUTURE_EXTENSIONS_DEFAULT', "css\njs\nsvg\nico\ngif\njpg\njpeg\npng\notf\nttf\neot\nwoff\nflv\nswf");
 define('CDN_BASIC_FARFUTURE_GZIP_EXTENSIONS', "css\njs\nico\nsvg\neot\notf\nttf");
