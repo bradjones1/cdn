@@ -65,7 +65,6 @@ define('CDN_DAEMON_FSMONITOR_DB', 'fsmonitor.db');
  * Implements hook_file_url_alter().
  */
 function cdn_file_url_alter(&$original_uri) {
-  $status                = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
   $mode                  = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   $farfuture             = variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT);
   $stats                 = variable_get(CDN_STATS_VARIABLE, FALSE) && user_access(CDN_PERM_ACCESS_STATS);
@@ -78,7 +77,7 @@ function cdn_file_url_alter(&$original_uri) {
     return;
   }
 
-  if ($status == CDN_ENABLED || ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING))) {
+  if (cdn_status_is_enabled()) {
     $scheme = file_uri_scheme($original_uri);
 
     // If the current path is an absolute path, return immediately.
@@ -275,6 +274,10 @@ function cdn_cdn_unique_file_identifier_info() {
  * Implements hook_element_info_alter().
  */
 function cdn_element_info_alter(&$type) {
+  if (!cdn_status_is_enabled()) {
+    return;
+  }
+
   $mode = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   if ($mode == CDN_MODE_BASIC) {
     // Override Drupal's CSS aggregation system.
@@ -413,12 +416,15 @@ function cdn_theme() {
  * Implements hook_init().
  */
 function cdn_init() {
+  if (!cdn_status_is_enabled()) {
+    return;
+  }
+
   _cdn_prefetch_dns();
 
   // When per-page statistics are enabled, add the CSS that will be used to
   // make these statistics more usable.
-  if (variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED) != CDN_DISABLED
-      && variable_get(CDN_STATS_VARIABLE, FALSE)
+  if (variable_get(CDN_STATS_VARIABLE, FALSE)
       && user_access(CDN_PERM_ACCESS_STATS)
   ) {
     drupal_add_css(drupal_get_path('module', 'cdn') . '/cdn.css', array('every_page' => TRUE));
@@ -620,6 +626,18 @@ function cdn_request_is_https() {
            &&
            $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
          );
+}
+
+/**
+ * Check if the CDN module is enabled.
+ *
+ * @return bool
+ */
+function cdn_status_is_enabled() {
+  $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
+  return $status == CDN_ENABLED
+         ||
+         ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING));
 }
 
 /**
