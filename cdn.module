@@ -80,8 +80,11 @@ function cdn_file_url_alter(&$original_uri) {
   if (cdn_status_is_enabled()) {
     $scheme = file_uri_scheme($original_uri);
 
-    // If the current path is an absolute path, return immediately.
-    if ($scheme && ($scheme == 'http' || $scheme == 'https')) {
+    // If the current URI is an absolute or protocol-relevative URI, return
+    // immediately.
+    if (($scheme && ($scheme == 'http' || $scheme == 'https'))
+        || substr($original_uri, 0, 2) == '//')
+    {
       return;
     }
     else if ($scheme) {

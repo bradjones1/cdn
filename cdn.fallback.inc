@@ -43,7 +43,12 @@ function _cdn_generate_url_prefix_regex() {
 
   if (!isset($url_prefix_regex)) {
     $url_prefixes = array_map('preg_quote', array(
-      base_path(),                                // Root-relative URL.
+      base_path() . '(?!/)',                      // Root-relative URL.
+      // Note:  root-relative URL that isn't a protocol-relative URL. The
+      // negative lookahead for a trailing slash is relaly only necessary
+      // when this site is installed in the document root (i.e. when the base
+      // path equals "/"), because this would otherwise match *all* protocol-
+      // relative URLs, also those that already point to the CDN.
       '//' . $_SERVER['HTTP_HOST'] . base_path(), // Protocol-relative URL.
       $base_url . '/',                            // Absolute URL.
     ));
