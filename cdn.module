@@ -47,6 +47,9 @@ define('CDN_BASIC_FARFUTURE_REMOVE_HEADERS', "Set-Cookie\nETag");
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE', 'cdn_farfuture_unique_identifier_mapping');
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT', "misc/*:modules/*:themes/*|drupal_version\nsites/*|mtime\nsites/*|.avi .m4v .mov .mp4 .wmv .flv|perpetual");
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_DEFAULT', 'mtime');
+define('CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_VARIABLE', 'cdn_farfuture_generate');
+define('CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_DEFAULT', 2);
+define('CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_TIMEOUT', 2.0);
 
 // Variables for advanced mode.
 define('CDN_ADVANCED_PID_FILE_VARIABLE', 'cdn_advanced_pid_file');
@@ -118,25 +121,18 @@ function cdn_file_url_alter(&$original_uri) {
     // Alter the file path when using Origin Pull mode and using that mode's
     // Far Future setting.
     if ($mode == CDN_MODE_BASIC && $farfuture && !$maintenance_mode) {
+      cdn_load_include('basic.farfuture');
       // We need the unescaped version of the URI to perform file operations.
       $uri = urldecode($uri);
       // If the file does not yet exist, perform a normal HTTP request to this
       // file, to generate it. (E.g. when ImageCache is used, this will
-      // generate the derivative file.)
-      if (!file_exists($uri)) {
-        drupal_http_request(
-          url($uri, array('absolute' => TRUE)),
-          array(
-            'headers' => array(
-              // Make sure we hit the server and do not end up with a stale
-              // cached version.
-              'Cache-Control' => 'no-cache',
-              'Pragma'        => 'no-cache',
-            ),
-          ));
+      // generate the derivative file.) When that fails, don't serve it from
+      // the CDN.
+      if (!file_exists($uri) && !_cdn_basic_farfuture_generate_file($uri)) {
+        $path = drupal_encode_path($uri);
+        return;
       }
       // Generate a unique file identifier (UFI).
-      cdn_load_include('basic.farfuture');
       $ufi = cdn_basic_farfuture_get_identifier($uri);
       // Now that file operations have been performed, re-encode the URI.
       $uri = drupal_encode_path($uri);

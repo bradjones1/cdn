@@ -27,21 +27,14 @@ function cdn_basic_farfuture_download($token, $ufi, $path) {
   }
 
   if (!file_exists($path)) {
-    /*
-    // If the file does not yet exist, try if it should be generated first.
-    if ($router_item = menu_get_item($path)) {
-      if ($router_item['access']) {
-        if ($router_item['file']) {
-          require_once($router_item['file']);
-        }
-        call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
-      }
-    }
-    */
-    if (!file_exists($path)) {
-      header('HTTP/1.1 404 Not Found');
-      exit();
-    }
+    watchdog(
+      'cdn',
+      'CDN Far Future 404: %file.',
+      array('%file' => $path),
+      WATCHDOG_ALERT
+    );
+    header('HTTP/1.1 404 Not Found');
+    exit();
   }
 
   // Remove some useless/unwanted headers.
@@ -412,6 +405,86 @@ function _cdn_basic_farfuture_get_mimetype($path) {
   }
 
   return 'application/octet-stream';
+}
+
+/**
+ * Perform a nested HTTP request to generate a file.
+ *
+ * @param $path
+ *   A path relative to the Drupal root (not urlencoded!) to the file that
+ *   should be generated.
+ * @return
+ *   Whether the file was generated or not.
+ */
+function _cdn_basic_farfuture_generate_file($path) {
+  // Check if there's a file to generate in the first place!
+  if (!menu_get_item($path)) {
+    return FALSE;
+  }
+
+  // While it should already be impossible to enter recursion because of the
+  // above menu system check, we still want to detect this just to be safe.
+  // This really can only happen if a file is missing and we try to generate
+  // it and the request to generate the file itself triggers a 404, which
+  // again references the file that is missing, and would thus again trigger a
+  // 404, etc.
+  // @see http://drupal.org/node/1417616#comment-5694960
+  if ($_SERVER['REQUEST_URI'] == base_path() . $path) {
+    watchdog('cdn', 'Recursion detected for %file!', array('%file' => $path), WATCHDOG_ALERT);
+    header('HTTP/1.1 404 Not Found');
+    exit();
+  }
+
+  $url = $GLOBALS['base_url'] . '/' . drupal_encode_path($path);
+
+  // Don't generate too many files in a single request!
+  $max_generated_files = variable_get(CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_VARIABLE, CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_DEFAULT);
+  static $generated_files;
+  if (!isset($generated_files)) {
+    $generated_files = 0;
+  }
+  if ($generated_files >= $max_generated_files) {
+    watchdog(
+      'cdn',
+      'Already generated !num files, skipping %file (URL: %url, time: !time).',
+      array(
+        '!num'  => $generated_files,
+        '!time' => (int) $_SERVER['REQUEST_TIME'],
+        '%file' => $path,
+        '%url'  => $url,
+      ), WATCHDOG_NOTICE
+    );
+    return FALSE;
+  }
+
+  $headers = array(
+    // Make sure we hit the server and do not end up with a stale
+    // cached version.
+    'Cache-Control' => 'no-cache',
+    'Pragma'        => 'no-cache',
+  );
+  drupal_http_request(
+    $url,
+    array(
+      'headers' => $headers,
+      'timeout' => CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_TIMEOUT,
+    )
+  );
+
+  $generated_files++;
+  $exists = file_exists($path);
+  watchdog(
+    'cdn',
+    'Nested HTTP request to generate %file: %result (URL: %url, time: !time).',
+    array(
+      '!time'   => (int) $_SERVER['REQUEST_TIME'],
+      '%file'   => $path,
+      '%url'    => $url,
+      '%result' => $exists ? 'success' : 'failure',
+    ),
+    $exists ? WATCHDOG_NOTICE : WATCHDOG_CRITICAL
+  );
+  return $exists;
 }
 
 /**
