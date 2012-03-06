@@ -523,8 +523,6 @@ function _cdn_admin_check_requirements() {
 function _cdn_settings_form_prepare(&$form, $form_state) {
   // Do some checks, but prevent them from showing up twice.
   if (empty($form_state['input'])) {
-    // Check requirements.
-    cdn_load_include('requirements');
     _cdn_admin_check_requirements();
 
     // Advanced help.
