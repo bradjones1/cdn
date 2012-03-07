@@ -498,6 +498,9 @@ function cdn_cdn_blacklist() {
   // Blacklist Image CAPTCHA' dynamically generated CAPTCHA images.
   $blacklist[] = '*image_captcha/*';
 
+  // Blacklist SimpleTest paths
+  $blacklist[] = "*simpletest/verbose/*";
+
   return $blacklist;
 }
 
