@@ -437,41 +437,14 @@ function _cdn_basic_farfuture_generate_file($path) {
 
   $url = $GLOBALS['base_url'] . '/' . drupal_encode_path($path);
 
-  // Don't generate too many files in a single request!
-  $max_generated_files = variable_get(CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_VARIABLE, CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_DEFAULT);
-  static $generated_files;
-  if (!isset($generated_files)) {
-    $generated_files = 0;
-  }
-  if ($generated_files >= $max_generated_files) {
-    watchdog(
-      'cdn',
-      'Already generated !num files, skipping %file (URL: %url, time: !time).',
-      array(
-        '!num'  => $generated_files,
-        '!time' => (int) $_SERVER['REQUEST_TIME'],
-        '%file' => $path,
-        '%url'  => $url,
-      ), WATCHDOG_NOTICE
-    );
-    return FALSE;
-  }
-
   $headers = array(
     // Make sure we hit the server and do not end up with a stale
     // cached version.
     'Cache-Control' => 'no-cache',
     'Pragma'        => 'no-cache',
   );
-  drupal_http_request(
-    $url,
-    array(
-      'headers' => $headers,
-      'timeout' => CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_TIMEOUT,
-    )
-  );
+  drupal_http_request($url, array('headers' => $headers));
 
-  $generated_files++;
   $exists = file_exists($path);
   watchdog(
     'cdn',

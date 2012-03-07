@@ -47,9 +47,6 @@ define('CDN_BASIC_FARFUTURE_REMOVE_HEADERS', "Set-Cookie\nETag");
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE', 'cdn_farfuture_unique_identifier_mapping');
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT', "misc/*:modules/*:themes/*|drupal_version\nsites/*|mtime\nsites/*|.avi .m4v .mov .mp4 .wmv .flv|perpetual");
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_DEFAULT', 'mtime');
-define('CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_VARIABLE', 'cdn_farfuture_generate');
-define('CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_DEFAULT', 2);
-define('CDN_BASIC_FARFUTURE_GENERATE_MISSING_FILES_TIMEOUT', 2.0);
 
 // Variables for advanced mode.
 define('CDN_ADVANCED_PID_FILE_VARIABLE', 'cdn_advanced_pid_file');
