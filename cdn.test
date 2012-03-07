@@ -13,6 +13,8 @@ class CDNTestCase extends DrupalUnitTestCase {
     $alt_server = array_merge($alt_server, $_SERVER);
     $_SERVER = $alt_server;
 
+    $this->loadFile('cdn.module');
+
     // Override $conf to be able to use variable_set() and variable_get() in
     // DrupalUnitTestCase. At the same time, make sure we can restore the
     // original values.
@@ -27,6 +29,11 @@ class CDNTestCase extends DrupalUnitTestCase {
     $conf = $this->originalConfig;
 
     parent::tearDown();
+  }
+
+  function loadFile($file) {
+    $cdn_path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'cdn');
+    require_once "$cdn_path/$file";
   }
 
   /**
@@ -118,6 +125,11 @@ class CDNOriginPullTestCase extends CDNTestCase {
       'description' => 'Verify Origin Pull mode-related functionality.',
       'group' => 'CDN',
     );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->loadFile('cdn.basic.inc');
   }
 
   /**
