@@ -47,7 +47,7 @@ class CDNTestCase extends DrupalUnitTestCase {
       CDN_BASIC_MAPPING_VARIABLE => '',
       CDN_BASIC_MAPPING_HTTPS_VARIABLE => '',
     );
-    $conf = array_merge($conf, $this->defaultConfig);    
+    $conf = array_merge($conf, $this->defaultConfig);
   }
 
   /**
@@ -61,7 +61,7 @@ class CDNTestCase extends DrupalUnitTestCase {
       $_SERVER['HTTPS'] = 'off';
       $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
     }
-    else if ($protocol == 'https') {
+    elseif ($protocol == 'https') {
       $_SERVER['HTTPS'] = 'on';
       $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
     }

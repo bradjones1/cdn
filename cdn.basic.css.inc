@@ -76,7 +76,7 @@ function _cdn_build_css_cache($css, $suffix = '') {
         $contents = drupal_load_stylesheet($stylesheet['data'], TRUE);
 
         // Get the parent directory of this file, relative to the Drupal root.
-        $css_base_url = substr($stylesheet['data'], 0, strrpos($stylesheet['data'], '/'));
+        $css_base_url = drupal_substr($stylesheet['data'], 0, strrpos($stylesheet['data'], '/'));
         _cdn_build_css_path(NULL, $css_base_url . '/');
 
         // Anchor all paths in the CSS with its base URL, ignoring external and absolute paths.

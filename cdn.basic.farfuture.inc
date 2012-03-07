@@ -94,7 +94,7 @@ function cdn_basic_farfuture_download($token, $ufi, $path) {
   // extensions (by default: images, fonts and flash content), then cache it
   // in the far future.
   $farfuture_extensions  = variable_get(CDN_BASIC_FARFUTURE_EXTENSIONS_VARIABLE, CDN_BASIC_FARFUTURE_EXTENSIONS_DEFAULT);
-  $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+  $extension = drupal_strtolower(pathinfo($path, PATHINFO_EXTENSION));
   if (in_array($extension, explode("\n", $farfuture_extensions))) {
     // Remove all previously set Cache-Control headers, because we're going to
     // override it. Since multiple Cache-Control headers might have been set,
@@ -192,7 +192,7 @@ function cdn_basic_farfuture_get_identifier($path) {
   foreach (array_keys($mapping) as $directory) {
     if (drupal_match_path($path, $directory)) {
       // Parse the file extension from the given path; convert it to lower case.
-      $file_extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+      $file_extension = drupal_strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
       // Based on the file extension, determine which key should be used to find
       // the CDN URLs in the mapping lookup table, if any.
@@ -264,12 +264,12 @@ function _cdn_basic_farfuture_parse_raw_mapping($mapping_raw) {
       // - part 3: unique file identifier method
       if (count($parts) == 2) {
         $extensions = array('*'); // Use the asterisk as a wildcard.
-        $ufi_method = strtolower(trim($parts[1]));
+        $ufi_method = drupal_strtolower(trim($parts[1]));
       }
-      else if (count($parts) == 3) {
+      elseif (count($parts) == 3) {
         // Convert to lower case, remove periods, whitespace and split on ' '.
-        $extensions = explode(' ', trim(str_replace('.', '', strtolower($parts[1]))));
-        $ufi_method = strtolower(trim($parts[2]));
+        $extensions = explode(' ', trim(str_replace('.', '', drupal_strtolower($parts[1]))));
+        $ufi_method = drupal_strtolower(trim($parts[2]));
       }
 
       // Create the mapping lookup table.
@@ -398,7 +398,7 @@ function _cdn_basic_farfuture_get_mimetype($path) {
   //   - image.jpeg, and
   //   - awesome.image.jpeg
   while ($additional_part = array_pop($file_parts)) {
-    $extension = strtolower($additional_part . ($extension ? '.' . $extension : ''));
+    $extension = drupal_strtolower($additional_part . ($extension ? '.' . $extension : ''));
     if (isset($mapping['extensions'][$extension])) {
       return $mapping['mimetypes'][$mapping['extensions'][$extension]];
     }

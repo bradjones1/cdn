@@ -25,7 +25,7 @@ function cdn_basic_get_servers($path) {
   }
 
   // Parse the file extension from the given path; convert it to lower case.
-  $file_extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+  $file_extension = drupal_strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
   // Based on the file extension, determine which key should be used to find
   // the CDN URLs in the mapping lookup table, if any.
@@ -97,7 +97,7 @@ function _cdn_basic_parse_raw_mapping($mapping_raw) {
       if (strpos($line, '|') !== FALSE) {
         $parts = explode('|', $line);
         $cdn_url    = rtrim(trim($parts[0]), '/'); // Remove whitespace and a trailing slash.
-        $extensions = explode(' ', trim(str_replace('.', '', strtolower($parts[1])))); // Conver to lower case, remove periods, whitespace and split on ' '.
+        $extensions = explode(' ', trim(str_replace('.', '', drupal_strtolower($parts[1])))); // Conver to lower case, remove periods, whitespace and split on ' '.
       }
       else {
         $cdn_url    = trim($line);

@@ -147,19 +147,19 @@ function cdn_admin_details_form($form, &$form_state) {
   );
 
   $form['settings']['ufis'] = array(
-    '#type'   => 'fieldset',
+    '#type'        => 'fieldset',
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#title'  => t('Available UFI methods'),
-    '#input' => true,
-    '#id'     => 'ufi-fs-id',
-    '#prefix' => '<div id="ufi-fs-id-wrapper">',
-    '#suffix' => '</div>',
-    '#states' => array(
+    '#collapsed'   => TRUE,
+    '#title'       => t('Available UFI methods'),
+    '#input'       => TRUE,
+    '#id'          => 'ufi-fs-id',
+    '#prefix'      => '<div id="ufi-fs-id-wrapper">',
+    '#suffix'      => '</div>',
+    '#states'      => array(
       'visible' => array(
         ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_BASIC),
         ':input[name="' . CDN_BASIC_FARFUTURE_VARIABLE . '"]' => array('checked' => TRUE),
-      )
+      ),
     ),
   );
 
@@ -330,16 +330,16 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     '#type' => 'textarea',
     '#title' => t('Blacklist'),
     '#default_value' => variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT),
-    '#description' => t("Enter one page per line as Drupal paths. The '*'
-                         character is a wildcard. Example paths are %blog for
-                         the blog page and %blog-wildcard for every personal
-                         blog. %front is the front page.",
-                         array(
-                           '%blog'          => 'blog',
-                           '%blog-wildcard' => 'blog/*',
-                           '%front'         => '<front>',
-                          )
-     ),
+    '#description' => t(
+      "Enter one page per line as Drupal paths. The '*' character is a
+      wildcard. Example paths are %blog for the blog page and %blog-wildcard
+      for every personal blog. %front is the front page.",
+      array(
+       '%blog'          => 'blog',
+       '%blog-wildcard' => 'blog/*',
+       '%front'         => '<front>',
+      )
+    ),
   );
 
   $form['exceptions']['auth_users'] = array(

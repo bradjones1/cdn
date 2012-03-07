@@ -83,11 +83,12 @@ function cdn_file_url_alter(&$original_uri) {
     // If the current URI is an absolute or protocol-relevative URI, return
     // immediately.
     if (($scheme && ($scheme == 'http' || $scheme == 'https'))
-        || substr($original_uri, 0, 2) == '//')
+        || drupal_substr($original_uri, 0, 2) == '//'
+       )
     {
       return;
     }
-    else if ($scheme) {
+    elseif ($scheme) {
       // Attempt to get an external URL using the appropriate wrapper.
       if ($wrapper = file_stream_wrapper_get_instance_by_uri($original_uri)) {
         $uri = str_replace($GLOBALS['base_url'] . '/', '', $wrapper->getExternalUrl());
@@ -748,7 +749,7 @@ function cdn_post_render_html_alter($html, $elements) {
  * @param $path
  *   The file path to the file for which to generate a  unique identifier.
  */
-function _cdn_ufi_deployment_id($path) { 
+function _cdn_ufi_deployment_id($path) {
   return CDN_DEPLOYMENT_ID;
 }
 

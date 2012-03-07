@@ -18,7 +18,7 @@ function cdn_uninstall() {
  */
 function cdn_requirements($phase) {
   module_load_include('module', 'cdn');
-  
+
   $requirements = array();
   $t = get_t();
 
@@ -61,10 +61,10 @@ function cdn_requirements($phase) {
       // When enabled, add more information.
       if ($status != CDN_DISABLED) {
         if ($mode == CDN_MODE_BASIC) {
-          $requirements['cdn']['value'] .= ' – '. t('Origin Pull mode');
+          $requirements['cdn']['value'] .= ' – ' . t('Origin Pull mode');
         }
         else {
-          $requirements['cdn']['value'] .= ' – '. t('File Conveyor mode');
+          $requirements['cdn']['value'] .= ' – ' . t('File Conveyor mode');
 
           $items = array();
 
@@ -84,7 +84,7 @@ function cdn_requirements($phase) {
             cdn_load_include('advanced');
             $db = _cdn_advanced_get_db_connection();
             if ($db !== FALSE) {
-              $input_file_mask = $drupal_root_path .'%';
+              $input_file_mask = $drupal_root_path . '%';
               $sql = "SELECT COUNT(*) AS count, server
                       FROM synced_files
                       WHERE input_file LIKE :input_file
