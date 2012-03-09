@@ -108,7 +108,15 @@ function cdn_admin_details_form($form, &$form_state) {
   $form['settings'][CDN_BASIC_FARFUTURE_VARIABLE] = array(
     '#type' => 'checkbox',
     '#title' => t('Far Future expiration'),
-    '#description' => _cdn_help('admin-details-mode-pull-far-future') . t('Mark all files served from the CDN to expire in the far future — improves client-side cacheability.'),
+    '#description' => _cdn_help('admin-details-mode-pull-far-future') .
+      t('Mark all files served from the CDN to expire in the far future —
+      improves client-side cacheability.<br><strong>Note:</strong> this
+      requires the <a href="!preprocess-css-url">"Aggregate and compress CSS
+      files"</a> performance setting to be enabled', array(
+        '!preprocess-css-url' => url('admin/config/development/performance',
+          array('fragment' => 'edit-bandwidth-optimization')),
+        )
+      ),
     '#default_value' => variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT),
     '#states' => array(
       'visible' => array(
