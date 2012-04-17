@@ -13,6 +13,7 @@ define('CDN_ENABLED', 2);
 define('CDN_PERM_ACCESS_STATS',   'access per-page statistics');
 define('CDN_PERM_ACCESS_TESTING', 'access files on CDN when in testing mode');
 define('CDN_PERM_TOUCH',          'touch files');
+define('CDN_PERM_ADMIN',          'administer CDN configuration');
 
 // Variables and values.
 define('CDN_MODE_VARIABLE', 'cdn_mode');
@@ -301,7 +302,7 @@ function cdn_menu() {
   $items['admin/config/development/cdn'] = array(
     'title'            => 'CDN',
     'description'      => 'Configure CDN integration.',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array(CDN_PERM_ADMIN),
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('cdn_admin_general_settings_form'),
     'type'             => MENU_NORMAL_ITEM,
@@ -310,14 +311,14 @@ function cdn_menu() {
   $items['admin/config/development/cdn/general'] = array(
     'title'            => 'General',
     'description'      => 'General settings.',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array(CDN_PERM_ADMIN),
     'weight'           => -10,
     'type'             => MENU_DEFAULT_LOCAL_TASK,
     'file'             => 'cdn.admin.inc',
   );
   $items['admin/config/development/cdn/details'] = array(
     'title'            => 'Details',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array(CDN_PERM_ADMIN),
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('cdn_admin_details_form'),
     'weight'           => -8,
@@ -327,7 +328,7 @@ function cdn_menu() {
   $items['admin/config/development/cdn/other'] = array(
     'title'            => 'Other',
     'description'      => 'Other settings.',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array(CDN_PERM_ADMIN),
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('cdn_admin_other_settings_form'),
     'weight'           => -4,
@@ -365,6 +366,10 @@ function cdn_menu() {
  */
 function cdn_permission() {
   return array(
+    CDN_PERM_ADMIN => array(
+      'title'           => t('Administer CDN configuration settings'),
+      'restrict access' => TRUE,
+    ),
     CDN_PERM_ACCESS_STATS => array(
       'title' => t('Access per-page statistics'),
     ),
