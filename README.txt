@@ -167,6 +167,9 @@ Q: What does the config.xml file of the CDN module do?
 A: Nothing. It only serves as a sample for using File Conveyor. It's used for
    nothing and can safely be deleted.
 
+Q: How to use different CDNs based on the domain name of an i18n site?
+A: See http://drupal.org/node/1483962#comment-5744830.
+
 
 No cookies should be sent to the CDN
 ------------------------------------
