@@ -200,6 +200,9 @@ You only need this when you're using multiple servers/CDNs and you can't rely
 on picking a server/CDN based on the file extension, i.e. if you need more
 advanced criteria than only file extension.
 
+NOTE: this function is only called for file X if >1 server/CDN is available
+for file X.
+
 For this purpose, you can implement the cdn_pick_server() function:
   /**
    * Implements cdn_pick_server().
