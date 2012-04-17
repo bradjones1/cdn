@@ -60,9 +60,16 @@ function _cdn_aggregate_css(&$css_groups) {
  * - uses _cdn_build_css_path() instead of drupal_build_css_path().
  */
 function _cdn_build_css_cache($css, $suffix = '') {
+  // Create different CSS aggregation maps for HTTP and HTTPS.
+  $css_cache_var = 'drupal_css_cache_files';
+  $https_mapping = variable_get(CDN_BASIC_MAPPING_HTTPS_VARIABLE, '');
+  if (!empty($https_mapping) && cdn_serve_from_https()) {
+    $css_cache_var .= '_https';
+  }
+
   $data = '';
   $uri = '';
-  $map = variable_get('drupal_css_cache_files', array());
+  $map = variable_get($css_cache_var, array());
   $key = hash('sha256', serialize($css));
   if (isset($map[$key])) {
     $uri = $map[$key];
@@ -113,7 +120,7 @@ function _cdn_build_css_cache($css, $suffix = '') {
     }
     // Save the updated map.
     $map[$key] = $uri;
-    variable_set('drupal_css_cache_files', $map);
+    variable_set($css_cache_var, $map);
   }
   return $uri;
 }
