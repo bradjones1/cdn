@@ -396,6 +396,22 @@ function cdn_node_view_alter(&$build) {
 }
 
 /**
+ * Implements hook_block_view_alter().
+ */
+function cdn_block_view_alter(&$data, $block) {
+  if (isset($data['content'])) {
+    // Blocks with render arrays.
+    if (is_array($data['content'])) {
+      $data['content']['#post_render'][] = 'cdn_post_render_html_alter';
+    }
+    // Blocks without render arrays (typically custom blocks).
+    else if (is_string($data['content'])) {
+      $data['content'] = cdn_post_render_html_alter($data['content']);
+    }
+  }
+}
+
+/**
  * Implements hook_theme().
  */
 function cdn_theme() {
@@ -748,7 +764,7 @@ function cdn_load_include($basename) {
  *
  * Can be used as a #post_render callback.
  */
-function cdn_post_render_html_alter($html, $elements) {
+function cdn_post_render_html_alter($html, $elements = array()) {
   cdn_load_include('fallback');
   cdn_html_alter_image_urls($html);
   return $html;
