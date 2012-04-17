@@ -62,6 +62,45 @@ function cdn_requirements($phase) {
       if ($status != CDN_DISABLED) {
         if ($mode == CDN_MODE_BASIC) {
           $requirements['cdn']['value'] .= ' – ' . t('Origin Pull mode');
+          $farfuture = variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT);
+          $preprocess_css = variable_get('preprocess_css');
+
+          if (!$preprocess_css) {
+            $args = array(
+              '!preprocess-css-link' => l(
+                '"Aggregate and compress CSS files"',
+                'admin/config/development/performance',
+                array('fragment' => 'edit-bandwidth-optimization')
+              ),
+            );
+            if ($farfuture) {
+              $requirements['cdn']['description'] = t(
+                'CSS aggregation is disabled. Files referenced by CSS files
+                will fail to load!<br />
+                Please enable the !preprocess-css-link performance setting.',
+                $args
+              );
+              $requirements['cdn']['severity'] = REQUIREMENT_ERROR;
+            }
+            else {
+              $requirements['cdn']['description'] = t(
+                'CSS aggregation is disabled. Files referenced by CSS files
+                such as background images and fonts will <em>not</em> be
+                served from the CDN!<br />
+                Please consider enabling the !preprocess-css-link performance
+                setting.',
+                $args
+              );
+              $requirements['cdn']['severity'] = REQUIREMENT_WARNING;
+            }
+          }
+
+          if ($farfuture) {
+            $requirements['cdn']['value'] .= ' (' . t('with Far Future expiration') . ')';
+          }
+          else {
+            $requirements['cdn']['value'] .= ' (' . t('without Far Future expiration') . ')';
+          }
         }
         else {
           $requirements['cdn']['value'] .= ' – ' . t('File Conveyor mode');

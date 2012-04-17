@@ -111,12 +111,16 @@ function cdn_admin_details_form($form, &$form_state) {
     '#description' => _cdn_help('admin-details-mode-pull-far-future') .
       t('Mark all files served from the CDN to expire in the far future —
       improves client-side cacheability.<br><strong>Note:</strong> this
-      requires the <a href="!preprocess-css-url">"Aggregate and compress CSS
-      files"</a> performance setting to be enabled', array(
-        '!preprocess-css-url' => url('admin/config/development/performance',
-          array('fragment' => 'edit-bandwidth-optimization')),
-        )
-      ),
+      requires the !preprocess-css-link performance setting to be enabled (or
+      your site will break).',
+      array(
+        '!preprocess-css-link' => l(
+          '"Aggregate and compress CSS files"',
+          'admin/config/development/performance',
+          array('fragment' => 'edit-bandwidth-optimization')
+        ),
+      )
+    ),
     '#default_value' => variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT),
     '#states' => array(
       'visible' => array(
@@ -509,20 +513,29 @@ function _cdn_admin_check_requirements() {
   // Check run-time requirements of the CDN integration module.
   module_load_install('cdn');
   $requirements = cdn_requirements('runtime');
+  $problematic_statuses = array(REQUIREMENT_WARNING, REQUIREMENT_ERROR);
 
   // Filter out the requirement errors and display these, with links back to
   // the admin/reports/status page.
   $errors = array();
   foreach ($requirements as $requirement => $details) {
-    if ($details['severity'] == REQUIREMENT_ERROR) {
-      $errors[] = l($details['title'], 'admin/reports/status') . '<br />' . $details['description'];
+    if (in_array($details['severity'], $problematic_statuses)) {
+      $errors[] = $details['description'];
     }
   }
   if (!empty($errors)) {
-    $args = array(
-      '!error-list' => theme('item_list', array('items' => $errors)),
+    drupal_set_message(
+      t(
+          'Please fix the following problems with the installation of the CDN
+          integration module:<br />!error-list You can also see them on
+          the !status-report.',
+          array(
+            '!status-report' => l('status report', 'admin/reports/status'),
+            '!error-list' => theme('item_list', array('items' => $errors)),
+          )
+      ),
+      'error'
     );
-    drupal_set_message(t('Please fix the following problems with the installation of the CDN integration module:<br />!error-list', $args), 'error');
   }
 
   return count($errors);
