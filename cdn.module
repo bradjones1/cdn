@@ -535,6 +535,42 @@ function cdn_cdn_blacklist() {
 
 
 //----------------------------------------------------------------------------
+// Drush.
+
+/**
+ * Implements hook_cacheaudit().
+ */
+function cdn_cacheaudit() {
+  $results = array(array('Settings', 'Value'));
+
+  $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
+  if ($status == CDN_ENABLED) {
+    $status_value = 'enabled';
+  }
+  else if ($status == CDN_TESTING) {
+    $status_value = 'testing';
+  }
+  else {
+    $status_value = 'disabled';
+  }
+  $results[] = array('Status', $status_value);
+
+  $mode = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+  $results[] = array('Mode', $mode ? 'Origin Pull' : 'File Conveyor');
+
+  if ($mode == CDN_MODE_BASIC) {
+    cdn_load_include('basic');
+    $results[] = array('    mappings', count(_cdn_basic_parse_raw_mapping(cdn_basic_get_mapping())));
+    $results[] = array('    Far Future expiration', variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT));
+  }
+
+  $results[] = array('Domains', count(cdn_get_domains()));
+
+  return array('cdn' => $results);
+}
+
+
+//----------------------------------------------------------------------------
 // Public functions.
 
 /**
