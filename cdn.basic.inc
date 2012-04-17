@@ -96,17 +96,25 @@ function _cdn_basic_parse_raw_mapping($mapping_raw) {
       // file extensions.
       if (strpos($line, '|') !== FALSE) {
         $parts = explode('|', $line);
-        $cdn_url    = rtrim(trim($parts[0]), '/'); // Remove whitespace and a trailing slash.
-        $extensions = explode(' ', trim(str_replace('.', '', drupal_strtolower($parts[1])))); // Conver to lower case, remove periods, whitespace and split on ' '.
+        $cdn_urls = explode(' ', trim($parts[0]));
+        $extensions = explode(' ', trim(str_replace('.', '', strtolower($parts[1])))); // Convert to lower case, remove periods, whitespace and split on ' '.
       }
       else {
-        $cdn_url    = trim($line);
+        $cdn_urls   = explode(' ', trim($line));
         $extensions = array('*'); // Use the asterisk as a wildcard.
+      }
+
+      // Remove trailing slash from URLs.
+      for ($i = 0; $i < count($cdn_urls); $i++) {
+        $cdn_urls[$i] = rtrim($cdn_urls[$i], '/');
       }
 
       // Create the mapping lookup table.
       foreach ($extensions as $extension) {
-        $mapping[$extension][] = $cdn_url;
+        if (!isset($mapping[$extension])) {
+          $mapping[$extension] = array();
+        }
+        $mapping[$extension] = array_merge($mapping[$extension], $cdn_urls);
       }
     }
   }

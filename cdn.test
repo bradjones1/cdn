@@ -155,9 +155,9 @@ class CDNOriginPullTestCase extends CDNTestCase {
     // Ensure the parsing of the raw mapping works correctly.
     $this->assertMapping('', array());
     $this->assertMapping('http://cdn-a.com',  array('*' => array('http://cdn-a.com')));
-    $this->assertMapping('http://cdn-a.com/', array('*' => array('http://cdn-a.com/')));
+    $this->assertMapping('http://cdn-a.com/', array('*' => array('http://cdn-a.com')));
     $this->assertMapping('//cdn-a.com',       array('*' => array('//cdn-a.com')));
-    $this->assertMapping('//cdn-a.com/',      array('*' => array('//cdn-a.com/')));
+    $this->assertMapping('//cdn-a.com/',      array('*' => array('//cdn-a.com')));
     $parsed_mapping = array(
       'css'  => array('http://cdn-a.com'),
       'jpg'  => array('http://cdn-a.com'),
@@ -168,6 +168,17 @@ class CDNOriginPullTestCase extends CDNTestCase {
     );
     $this->assertMapping(
       "http://cdn-a.com|.css .jpg .jpeg .png\nhttp://cdn-b.com|.zip\nhttp://cdn-c.com",
+      $parsed_mapping
+    );
+    $parsed_mapping = array(
+      'css'  => array('http://cdn-a.com', 'http://cdn-d.com'),
+      'jpg'  => array('http://cdn-a.com', 'http://cdn-d.com'),
+      'jpeg' => array('http://cdn-a.com', 'http://cdn-d.com'),
+      'png'  => array('http://cdn-a.com', 'http://cdn-d.com', 'http://cdn-b.com'),
+      '*'    => array('http://cdn-c.com'),
+    );
+    $this->assertMapping(
+      "http://cdn-a.com http://cdn-d.com|.css .jpg .jpeg .png\nhttp://cdn-b.com|.png\nhttp://cdn-c.com",
       $parsed_mapping
     );
 
