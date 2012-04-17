@@ -163,26 +163,15 @@ function cdn_basic_farfuture_download($token, $ufi, $path) {
 // Public functions.
 
 /**
- * Gets the servers on which a file is available when basic mode is enabled.
+ * Get the UFI method for the file at a path.
  *
  * @param $path
- *   The path to get the servers for.
+ *   The path to get UFI method for the file at the given path.
+ * @param $mapping
+ *   The UFI mapping to use.
  */
-function cdn_basic_farfuture_get_identifier($path) {
-  static $mapping;
-  static $ufi_info;
-  $servers = array();
 
-  // Gather all unique file identifier info.
-  if (!isset($ufi_info)) {
-    $ufi_info = module_invoke_all('cdn_unique_file_identifier_info');
-  }
-
-  // We only need to parse the textual CDN mapping once into a lookup table.
-  if (!isset($mapping)) {
-    $mapping = _cdn_basic_farfuture_parse_raw_mapping(variable_get(CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE, CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT));
-  }
-
+function cdn_basic_farfuture_get_ufi_method($path, $mapping) {
   // Determine which UFI method should be used. Note that we keep on trying to
   // find another method until the end: the order of rules matters!
   // However, specificity also matters. The directory pattern "foo/bar/*"
@@ -198,7 +187,7 @@ function cdn_basic_farfuture_get_identifier($path) {
       // the CDN URLs in the mapping lookup table, if any.
       $extension = NULL;
       if (array_key_exists($file_extension, $mapping[$directory])) {
-        $key = $file_extension;
+        $extension = $file_extension;
       }
       elseif (array_key_exists('*', $mapping[$directory])) {
         $extension = '*';
@@ -220,6 +209,31 @@ function cdn_basic_farfuture_get_identifier($path) {
   if ($ufi_method === FALSE) {
     $ufi_method = CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_DEFAULT;
   }
+
+  return $ufi_method;
+}
+
+/**
+ * Get the UFI (Unique File Identifier) for the file at a path.
+ *
+ * @param $path
+ *   The path to get a UFI for.
+ */
+function cdn_basic_farfuture_get_identifier($path) {
+  static $ufi_info;
+  static $mapping;
+
+  // Gather all unique file identifier info.
+  if (!isset($ufi_info)) {
+    $ufi_info = module_invoke_all('cdn_unique_file_identifier_info');
+  }
+
+  // We only need to parse the textual CDN mapping once into a lookup table.
+  if (!isset($mapping)) {
+    $mapping = _cdn_basic_farfuture_parse_raw_mapping(variable_get(CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE, CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT));
+  }
+
+  $ufi_method = cdn_basic_farfuture_get_ufi_method($path, $mapping);
 
   $prefix = $ufi_info[$ufi_method]['prefix'];
   if (isset($ufi_info[$ufi_method]['value'])) {
