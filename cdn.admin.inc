@@ -530,7 +530,7 @@ function _cdn_admin_check_requirements() {
           integration module:<br />!error-list You can also see them on
           the !status-report.',
           array(
-            '!status-report' => l('status report', 'admin/reports/status'),
+            '!status-report' => l(t('status report'), 'admin/reports/status'),
             '!error-list' => theme('item_list', array('items' => $errors)),
           )
       ),
@@ -558,12 +558,24 @@ function _cdn_settings_form_prepare(&$form, $form_state) {
 
 function _cdn_check_advanced_help() {
   if (!module_exists('advanced_help')) {
-    $filename = db_query("SELECT filename FROM {system} WHERE type = 'module' AND name = 'advanced_help'")->fetchField();
+    $sql = "SELECT filename
+            FROM {system}
+            WHERE type = 'module'
+            AND name = 'advanced_help'";
+    $filename = db_query($sql)->fetchField();
     if ($filename && file_exists($filename)) {
-      drupal_set_message(t('If you <a href="@modules">enable the advanced help module</a>, CDN will provide more and better help.', array('@modules' => url('admin/modules'))));
+      drupal_set_message(t(
+        'If you enable the <a href="@modules-url">Advanced Help</a> module,
+        the CDN module will provide more and better help.',
+        array('@modules-url' => url('admin/modules'))
+      ));
     }
     else {
-      drupal_set_message(t('If you install the advanced help module from !href, CDN will provide more and better help.', array('!href' => l('http://drupal.org/project/advanced_help', 'http://drupal.org/project/advanced_help'))));
+      drupal_set_message(t(
+        'If you install the <a href="@adv-help-url">Advanced Help</a> module,
+        the CDN module will provide more and better help.',
+        array('!adv-help-url' => url('http://drupal.org/project/advanced_help'))
+      ));
     }
   }
 }
