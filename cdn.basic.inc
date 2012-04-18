@@ -97,7 +97,7 @@ function _cdn_basic_parse_raw_mapping($mapping_raw) {
       if (strpos($line, '|') !== FALSE) {
         $parts = explode('|', $line);
         $cdn_urls = explode(' ', trim($parts[0]));
-        $extensions = explode(' ', trim(str_replace('.', '', strtolower($parts[1])))); // Convert to lower case, remove periods, whitespace and split on ' '.
+        $extensions = explode(' ', trim(str_replace('.', '', drupal_strtolower($parts[1])))); // Convert to lower case, remove periods, whitespace and split on ' '.
       }
       else {
         $cdn_urls   = explode(' ', trim($line));

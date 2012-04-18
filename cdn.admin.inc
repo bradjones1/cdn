@@ -110,7 +110,7 @@ function cdn_admin_details_form($form, &$form_state) {
     '#title' => t('Far Future expiration'),
     '#description' => _cdn_help('admin-details-mode-pull-far-future') .
       t('Mark all files served from the CDN to expire in the far future —
-      improves client-side cacheability.<br><strong>Note:</strong> this
+      improves client-side cacheability.<br /><strong>Note:</strong> this
       requires the !preprocess-css-link performance setting to be enabled (or
       your site will break).',
       array(
@@ -574,7 +574,7 @@ function _cdn_check_advanced_help() {
       drupal_set_message(t(
         'If you install the <a href="@adv-help-url">Advanced Help</a> module,
         the CDN module will provide more and better help.',
-        array('!adv-help-url' => url('http://drupal.org/project/advanced_help'))
+        array('@adv-help-url' => url('http://drupal.org/project/advanced_help'))
       ));
     }
   }
