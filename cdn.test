@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Test CDN.
+ */
+
 class CDNTestCase extends DrupalUnitTestCase {
   function setUp() {
     parent::setUp();

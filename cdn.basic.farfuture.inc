@@ -443,7 +443,7 @@ function _cdn_basic_farfuture_generate_file($path) {
   // again references the file that is missing, and would thus again trigger a
   // 404, etc.
   // @see http://drupal.org/node/1417616#comment-5694960
-  if ($_SERVER['REQUEST_URI'] == base_path() . $path) {
+  if (request_uri() == base_path() . $path) {
     watchdog('cdn', 'Recursion detected for %file!', array('%file' => $path), WATCHDOG_ALERT);
     header('HTTP/1.1 404 Not Found');
     exit();

@@ -179,7 +179,7 @@ function cdn_file_url_alter(&$original_uri) {
     // The file is available from multiple servers; pick a server randomly
     // (yet consistently: this uses consistent hashing!), so that each server
     // will serve approximately the same number of files.
-    else if (count($servers > 1)) {
+    elseif (count($servers > 1)) {
       $filename = basename($servers[0]['url']);
       $unique_file_id = hexdec(substr(md5($filename), 0, 5));
       $choice = $unique_file_id % count($servers);
@@ -405,7 +405,7 @@ function cdn_block_view_alter(&$data, $block) {
       $data['content']['#post_render'][] = 'cdn_post_render_html_alter';
     }
     // Blocks without render arrays (typically custom blocks).
-    else if (is_string($data['content'])) {
+    elseif (is_string($data['content'])) {
       $data['content'] = cdn_post_render_html_alter($data['content']);
     }
   }
@@ -547,7 +547,7 @@ function cdn_cacheaudit() {
   if ($status == CDN_ENABLED) {
     $status_value = 'enabled';
   }
-  else if ($status == CDN_TESTING) {
+  elseif ($status == CDN_TESTING) {
     $status_value = 'testing';
   }
   else {
@@ -672,8 +672,6 @@ function cdn_get_blacklist($reset = FALSE) {
 
 /**
  * Check if CDN module should serve files from a HTTPS location.
- *
- * @return bool
  */
 function cdn_serve_from_https() {
   return variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE)
@@ -682,8 +680,6 @@ function cdn_serve_from_https() {
 
 /**
  * Check if the current request is over HTTPS.
- *
- * @return bool
  */
 function cdn_request_is_https() {
   return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')
@@ -697,8 +693,6 @@ function cdn_request_is_https() {
 
 /**
  * Check if the CDN module is enabled.
- *
- * @return bool
  */
 function cdn_status_is_enabled() {
   $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);

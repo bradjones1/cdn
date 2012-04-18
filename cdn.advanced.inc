@@ -54,8 +54,7 @@ function cdn_advanced_get_servers($path) {
 // Private functions.
 
 /**
- * Get a connection to the database. The resulting PDO object is statically
- * cached.
+ * Get a connection to the database.
  *
  * @return
  *   A database connection (through PDO), or FALSE in case of failure.
