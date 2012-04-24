@@ -157,6 +157,17 @@ function cdn_basic_farfuture_download($token, $ufi, $path) {
   exit();
 }
 
+function cdn_basic_farfuture_reverseproxy_test($token) {
+  $reference_token = variable_get('cdn_reverse_proxy_test');
+  if ($reference_token === FALSE || $token != $reference_token) {
+    header('HTTP/1.1 403 Forbidden');
+    exit();
+  }
+
+  print REQUEST_TIME . '-' . md5(rand());
+  exit();
+}
+
 
 //----------------------------------------------------------------------------
 // Public functions.

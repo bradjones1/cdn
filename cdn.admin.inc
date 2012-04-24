@@ -112,7 +112,8 @@ function cdn_admin_details_form($form, &$form_state) {
       t('Mark all files served from the CDN to expire in the far future —
       improves client-side cacheability.<br /><strong>Note:</strong> this
       requires the !preprocess-css-link performance setting to be enabled (or
-      your site will break).',
+      your site will break).<br><strong>Note:</strong> only use Far Future
+      expiration when using a CDN or a reverse proxy.',
       array(
         '!preprocess-css-link' => l(
           '"Aggregate and compress CSS files"',
@@ -422,8 +423,50 @@ function cdn_admin_details_form_validate($form, &$form_state) {
     }
   }
 
+  // When in Origin Pull mode, check the CDN mapping for CDNs/reverse proxies.
+  if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_BASIC) {
+    $domains = cdn_get_domains();
+    $token = md5(rand());
+    variable_set('cdn_reverse_proxy_test', $token);
+    $yays = array();
+    $nays = array();
+    foreach ($domains as $domain) {
+      $url = 'http://' . $domain . base_path() . 'cdn/farfuture/reverse-proxy-test/' . $token;
+      $r1 = drupal_http_request($url);
+      $r2 = drupal_http_request($url);
+      unset($r1->headers);
+      unset($r2->headers);
+      $args = array('%domain' => $domain);
+      if ($r1 == $r2) {
+        $yays[] = t('%domain is a CDN or a reverse proxy.', $args);
+      }
+      else {
+        if ($r1->code == 404) {
+          $nays[] = t('%domain is a static file server.', $args);
+        }
+        else {
+          $nays[] = t('%domain uses the same web server as this Drupal site.', $args);
+        }
+      }
+    }
+    variable_set('cdn_reverse_proxy_test', FALSE);
+    if (!empty($yays)) {
+      drupal_set_message(t('Perfect domains: !yay-list',
+        array(
+          '!yay-list' => theme('item_list', array('items' => $yays)),
+        )
+      ));
+    }
+    if (!empty($nays)) {
+      drupal_set_message(t('Potentially problematic domains: !nay-list',
+        array(
+          '!nay-list' => theme('item_list', array('items' => $nays)),
+        )
+      ), 'warning');
+    }
+  }
   // When in advanced mode, validate the synced files DB.
-  if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_ADVANCED) {
+  elseif ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_ADVANCED) {
     $synced_files_db = $form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE];
     _cdn_admin_validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
   }
@@ -452,7 +495,7 @@ function cdn_admin_other_settings_form_validate($form, &$form_state) {
 function cdn_admin_settings_submit_show_cache_warning($form, &$form_state) {
   drupal_set_message(t('You have just changed some settings. This might affect
                         the file URLs that have been cached in nodes, views,
-                        or elsewhere.<br />
+                        aggregated CSS files or elsewhere.<br />
                         You now may want to clear all caches, to ensure that
                         the new CDN file URLs are used immediately. This can
                         be done in the <a href="!link">"Clear cache"

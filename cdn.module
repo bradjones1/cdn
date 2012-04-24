@@ -357,6 +357,14 @@ function cdn_menu() {
     'load arguments'   => array('%map', '%index'),
     'file'             => 'cdn.basic.farfuture.inc',
   );
+  $items['cdn/farfuture/reverse-proxy-test/%'] = array(
+    'title'            => 'Far Future reverse proxy test',
+    'access callback'  => TRUE,
+    'page callback'    => 'cdn_basic_farfuture_reverseproxy_test',
+    'page arguments'   => array(3),
+    'type'             => MENU_CALLBACK,
+    'file'             => 'cdn.basic.farfuture.inc',
+  );
 
   return $items;
 }
