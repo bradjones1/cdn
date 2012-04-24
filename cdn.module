@@ -589,6 +589,12 @@ function cdn_get_domains() {
     $mapping = cdn_basic_get_mapping();
     $lines = preg_split("/[\n\r]+/", $mapping, -1, PREG_SPLIT_NO_EMPTY);
     foreach ($lines as $line) {
+      // Ignore empty lines.
+      $line = trim($line);
+      if (empty($line)) {
+        continue;
+      }
+
       // Parse this line. It may or may not limit the CDN URL to a list of
       // file extensions.
       if (strpos($line, '|') !== FALSE) {

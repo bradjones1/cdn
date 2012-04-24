@@ -92,6 +92,12 @@ function _cdn_basic_parse_raw_mapping($mapping_raw) {
   if (!empty($mapping_raw)) {
     $lines = preg_split("/[\n\r]+/", $mapping_raw, -1, PREG_SPLIT_NO_EMPTY);
     foreach ($lines as $line) {
+      // Ignore empty lines.
+      $line = trim($line);
+      if (empty($line)) {
+        continue;
+      }
+
       // Parse this line. It may or may not limit the CDN URL to a list of
       // file extensions.
       if (strpos($line, '|') !== FALSE) {
