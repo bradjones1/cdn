@@ -476,7 +476,7 @@ function cdn_admin_details_form_validate($form, &$form_state) {
  * Default validate callback for the other settings form.
  */
 function cdn_admin_other_settings_form_validate($form, &$form_state) {
-  if ($form_state['values'][CDN_PICK_SERVER_PHP_CODE_VARIABLE] !== '') {
+  if (!empty($form_state['values'][CDN_PICK_SERVER_PHP_CODE_VARIABLE])) {
     $php_code = $form_state['values'][CDN_PICK_SERVER_PHP_CODE_VARIABLE];
     $servers = array();
     if (_cdn_eval_pick_server($php_code, $servers) === FALSE) {
