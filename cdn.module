@@ -605,12 +605,17 @@ function cdn_get_domains() {
 
       // Parse this line. It may or may not limit the CDN URL to a list of
       // file extensions.
-      if (strpos($line, '|') !== FALSE) {
-        $parts = explode('|', $line);
-        $domains[] = parse_url(trim($parts[0]), PHP_URL_HOST);
-      }
-      else {
-        $domains[] = parse_url(trim($line), PHP_URL_HOST);
+      $parts = explode('|', $line);
+      // It may also list more than one domain.
+      foreach (explode(' ', $parts[0]) as $part) {
+        // Remove white space.
+        $part = trim($part);
+        // Allow for protocol-relative domains. We prepend "http:", otherwise
+        // parse_url() won't return anything.
+        if (strpos($part, '//') === 0) {
+          $part = 'http:' . $part;
+        }
+        $domains[] = parse_url($part, PHP_URL_HOST);
       }
     }
   }
