@@ -26,7 +26,7 @@ function cdn_html_alter_image_urls(&$html) {
   $pattern .= "([\"|'][^>]*)>"; // End of opening <a> tag.
   $pattern .= "((<img\s+|<img\s+[^>]*\s+)src\s*=\s*[\"|'])([^\"|^']*)([\"|'])"; // Wrapped <img> tag.
   $pattern .= ")#i";
-  _cdn_html_alter_file_url($html, $pattern, 0, 4, 5, 1, 7);
+  _cdn_html_alter_file_url($html, $pattern, 0, 4, 5, 1, 7, 11);
 
   // Image file URLs in <img> tags.
   $pattern = "#((<img\s+|<img\s+[^>]*\s+)src\s*=\s*[\"|'])($url_prefix_regex)([^\"|^'|^\?]*)()(\?[^\"|^']*)?([\"|'])#i";
@@ -87,8 +87,11 @@ function _cdn_generate_url_prefix_regex() {
  *   prefix in the array of regexp matches.
  * @param $suffix
  *   See $prefix.
+ * @param $comparison_index
+ *   The index of a comparison path whose file extension should match the file
+ *   extension of the path located at $path_index.
  */
-function _cdn_html_alter_file_url(&$html, $pattern, $search_index, $path_index, $querystring_index, $prefix, $suffix) {
+function _cdn_html_alter_file_url(&$html, $pattern, $search_index, $path_index, $querystring_index, $prefix, $suffix, $comparison_index = FALSE) {
   // Find a match against the given pattern.
   preg_match_all($pattern, $html, $matches);
 
@@ -101,6 +104,20 @@ function _cdn_html_alter_file_url(&$html, $pattern, $search_index, $path_index, 
 
     $prefix_string = (is_numeric($prefix)) ? $matches[$prefix][$i] : $prefix;
     $suffix_string = (is_numeric($suffix)) ? $matches[$suffix][$i] : $suffix;
+
+    // Compare the filename in the path with that of another index. The file
+    // URL only is rewritten if it matches.
+    if ($comparison_index) {
+      $comparison = $matches[$comparison_index][$i];
+
+      // Calculate length of extension.
+      $path_ext_pos = strrpos($path, '.');
+      $ext_length = -1 * (strlen($path) - $path_ext_pos);
+
+      if (substr($path, $ext_length) !== substr($comparison, $ext_length)) {
+        continue;
+      }
+    }
 
     // Store the current path as the old path, then let cdn_file_url_alter()
     // do its magic by invoking all file_url_alter hooks. When the path hasn't
