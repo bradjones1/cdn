@@ -569,9 +569,10 @@ function _cdn_admin_check_requirements() {
   if (!empty($errors)) {
     drupal_set_message(
       t(
-          'Please fix the following problems with the installation of the CDN
-          integration module:<br />!error-list You can also see them on
-          the !status-report.',
+          'The CDN module has detected the following <em>potential</em>
+          problems in its configuration:<br />
+          !error-list
+          You can also see them on the !status-report.',
           array(
             '!status-report' => l(t('status report'), 'admin/reports/status'),
             '!error-list' => theme('item_list', array('items' => $errors)),
