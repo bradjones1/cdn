@@ -744,18 +744,7 @@ function cdn_check_file($uri) {
  * Helper function to efficiently load include files for this module.
  */
 function cdn_load_include($basename) {
-  static $used = array();
-  static $base_path;
-
-  if (!isset($base_path)) {
-    $base_path = './' . drupal_get_path('module', 'cdn');
-  }
-
-  if (!isset($used[$basename])) {
-    require $base_path . "/cdn.$basename.inc";
-  }
-
-  $used[$basename] = TRUE;
+  module_load_include('inc', 'cdn', "cdn.$basename");
 }
 
 /**
