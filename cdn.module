@@ -464,6 +464,14 @@ function cdn_exit($destination = NULL) {
 function cdn_flush_caches() {
   // Force refresh of the blacklist.
   cdn_get_blacklist(TRUE);
+
+  // Clear aggregated CSS files for pages served via HTTP.
+  variable_del('drupal_css_cache_files_http');
+  file_scan_directory('public://cdn/css/http', '/.*/', array('callback' => 'drupal_delete_file_if_stale'));
+
+  // Clear aggregated CSS files for pages served via HTTPS.
+  variable_del('drupal_css_cache_files_https');
+  file_scan_directory('public://cdn/css/https', '/.*/', array('callback' => 'drupal_delete_file_if_stale'));
 }
 
 /**
