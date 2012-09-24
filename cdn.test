@@ -55,6 +55,7 @@ class CDNTestCase extends DrupalUnitTestCase {
   function variableSetDefaults() {
     global $conf;
     $this->defaultConfig = array(
+      CDN_MODE_VARIABLE => FALSE,
       CDN_HTTPS_SUPPORT_VARIABLE => FALSE,
       CDN_BASIC_MAPPING_VARIABLE => '',
       CDN_BASIC_MAPPING_HTTPS_VARIABLE => '',
@@ -136,6 +137,7 @@ class CDNOriginPullTestCase extends CDNTestCase {
     parent::setUp();
     $this->loadFile('cdn.basic.inc');
     $this->loadFile('cdn.basic.farfuture.inc');
+    $this->variableSet(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
   }
 
   /**
