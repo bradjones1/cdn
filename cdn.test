@@ -17,6 +17,7 @@ class CDNTestCase extends DrupalUnitTestCase {
     );
     $alt_server = array_merge($alt_server, $_SERVER);
     $_SERVER = $alt_server;
+    $this->setRequestProtocol('http');
 
     $this->loadFile('cdn.module');
 
@@ -55,10 +56,12 @@ class CDNTestCase extends DrupalUnitTestCase {
   function variableSetDefaults() {
     global $conf;
     $this->defaultConfig = array(
+      CDN_STATUS_VARIABLE => CDN_ENABLED,
       CDN_MODE_VARIABLE => FALSE,
       CDN_HTTPS_SUPPORT_VARIABLE => FALSE,
       CDN_BASIC_MAPPING_VARIABLE => '',
       CDN_BASIC_MAPPING_HTTPS_VARIABLE => '',
+      CDN_BASIC_FARFUTURE_VARIABLE => FALSE,
     );
     $conf = array_merge($conf, $this->defaultConfig);
   }
@@ -93,6 +96,31 @@ class CDNTestCase extends DrupalUnitTestCase {
   function configureHTTPS($supported, $mapping = '') {
     $this->variableSet(CDN_HTTPS_SUPPORT_VARIABLE, $supported);
     $this->variableSet(CDN_BASIC_MAPPING_HTTPS_VARIABLE, $mapping);
+  }
+
+  /**
+   * Given a file URI, get the expanded file path.
+   *
+   * @param $uri
+   *   @see file_stream_wrapper_get_instance_by_uri()
+   * @return
+   *  A Drupal root-relative path.
+   */
+  function getExpandedFilePath($uri) {
+    $wrapper = file_stream_wrapper_get_instance_by_uri($uri);
+    return str_replace($GLOBALS['base_url'] . '/', '', $wrapper->getExternalUrl());
+  }
+
+  /**
+   * Given a file URI, get its path, create the file and ensure it exists.
+   *
+   * @param $uri
+   *   @see getExpandedFilePath()
+   */
+  function touchFile($uri) {
+    $path = $this->getExpandedFilePath($uri);
+    $this->assertTrue(touch(rawurldecode($path)), 'Test file created.');
+    return $path;
   }
 }
 
@@ -236,6 +264,37 @@ class CDNOriginPullTestCase extends CDNTestCase {
     $this->assertMapping(FALSE, $parsed_mapping, $domains);
   }
 
+  function testFileUrlAlterHook() {
+    // Provide a very basic CDN mapping.
+    $this->variableSet(CDN_BASIC_MAPPING_VARIABLE, 'http://cdn-a.com');
+
+    $filename = 'újjáépítésérol — 100% in B&W.jpg';
+    $uri = "public://$filename";
+    $this->touchFile($uri);
+
+    cdn_file_url_alter($uri);
+    $expected = 'http://cdn-a.com' . base_path() . variable_get('file_public_path', conf_path() . '/files') . '/' . drupal_encode_path($filename);
+    $this->assertIdentical($uri, $expected, 'cdn_file_url_alter() works correctly.');
+  }
+}
+
+class CDNOriginPullFarFutureTestCase extends CDNTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Origin Pull mode — Far Future expiration',
+      'description' => 'Verify Origin Pull mode\'s Far Future expiration functionality.',
+      'group' => 'CDN',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->loadFile('cdn.basic.inc');
+    $this->loadFile('cdn.basic.farfuture.inc');
+    $this->variableSet(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+    $this->variableSet(CDN_BASIC_FARFUTURE_VARIABLE, TRUE);
+  }
+
   /**
    * Assert a UFI mapping (and optionally set a mapping).
    *
@@ -354,5 +413,28 @@ class CDNOriginPullTestCase extends CDNTestCase {
     $this->assertUFIMethod('sites/foo/bar/baz.ttf', 'md5_hash');
     $this->assertUFIMethod('sites/movies/foo.mov', 'perpetual');
     $this->assertUFIMethod('sites/movies/bar.mp4', 'perpetual');
+  }
+
+  function testFileUrlAlterHook() {
+    // We don't want to test the UFI functionality here.
+    $this->variableSet(CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE, '*|perpetual');
+    // Provide a very basic CDN mapping.
+    $this->variableSet(CDN_BASIC_MAPPING_VARIABLE, 'http://cdn-a.com');
+
+    $filename = 'újjáépítésérol — 100% in B&W.jpg';
+    $uri = "public://$filename";
+    $this->touchFile($uri);
+
+    cdn_file_url_alter($uri);
+
+    $path_info = pathinfo($filename);
+    $expected = implode('/', array(
+      'http://cdn-a.com' . base_path() . 'cdn/farfuture',
+      drupal_hmac_base64('perpetual:forever' . $path_info['filename'], drupal_get_private_key() . drupal_get_hash_salt()),
+      'perpetual:forever',
+      variable_get('file_public_path', conf_path() . '/files'),
+      drupal_encode_path($filename)
+    ));
+    $this->assertIdentical($uri, $expected, 'cdn_file_url_alter() works correctly.');
   }
 }
