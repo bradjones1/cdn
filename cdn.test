@@ -19,9 +19,10 @@ class CDNTestCase extends DrupalUnitTestCase {
     $_SERVER = $alt_server;
     $this->setRequestProtocol('http');
 
-    // Pretend only the CDN module is enabled; this ensures invocations of its
-    // own hook implementations will work as expected.
+    // Pretend the CDN module is enabled; this ensures invocations of its own
+    // hook implementations will work as expected.
     $cdn_module_file = drupal_get_path('module', 'cdn') . '/cdn.module';
+    $module_list = module_list();
     $module_list['cdn']['filename'] = $cdn_module_file;
     module_list(TRUE, FALSE, FALSE, $module_list);
 
