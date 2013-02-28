@@ -69,7 +69,13 @@ function _cdn_build_css_cache($css, $suffix = '') {
   $data = '';
   $uri = '';
   $map = variable_get($css_cache_var, array());
-  $key = hash('sha256', serialize($css));
+  // Create a new array so that only the file names are used to create the hash.
+  // This prevents new aggregates from being created unnecessarily.
+  $css_data = array();
+  foreach ($css as $css_file) {
+    $css_data[] = $css_file['data'];
+  }
+  $key = hash('sha256', serialize($css_data));
   if (isset($map[$key])) {
     $uri = $map[$key];
   }
