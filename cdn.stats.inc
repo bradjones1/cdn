@@ -9,7 +9,8 @@ function cdn_touch_file_form($form, &$form_state) {
   // All arguments after the first are in fact the different parts of the file
   // path that is being passed in.
   $additional_args = func_get_args();
-  // Ignore the first function argument: this is $form_state.
+  // Ignore the first two function arguments: these are $form and $form_state.
+  array_shift($additional_args);
   array_shift($additional_args);
   $filepath = implode('/', $additional_args);
 
