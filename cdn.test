@@ -25,7 +25,10 @@ class CDNTestCase extends DrupalUnitTestCase {
     $module_list = module_list();
     $module_list['cdn']['filename'] = $cdn_module_file;
     module_list(TRUE, FALSE, FALSE, $module_list);
+    $implementations = &drupal_static('module_implements');
+    $implementations = array();
 
+    $this->loadFile('cdn.constants.inc');
     $this->loadFile('cdn.module');
 
     // Override $conf to be able to use variable_set() and variable_get() in
@@ -443,5 +446,68 @@ class CDNOriginPullFarFutureTestCase extends CDNTestCase {
       drupal_encode_path($filename)
     ));
     $this->assertIdentical($uri, $expected, 'cdn_file_url_alter() works correctly.');
+  }
+}
+
+class CDNImageTestCase extends CDNTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Image HTML altering',
+      'description' => 'Verify that image URLs inside HTML are rewritten correctly.',
+      'group' => 'CDN',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->loadFile('cdn.fallback.inc');
+  }
+
+  function testImage() {
+    $cdn = 'http://cdn-a.com';
+    $this->variableSet(CDN_BASIC_MAPPING_VARIABLE, $cdn);
+    $this->variableSet(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+
+    // Image altering type 1: "just image", i.e. "<img />".
+    $template = function($url) {
+      return '<img src="' . $url . '" />';
+    };
+    // Simplest case possible.
+    $img_url = base_path() . 'foo/bar/image.png';
+    $html = $template($img_url);
+    cdn_html_alter_image_urls($html);
+    $this->assertIdentical($template($cdn . $img_url), $html, 'Image HTML correctly altered.');
+    // Query strings should be stripped
+    $html = $template($img_url . '?foobar');
+    cdn_html_alter_image_urls($html);
+    $this->assertIdentical($template($cdn . $img_url), $html, 'Image HTML correctly altered (query string stripped).');
+    // Edge case: a script generating an image is not (yet) supported.
+    $img_url = base_path() . 'foo/bar/showimage';
+    $html = $template($img_url . '?formula=12345.png');
+    cdn_html_alter_image_urls($html);
+    $this->assertIdentical($template($cdn . $img_url), $html, 'Image HTML correctly altered (query string stripped).');
+
+    // Image altering type 2: "linked image", i.e. "<a><img /></a>"..
+    $template = function($a_url, $img_url) {
+      return '<a href="' . $a_url . '"><img src="' . $img_url . '" /></a>';
+    };
+    // Simplest case possible.
+    $img_base_url = base_path() . 'foo/bar/image';
+    $a_url = $img_base_url . '.png';
+    $img_url = $img_base_url . '-thumbnail.png';
+    $html = $template($a_url, $img_url);
+    cdn_html_alter_image_urls($html);
+    $this->assertIdentical($template($cdn . $a_url, $cdn . $img_url), $html, 'Linked image HTML correctly altered.');
+    // Ensure that images linking to content (i.e. not a bigger version of the
+    // image) don't get their anchors modified
+    $a_url = base_path() . 'node';
+    $html = $template($a_url, $img_url);
+    cdn_html_alter_image_urls($html);
+    $this->assertIdentical($template($a_url, $cdn . $img_url), $html, 'Linked image HTML correctly altered (anchor unmodified).');
+    // Same, but now for a link with a query string.
+    $a_url = base_path() . 'node?foobar';
+    $html = $template($a_url, $img_url);
+    cdn_html_alter_image_urls($html);
+    $this->assertIdentical($template($a_url, $cdn . $img_url), $html, 'Linked image HTML correctly altered (anchor unmodified, even with query strings).');
   }
 }
