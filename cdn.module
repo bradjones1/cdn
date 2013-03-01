@@ -31,7 +31,7 @@ function cdn_file_url_alter(&$original_uri) {
   if (cdn_status_is_enabled()) {
     $scheme = file_uri_scheme($original_uri);
 
-    // If the current URI is an absolute or protocol-relevative URI, return
+    // If the current URI is an absolute or protocol-relative URI, return
     // immediately.
     if (($scheme && ($scheme == 'http' || $scheme == 'https'))
         || drupal_substr($original_uri, 0, 2) == '//'
@@ -55,7 +55,7 @@ function cdn_file_url_alter(&$original_uri) {
     if (!cdn_check_protocol()) {
       return;
     }
-    if (!cdn_check_drupal_path($_GET['q'])) {
+    if (!cdn_check_drupal_path(current_path())) {
       return;
     }
     if (!cdn_check_file($uri)) {
