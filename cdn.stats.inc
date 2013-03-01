@@ -6,12 +6,9 @@
  */
 
 function cdn_touch_file_form($form, &$form_state) {
-  // All arguments after the first are in fact the different parts of the file
-  // path that is being passed in.
-  $additional_args = func_get_args();
-  // Ignore the first two function arguments: these are $form and $form_state.
-  array_shift($additional_args);
-  array_shift($additional_args);
+  // All arguments after the first two are in fact the different parts of the
+  // file path that is being passed in.
+  $additional_args = array_slice(func_get_args(), 2);
   $filepath = implode('/', $additional_args);
 
   // Store the page we should redirect to after the file has been touched, or
@@ -25,6 +22,7 @@ function cdn_touch_file_form($form, &$form_state) {
     drupal_goto($form_state['storage']['redirect']);
   }
   else {
+    $form_state['filepath'] = $filepath;
     return confirm_form(
       array(
         'filepath' => array(
@@ -46,8 +44,8 @@ function cdn_touch_file_form($form, &$form_state) {
 }
 
 function cdn_touch_file_form_submit($form, &$form_state) {
-  $filepath = $form_state['values']['filepath'];
-  if (touch($filepath)) {
+  $filepath = $form_state['filepath'];
+  if (touch(_cdn_get_absolute_path($filepath))) {
     drupal_set_message(t('Successfully touched %filepath.', array('%filepath' => $filepath)));
   }
   else {
@@ -82,11 +80,6 @@ function _cdn_devel_page_stats($file = FALSE, $file_cdn_url = FALSE, $server = F
   static $total_time;
   static $synced_files;
   static $unsynced_files;
-  static $drupal_root_path;
-
-  if (!isset($drupal_root_path)) {
-    $drupal_root_path = dirname('.');
-  }
 
   if (!isset($file_count)) {
     $files = array();
@@ -110,7 +103,7 @@ function _cdn_devel_page_stats($file = FALSE, $file_cdn_url = FALSE, $server = F
 
       $synced_files[] = array(
         'file'          => $file,
-        'absolute path' => realpath($drupal_root_path . '/' . $file),
+        'absolute path' => _cdn_get_absolute_path($file),
         'cdn_url'       => $file_cdn_url,
         'server'        => ($server === FALSE) ? '' : $server,
       );
@@ -137,4 +130,31 @@ function _cdn_devel_page_stats($file = FALSE, $file_cdn_url = FALSE, $server = F
       $unsynced_files,
     );
   }
+}
+
+/**
+ * Maps a file URI (or shipped file path) to an absolute path.
+ *
+ * @param string $uri
+ *   A file URI or shipped file path.
+ * @return string
+ *   The absolute path.
+ */
+function _cdn_get_absolute_path($uri) {
+  static $drupal_root_path;
+
+  if (!isset($drupal_root_path)) {
+    $drupal_root_path = dirname('.');
+  }
+
+  $absolute_path = '';
+  if (file_uri_scheme($uri)) {
+    if ($wrapper = file_stream_wrapper_get_instance_by_uri($uri)) {
+      $absolute_path = $wrapper->realpath();
+    }
+  }
+  else {
+    $absolute_path = realpath($drupal_root_path . '/' . $uri);
+  }
+  return $absolute_path;
 }
