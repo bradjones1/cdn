@@ -144,6 +144,7 @@ class CDNGeneralTestCase extends CDNTestCase {
   }
 
   function testHTTPSDetection() {
+    // HTTPS + HTTP_X_FORWARDED_PROTO permutations.
     $_SERVER['HTTPS'] = 'off';
     $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
     $this->assertEqual(FALSE, cdn_request_is_https(), 'HTTP request detected.');
@@ -158,6 +159,24 @@ class CDNGeneralTestCase extends CDNTestCase {
 
     $_SERVER['HTTPS'] = 'on';
     $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+    $this->assertEqual(TRUE, cdn_request_is_https(), 'HTTPS request detected.');
+
+    // HTTPS + HTTP_X_FORWARDED_PROTOCOL permutations.
+    unset($_SERVER['HTTP_X_FORWARDED_PROTO']);
+    $_SERVER['HTTPS'] = 'off';
+    $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] = 'http';
+    $this->assertEqual(FALSE, cdn_request_is_https(), 'HTTP request detected.');
+
+    $_SERVER['HTTPS'] = 'off';
+    $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] = 'https';
+    $this->assertEqual(TRUE, cdn_request_is_https(), 'HTTPS request detected.');
+
+    $_SERVER['HTTPS'] = 'on';
+    $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] = 'https';
+    $this->assertEqual(TRUE, cdn_request_is_https(), 'HTTPS request detected.');
+
+    $_SERVER['HTTPS'] = 'on';
+    $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] = 'http';
     $this->assertEqual(TRUE, cdn_request_is_https(), 'HTTPS request detected.');
   }
 }

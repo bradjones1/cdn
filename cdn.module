@@ -665,6 +665,12 @@ function cdn_request_is_https() {
            isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
            &&
            $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
+         )
+         ||
+         (
+           isset($_SERVER['HTTP_X_FORWARDED_PROTOCOL'])
+           &&
+           $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] == 'https'
          );
 }
 
