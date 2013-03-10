@@ -40,6 +40,13 @@ function cdn_file_url_alter(&$original_uri) {
       return;
     }
     elseif ($scheme) {
+      // Only alter URLs for local stream wrappers. If a file is served
+      // remotely, it doesn't make sense to serve it from a CDN.
+      $local_schemes = array_keys(file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL));
+      if (!in_array($scheme, $local_schemes)) {
+        return;
+      }
+
       // Attempt to get an external URL using the appropriate wrapper.
       if ($wrapper = file_stream_wrapper_get_instance_by_uri($original_uri)) {
         $uri = str_replace($GLOBALS['base_url'] . '/', '', $wrapper->getExternalUrl());
