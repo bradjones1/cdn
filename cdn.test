@@ -489,7 +489,7 @@ class CDNImageTestCase extends CDNTestCase {
 
     // Image altering type 1: "just image", i.e. "<img />".
     $template = function($url) {
-      return '<img src="' . $url . '" />';
+      return '<img alt="Foo!" src="' . $url . '" title="Bar!"/>';
     };
     // Simplest case possible.
     $img_url = base_path() . 'foo/bar/image.png';
@@ -514,7 +514,7 @@ class CDNImageTestCase extends CDNTestCase {
 
     // Image altering type 2: "linked image", i.e. "<a><img /></a>"..
     $template = function($a_url, $img_url) {
-      return '<a href="' . $a_url . '"><img src="' . $img_url . '" /></a>';
+      return '<a rel="gallery" href="' . $a_url . '" class="gallery-image"><img alt="Foo!" src="' . $img_url . '" title="Bar!" /></a>';
     };
     // Simplest case possible: a linked image linking to the same image.
     $img_base_url = base_path() . 'foo/bar/image';
