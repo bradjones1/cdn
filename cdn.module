@@ -377,6 +377,16 @@ function cdn_block_view_alter(&$data, $block) {
 }
 
 /**
+ * Implements hook_ctools_render_alter().
+ */
+function cdn_ctools_render_alter(&$info, $page, $context) {
+  // Nodes in Panel panes.
+  if ($context['task']['name'] === 'node_view') {
+    $info['content'] = cdn_post_render_html_alter($info['content']);
+  }
+}
+
+/**
  * Implements hook_theme().
  */
 function cdn_theme() {
