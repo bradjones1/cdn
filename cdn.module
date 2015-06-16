@@ -357,7 +357,7 @@ function cdn_node_view_alter(&$build) {
 function cdn_block_view_alter(&$data, $block) {
   if (isset($data['content'])) {
     // Blocks with render arrays.
-    if (is_array($data['content'])) {
+    if (is_array($data['content']) && $data['content']) {
       $data['content']['#post_render'][] = 'cdn_post_render_html_alter';
     }
     // Blocks without render arrays (typically custom blocks).
