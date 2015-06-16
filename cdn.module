@@ -372,7 +372,7 @@ function cdn_block_view_alter(&$data, $block) {
  */
 function cdn_ctools_render_alter(&$info, $page, $context) {
   // Nodes in Panel panes.
-  if ($context['task']['name'] === 'node_view' && is_string($info['content'])) {
+  if ($context['task']['name'] === 'node_view' && !empty($info['content']) && is_string($info['content'])) {
     $info['content'] = cdn_post_render_html_alter($info['content']);
   }
 }
