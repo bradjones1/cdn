@@ -193,18 +193,18 @@ A: See http://drupal.org/node/1483962#comment-5744830.
 
 No cookies should be sent to the CDN
 ------------------------------------
-Please note though that you should ensure no cookies are sent to the CDN: this 
+Please note though that you should ensure no cookies are sent to the CDN: this
 would slow down HTTP requests to the CDN (since the requests become larger:
 they piggyback the cookie data).
 You can achieve this in two ways:
   1) When you are using cookies that are bound to your www subdomain only
      (i.e. not an example.com, but on www.example.com), you can safely use
      another subdomain for your CDN.
-  2) When you are using cookies on your main domain (example.com), you'll have 
-     to use a completely different domain for the CDN if you don't want 
+  2) When you are using cookies on your main domain (example.com), you'll have
+     to use a completely different domain for the CDN if you don't want
      cookies to be sent.
-     So then you should use the CDN's URL (e.g. myaccount.cdn.com). But now 
-     you should be careful to avoid JavaScript issues: you may run into "same 
+     So then you should use the CDN's URL (e.g. myaccount.cdn.com). But now
+     you should be careful to avoid JavaScript issues: you may run into "same
      origin policy" problems. See admin/config/development/cdn/other for
      details.
 
@@ -258,22 +258,6 @@ picking the CDN based purely on filetype, one could write:
     $unique_file_id = hexdec(substr(md5($filename), 0, 5));
     return $servers_for_file[$unique_file_id % count($servers_for_file)];
   }
-
-Note: if you don't want to create a small module for this function, or if you
-      would just like to experiment with this function, you can also enter the
-      body of this function at admin/settings/cdn/other — it will work exactly
-      the same!
-      If you don't know what the "body" of a function is, it's the part
-      between the curly brackets:
-        function doSomething() {
-          BODY
-        }
-      So, in the case of the cdn_pick_server() function, this is the body that
-      you would enter:
-        $filename = basename($servers_for_file[0]['url']);
-        $unique_file_id = hexdec(substr(md5($filename), 0, 5));
-        return $servers_for_file[$unique_file_id % count($servers_for_file)];
-
 
 Sponsors
 --------

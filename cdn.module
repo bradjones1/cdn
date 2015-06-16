@@ -124,15 +124,6 @@ function cdn_file_url_alter(&$original_uri) {
       $cdn_url = $picked_server['url'];
       $server  = $picked_server['server'];
     }
-    // Allow this special function to be defined as a Drupal variable; this
-    // Drupal variable then contains the body of this function. This is handy
-    // for experimentation and novice Drupal users.
-    elseif (count($servers) > 1 && variable_get(CDN_PICK_SERVER_PHP_CODE_VARIABLE, '') !== '') {
-      $php_code = variable_get(CDN_PICK_SERVER_PHP_CODE_VARIABLE, '');
-      $picked_server = _cdn_eval_pick_server($php_code, $servers);
-      $cdn_url = $picked_server['url'];
-      $server  = $picked_server['server'];
-    }
     // The file is available from multiple servers; pick a server randomly
     // (yet consistently: this uses consistent hashing!), so that each server
     // will serve approximately the same number of files.
@@ -801,24 +792,6 @@ function cdn_post_render_html_alter($html, $elements = array()) {
  */
 function _cdn_ufi_deployment_id($path) {
   return CDN_DEPLOYMENT_ID;
-}
-
-/**
- * Helper function to evaluate CDN_PICK_SERVER_PHP_CODE_VARIABLE, when that is
- * being used instead of an actual cdn_pick_server() function.
- *
- * @param $php_code
- *   The PHP code to be evaluated.
- * @param $servers_for_file
- *   The $servers_for_file parameter, as it will be available to the eval()'d
- *   $php_code. This variable is not passed by reference, hence it will not be
- *   changed outside the scope of this function.
- */
-function _cdn_eval_pick_server($php_code, $servers_for_file) {
-  ob_start();
-  $result = @eval($php_code);
-  ob_end_clean();
-  return $result;
 }
 
 /**
