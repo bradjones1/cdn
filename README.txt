@@ -22,8 +22,7 @@ Amazon S3, Rackspace CloudFiles). File Conveyor is flexible enough to be used
 with *any* CDN, thus it enables you to avoid vendor lock-in.
 
 If you're not sure which mode to use, use "Origin Pull". It's easier and more
-reliable. The only common CDN today (2011–2012) that doesn't support it is
-Rackspace Cloud Files.
+reliable. Every single common CDN today (2015) supports Origin Pull.
 
 _Note:_ It is essential that you understand the key properties of a CDN, most
 importantly the differences between an Origin Pull CDN and a Push CDN. A good
