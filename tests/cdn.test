@@ -5,7 +5,7 @@
  * Test CDN.
  */
 
-class CDNTestCase extends DrupalUnitTestCase {
+class CDNUnitTestCase extends DrupalUnitTestCase {
   function setUp() {
     parent::setUp();
 
@@ -22,7 +22,7 @@ class CDNTestCase extends DrupalUnitTestCase {
     // Pretend the CDN module is enabled; this ensures invocations of its own
     // hook implementations will work as expected.
     $cdn_module_file = drupal_get_path('module', 'cdn') . '/cdn.module';
-    $module_list = module_list();
+    $module_list['system']['filename'] = 'modules/system/system.module';
     $module_list['cdn']['filename'] = $cdn_module_file;
     module_list(TRUE, FALSE, FALSE, $module_list);
     $implementations = &drupal_static('module_implements');
@@ -134,7 +134,18 @@ class CDNTestCase extends DrupalUnitTestCase {
   }
 }
 
-class CDNGeneralTestCase extends CDNTestCase {
+class CDNWebTestCase extends DrupalWebTestCase {
+  function setUp() {
+    parent::setUp('cdn');
+  }
+
+  function loadFile($file) {
+    $cdn_path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'cdn');
+    require_once "$cdn_path/$file";
+  }
+}
+
+class CDNGeneralTestCase extends CDNUnitTestCase {
   public static function getInfo() {
     return array(
       'name' => 'General',
@@ -181,7 +192,7 @@ class CDNGeneralTestCase extends CDNTestCase {
   }
 }
 
-class CDNOriginPullTestCase extends CDNTestCase {
+class CDNOriginPullTestCase extends CDNUnitTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Origin Pull mode',
@@ -307,7 +318,7 @@ class CDNOriginPullTestCase extends CDNTestCase {
   }
 }
 
-class CDNOriginPullFarFutureTestCase extends CDNTestCase {
+class CDNOriginPullFarFutureTestCase extends CDNUnitTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Origin Pull mode — Far Future expiration',
@@ -468,7 +479,7 @@ class CDNOriginPullFarFutureTestCase extends CDNTestCase {
   }
 }
 
-class CDNImageTestCase extends CDNTestCase {
+class CDNImageTestCase extends CDNUnitTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Image HTML altering',
@@ -545,5 +556,40 @@ class CDNImageTestCase extends CDNTestCase {
     $html = $template($a_url, $img_url);
     cdn_html_alter_image_urls($html);
     $this->assertIdentical($template($a_url, $cdn . $img_url), $html, 'Linked image HTML correctly altered (anchor unmodified, even with query strings).');
+  }
+}
+
+class CDNCssUrlTestCase extends CDNWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'CSS URLs',
+      'description' => 'Verify URLs in CSS files are rewritten properly.',
+      'group' => 'CDN',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->loadFile('cdn.basic.css.inc');
+    variable_set(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
+    variable_set(CDN_BASIC_FARFUTURE_VARIABLE, TRUE);
+  }
+
+  // Makes sure the URL components are preserved.
+  function testCssUrl() {
+    global $base_url;
+    $css_info = array(
+      array(
+        'type' => 'file',
+        'data' => drupal_get_path('module', 'cdn') . '/tests/css/orig/url.css',
+      ),
+    );
+    try {
+      // Make sure the URL in the supplied CSS file matches what we expect.
+      // trim() is needed to avoid issues with differences in newlines.
+      $this->assertEqual(trim(file_get_contents(_cdn_build_css_cache($css_info))), '.home{background:url('. $base_url . '/' . drupal_get_path('module', 'cdn') . '/tests/css/orig/geo-md-webfont.eot?#iefix);}');
+    } catch (Exception $exc) {
+      $this->fail($exc);
+    }
   }
 }
