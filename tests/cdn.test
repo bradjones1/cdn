@@ -14,6 +14,7 @@ class CDNUnitTestCase extends DrupalUnitTestCase {
       'HTTP_ACCEPT_ENCODING',
       'HTTPS' => 'off',
       'HTTP_X_FORWARDED_PROTO' => 'http',
+      'HTTP_USER_AGENT' => $this->randomName(),
     );
     $alt_server = array_merge($alt_server, $_SERVER);
     $_SERVER = $alt_server;
@@ -72,6 +73,7 @@ class CDNUnitTestCase extends DrupalUnitTestCase {
       CDN_BASIC_MAPPING_VARIABLE => '',
       CDN_BASIC_MAPPING_HTTPS_VARIABLE => '',
       CDN_BASIC_FARFUTURE_VARIABLE => FALSE,
+      CDN_SEO_REDIRECT_VARIABLE => TRUE,
     );
     $conf = array_merge($conf, $this->defaultConfig);
   }
@@ -91,6 +93,16 @@ class CDNUnitTestCase extends DrupalUnitTestCase {
       $_SERVER['HTTPS'] = 'on';
       $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
     }
+  }
+
+  /**
+   * Set the User-Agent of the current "request".
+   *
+   * @param $ua
+   *   A User-Agent, which can be almost any string.
+   */
+  function setUserAgent($ua) {
+    $_SERVER['HTTP_USER_AGENT'] = $ua;
   }
 
   /**
@@ -591,5 +603,58 @@ class CDNCssUrlTestCase extends CDNWebTestCase {
     } catch (Exception $exc) {
       $this->fail($exc);
     }
+  }
+}
+
+class CDNSEOTestCase extends CDNUnitTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'SEO',
+      'description' => 'Verify SEO duplicate content prevention.',
+      'group' => 'CDN',
+    );
+  }
+
+  function testSEO() {
+    // Test with and without SEO duplicate content prevention. Each case is tested
+    // with three sorts of paths:
+    // - page path (without any extension and with all of the three default
+    //   "allowed" extensions, meaning that they c)
+    // - file path
+    // - generated file path
+
+    // SEO duplicate content prevention disabled.
+    $this->variableSet(CDN_SEO_REDIRECT_VARIABLE, FALSE);
+    $this->setUserAgent('Amazon CloudFront');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.htm.'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.htm'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.php'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('misc/jquery.js'), FALSE, 'Disabled SEO duplicate content prevention is respected for file paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('sites/default/files/styles/thumbnail/foobar.png'), FALSE, 'Disabled SEO duplicate content prevention is respected for generated file paths.');
+    $this->setUserAgent($this->randomName());
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.html'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.htm'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.php'), FALSE, 'Disabled SEO duplicate content prevention is respected for page paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('misc/jquery.js'), FALSE, 'Disabled SEO duplicate content prevention is respected for file paths.');
+    $this->assertIdentical(_cdn_seo_should_redirect('sites/default/files/styles/thumbnail/foobar.png'), FALSE, 'Disabled SEO duplicate content prevention is respected for generated file paths.');
+
+    // SEO page request duplicate content prevention enabled.
+    $this->variableSet(CDN_SEO_REDIRECT_VARIABLE, TRUE);
+    $this->setUserAgent('The Amazon CloudFront User Agent!'); // Note that this is a superstring of the provided CDN user agent "Amazon CloudFront"!
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1'), url('node/1', array('absolute' => TRUE)), 'Enabled SEO duplicate content prevention works correctly when a CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.html'), url('node/1.html', array('absolute' => TRUE)), 'Enabled SEO duplicate content prevention works correctly when a CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.htm'), url('node/1.htm', array('absolute' => TRUE)), 'Enabled SEO duplicate content prevention works correctly when a CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.php'), url('node/1.php', array('absolute' => TRUE)), 'Enabled SEO duplicate content prevention works correctly when a CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('misc/jquery.js'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a CDN UA requests a file path: the response is not a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('sites/default/files/styles/thumbnail/foobar.png'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a CDN UA requests a generated file path: the response is not a redirect.');
+    $this->setUserAgent($this->randomName());
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a non-CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.htm'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a non-CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.html'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a non-CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('node/1.php'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a non-CDN UA requests a page path: the response is a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('misc/jquery.js'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a non-CDN UA requests a file path: the response is not a redirect.');
+    $this->assertIdentical(_cdn_seo_should_redirect('sites/default/files/styles/thumbnail/foobar.png'), FALSE, 'Enabled SEO duplicate content prevention works correctly when a non-CDN UA requests a generated file path: the response is not a redirect.');
   }
 }
