@@ -76,9 +76,6 @@ function cdn_basic_farfuture_download($token, $ufi, $path) {
   // Instead of being powered by PHP, tell the world this resource was powered
   // by the CDN module!
   header("X-Powered-By: Drupal CDN module");
-  // Instruct intermediate HTTP caches to store both a compressed (gzipped)
-  // and uncompressed version of the resource.
-  header("Vary: Accept-Encoding");
   // Determine the content type.
   header("Content-Type: " . _cdn_basic_farfuture_get_mimetype(basename($path)));
   // Support partial content requests.
@@ -136,6 +133,9 @@ function cdn_basic_farfuture_download($token, $ufi, $path) {
       }
       // Make sure zlib.output_compression does not gzip our gzipped output.
       ini_set('zlib.output_compression', '0');
+      // Instruct intermediate HTTP caches to store both a compressed (gzipped)
+      // and uncompressed version of the resource.
+      header("Vary: Accept-Encoding");
       // Prepare for gzipped output.
       header("Content-Encoding: gzip");
       $path = $gzip_path;
