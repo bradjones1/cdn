@@ -84,7 +84,7 @@ function cdn_file_url_alter(&$original_uri) {
       // file, to generate it. (E.g. when ImageCache is used, this will
       // generate the derivative file.) When that fails, don't serve it from
       // the CDN.
-      if (!file_exists($uri) && !_cdn_basic_farfuture_generate_file($uri)) {
+      if (!file_exists($uri) && !_cdn_basic_farfuture_generate_file($uri, $original_uri)) {
         $path = drupal_encode_path($uri);
         return;
       }
