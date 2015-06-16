@@ -214,6 +214,107 @@ If you just use the CDN's URL (e.g. myaccount.cdn.com), all cookie issues are
 avoided automatically.
 
 
+Origin Pull mode's "Far Future expiration" setting
+--------------------------------------------------
+For small sites, or sites with relatively few assets, the Far Future
+expiration functionality should work just fine out of the box. The CDN module
+serves all files through PHP with all headers configured perfectly. Since the
+CDN only occasionally comes back to check on files, the far-from-great
+performance of serving files through PHP is irrelevant.
+However, if your site has a *lot* of images, for example, this can be
+problematic, because even the occasional check by the CDN may amount to a near
+constant load on your server, of files being served through PHP. In that case,
+you may want to let your web server take care of that for you.
+
+Apache users: add the following rules to <IfModule mod_rewrite.c> section of
+your .htaccess file:
+
+  ### CDN START ###
+  # See http://drupal.org/node/1413156
+  <IfModule mod_headers.c>
+    # Transform /cdn/farfuture/[security token]/[ufi method]:[ufi]/sites/default/files
+    # to /files and set environment variable for later Header rules.
+    RewriteCond %{REQUEST_URI} ^/cdn/farfuture/[^/]+/[^/]+/(.+)$
+    RewriteRule .* %1 [L,E=FARFUTURE_CDN:1]
+
+    # Apache will change FARFUTURE_CDN to REDIRECT_FARFUTURE_CDN on internal
+    # redirects, restore original environment variable.
+    # See http://stackoverflow.com/q/3050444
+    RewriteCond %{ENV:REDIRECT_FARFUTURE_CDN} =1
+    RewriteRule .* - [E=FARFUTURE_CDN:1]
+
+
+    ###
+    ### Always reply "304 Not Modified" to "If-Modified-Since" header.
+    ###
+
+    # The redirect works only if URL was actually modified by rewrite rule
+    # (probably, to prevent infinite loops). So, we rewrite the URL with
+    # website root and this causes the webserver to return 304 status.
+    RewriteCond %{ENV:FARFUTURE_CDN} =1
+    RewriteCond %{HTTP:If-Modified-Since} !=""
+    RewriteRule .* / [R=304,L]
+
+
+    ###
+    ### Generic headers that apply to all /cdn/farfuture/* requests.
+    ###
+
+    # Instead of being powered by Apache, tell the world this resource was
+    # powered by the CDN module's .htaccess!
+    Header set X-Powered-By "Drupal CDN module (.htaccess)" env=FARFUTURE_CDN
+
+    # Instruct intermediate HTTP caches to store both a compressed (gzipped) and
+    # uncompressed version of the resource.
+    Header set Vary "Accept-Encoding" env=FARFUTURE_CDN
+
+    # Support partial content requests.
+    Header set Accept-Ranges "bytes" env=FARFUTURE_CDN
+
+    # Do not use ETags for cache validation.
+    Header unset ETag env=FARFUTURE_CDN
+
+    # Browsers that implement the W3C Access Control specification might refuse
+    # to use certain resources such as fonts if those resources violate the
+    # same-origin policy. Send a header to explicitly allow cross-domain use of
+    # those resources. (This is called Cross-Origin Resource Sharing, or CORS.)
+    Header set Access-Control-Allow-Origin "*" env=FARFUTURE_CDN
+
+
+    ###
+    ### Default caching rules: no caching/immediate expiration.
+    ###
+
+    Header set Cache-Control "private, must-revalidate, proxy-revalidate" env=FARFUTURE_CDN
+    Header set Expires "Wed, 20 Jan 1988 04:20:42 GMT" env=FARFUTURE_CDN
+
+
+    ###
+    ### Far future caching rules: only files with certain extensions.
+    ###
+
+    <FilesMatch "(\.css|\.css\.gz|\.js|\.js\.gz|\.svg|\.ico|\.gif|\.jpg|\.jpeg|\.png|\.otf|\.ttf|\.eot|\.woff|\.flv|\.swf)$">
+      # Set a far future Cache-Control header (480 weeks), which prevents
+      # intermediate caches from transforming the data and allows any
+      # intermediate cache to cache it, since it's marked as a public resource.
+      Header set Cache-Control "max-age=290304000, no-transform, public" env=FARFUTURE_CDN
+
+      # Set a far future Expires header. The maximum UNIX timestamp is somewhere
+      # in 2038. Set it to a date in 2037, just to be safe.
+      Header set Expires "Tue, 20 Jan 2037 04:20:42 GMT" env=FARFUTURE_CDN
+
+      # Pretend the file was last modified a long time ago in the past, this will
+      # prevent browsers that don't support Cache-Control nor Expires headers to
+      # still request a new version too soon (these browsers calculate a
+      # heuristic to determine when to request a new version, based on the last
+      # time the resource has been modified).
+      # Also see http://code.google.com/speed/page-speed/docs/caching.html.
+      Header set Last-Modified "Wed, 20 Jan 1988 04:20:42 GMT" env=FARFUTURE_CDN
+    </FilesMatch>
+  </IfModule>
+  ### CDN END ###
+
+
 When using multiple servers/CDNs: picking one based on advanced criteria
 ------------------------------------------------------------------------
 You only need this when you're using multiple servers/CDNs and you can't rely
