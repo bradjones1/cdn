@@ -62,9 +62,7 @@ function _cdn_aggregate_css(&$css_groups) {
 function _cdn_build_css_cache($css, $suffix = '') {
   // Create different CSS aggregation maps for HTTP and HTTPS.
   $https_mapping = variable_get(CDN_BASIC_MAPPING_HTTPS_VARIABLE, '');
-  $css_cache_var = (!empty($https_mapping) && cdn_serve_from_https())
-    ? 'cdn_css_cache_files_https'
-    : 'cdn_css_cache_files_http';
+  $css_cache_var = (cdn_request_is_https()) ? 'cdn_css_cache_files_https' : 'cdn_css_cache_files_http';
 
   $data = '';
   $uri = '';
