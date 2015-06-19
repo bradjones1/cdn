@@ -348,6 +348,10 @@ function cdn_permission() {
  * Implements hook_node_view_alter().
  */
 function cdn_node_view_alter(&$build) {
+  if (!cdn_status_is_enabled()) {
+    return;
+  }
+
   $build['#post_render'][] = 'cdn_post_render_html_alter';
 }
 
@@ -355,6 +359,10 @@ function cdn_node_view_alter(&$build) {
  * Implements hook_block_view_alter().
  */
 function cdn_block_view_alter(&$data, $block) {
+  if (!cdn_status_is_enabled()) {
+    return;
+  }
+
   if (isset($data['content'])) {
     // Blocks with render arrays.
     if (is_array($data['content']) && $data['content']) {
@@ -371,6 +379,10 @@ function cdn_block_view_alter(&$data, $block) {
  * Implements hook_ctools_render_alter().
  */
 function cdn_ctools_render_alter(&$info, $page, $context) {
+  if (!cdn_status_is_enabled()) {
+    return;
+  }
+
   // Nodes in Panel panes.
   if ($context['task']['name'] === 'node_view' && !empty($info['content']) && is_string($info['content'])) {
     $info['content'] = cdn_post_render_html_alter($info['content']);
