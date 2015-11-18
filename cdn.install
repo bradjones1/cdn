@@ -5,14 +5,6 @@
  * Install, update and uninstall functions for the CDN module.
  */
 
-
-/**
- * Implements hook_uninstall().
- */
-function cdn_uninstall() {
-  db_query("DELETE FROM {variable} WHERE name LIKE 'cdn_%%'");
-}
-
 /**
  * Implements hook_requirements().
  */
@@ -191,96 +183,4 @@ function cdn_requirements($phase) {
   }
 
   return $requirements;
-}
-
-
-//----------------------------------------------------------------------------
-// Update hooks.
-
-/**
- * In version 2 of the CDN integration module, basic mode is more flexible
- * than in version 1: there now is the ability to have multiple CDN URLs.
- */
-function cdn_update_6200() {
-  $url  = variable_get('cdn_basic_url', '');
-  $exts = variable_get('cdn_basic_extensions', '');
-
-  // Store URL variable in new format, then delete old variables.
-  $cdn_basic_mapping = $url;
-  if (!empty($exts)) {
-    $cdn_basic_mapping .= '|' . $exts;
-  }
-  variable_set('cdn_basic_mapping', $url . '|' . $exts);
-  variable_del('cdn_basic_url');
-  variable_del('cdn_basic_extensions');
-
-  return t('Updated variables to allow for multiple Origin Pull CDN URLs instead of just one.');
-}
-
-/**
- * More consistent variable names: upgrade path.
- */
-function cdn_update_6201() {
-  $cdn_exception_path_blacklist = variable_get('cdn_exclusion');
-  variable_del('cdn_exclusion');
-  if (isset($cdn_exception_path_blacklist)) {
-    variable_set('cdn_exception_path_blacklist', $cdn_exception_path_blacklist);
-  }
-
-  $cdn_exception_auth_users_blacklist = variable_get('cdn_exclusion_logged_in');
-  variable_del('cdn_exclusion_logged_in');
-  if (isset($cdn_exception_auth_users_blacklist)) {
-    variable_set('cdn_exception_auth_users_blacklist', $cdn_exception_auth_users_blacklist);
-  }
-
-  return t('Updated variables (internal name changes only, for improved consistency).');
-}
-
-/**
- * CDN must run after JavaScript aggregator (weight 9999) in fallback mode.
- */
-function cdn_update_6202() {
-  db_query("UPDATE {system} SET weight = 10000 WHERE name = 'cdn'");
-  // update.php runs drupal_rebuild_theme_registry();
-
-  return t('Ensured the CDN module runs after the JavaScript aggregator module.');
-}
-
-/**
- * More consistent variable names: upgrade path.
- */
-function cdn_update_6203() {
-  db_query("UPDATE {variable} SET name = 'cdn_exception_file_path_blacklist' WHERE name = 'cdn_exception_path_blacklist'");
-  db_query("UPDATE {variable} SET name = 'cdn_exception_file_path_whitelist' WHERE name = 'cdn_exception_path_whitelist'");
-
-  return t('Updated variables (internal name changes only, for improved consistency).');
-}
-
-/**
- * Fallback mode is not needed in Drupal 7, hence also no more need for an
- * altered module weight.
- */
-function cdn_update_7200() {
-  db_query("UPDATE {system} SET weight = 0 WHERE name = 'cdn'");
-}
-
-/**
- * New: File Conveyor PID file variable.
- */
-function cdn_update_7210() {
-  $ret = array();
-
-  if (variable_get('cdn_mode', FALSE) == 'advanced') {
-    // Only do this if cdn_update_6210() for the Drupal 6 version of this
-    // module hasn't run.
-    if (variable_get('cdn_advanced_pid_file', FALSE) != FALSE) {
-      $synced_files_db = variable_get('cdn_advanced_synced_files_db', FALSE);
-      $daemon_pid_file = str_replace('synced_files.db', 'daemon.pid', $synced_files_db);
-      variable_set('cdn_advanced_pid_file', $daemon_pid_file);
-
-      $ret[] = array('success' => TRUE, 'query' => 'Created File Conveyor PID file variable.');
-    }
-  }
-
-  return $ret;
 }

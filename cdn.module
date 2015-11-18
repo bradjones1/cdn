@@ -318,33 +318,6 @@ function cdn_menu() {
 }
 
 /**
- * Implements hook_permission().
- */
-function cdn_permission() {
-  return array(
-    CDN_PERM_ADMIN => array(
-      'title'           => t('Administer CDN configuration settings'),
-      'restrict access' => TRUE,
-    ),
-    CDN_PERM_ACCESS_STATS => array(
-      'title' => t('Access per-page statistics'),
-    ),
-    CDN_PERM_ACCESS_TESTING => array(
-      'title'       => t('Access files on the CDN when in testing mode'),
-      'description' => t('Users with this permission will get files from the
-                          CDN when testing mode is enabled.'),
-    ),
-    CDN_PERM_TOUCH => array(
-      'title'       => t('Touch files'),
-      'description' => t("'Touch' files through the links provided by the
-                          per-page statistics. This will change the last
-                          modification time of the file, and depending on your
-                          set-up, may cause a resync of the file."),
-    )
-  );
-}
-
-/**
  * Implements hook_node_view_alter().
  */
 function cdn_node_view_alter(&$build) {

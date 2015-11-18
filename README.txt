@@ -5,28 +5,9 @@ This module provide easy Content Delivery Network integration for Drupal sites.
 It alters file URLs, so that files are downloaded from a CDN instead of your
 web server.
 
-It provides two modes: "Origin Pull" and "File Conveyor".
-
-In "Origin Pull" mode, only "Origin Pull" CDNs are supported (hence the name).
-These are CDNs that only require you to replace the domain name with another
-domain name. The CDN will then automatically fetch (pull) the files from your
-server (the origin).
-
-In "File Conveyor" mode, this module integrates with the File Conveyor [1]
-daemon. This allows for much more advanced setups: files can be processed
-(e.g. optimize images like smush.it [2], minify CSS with YUI Compressor [3],
-minify JS with YUI compressor or Google Closure Compiler [4], and it's easy to
-add your own!), before they are synced and your CDN doesn't *have* to support
-Origin Pull, any push method is fine (supported transfer protocols: FTP,
-Amazon S3, Rackspace CloudFiles). File Conveyor is flexible enough to be used
-with *any* CDN, thus it enables you to avoid vendor lock-in.
-
-If you're not sure which mode to use, use "Origin Pull". It's easier and more
-reliable. Every single common CDN today (2015) supports Origin Pull.
-
-_Note:_ It is essential that you understand the key properties of a CDN, most
-importantly the differences between an Origin Pull CDN and a Push CDN. A good
-(and compact!) reference is the "Key Properties of a CDN" article [5].
+Only "Origin Pull" CDNs are supported. These are CDNs that only require you to
+replace the domain name with another domain name. The CDN will then
+automatically fetch (pull) the files from your server (the origin).
 
 The CDN module aims to do only one thing and do it well: altering URLs to
 point to files on CDNs.
@@ -44,45 +25,14 @@ integration frictionless:
     • auto-balance files over multiple CDNs (http://drupal.org/node/1452092)
     • … and many more details that are taken care of automatically
 
-But in some cases, simply altering the URL is not enough, that's where the
-AdvAgg module comes in:
-
-    If you've ever had any issues with CSS or JS files not behaving as
-    desired, check out AdvAgg. The "Advanced CSS/JS Aggregation" module solves
-    all issues that arise from having CSS/JS served from a CDN. Keeping track
-    of changes to CSS/JS files, smart aggregate names, 404 protection,
-    on-demand generation, works with private file system, Google CDN
-    integration, CSS/JS compression, GZIP compression, caching, and smart
-    bundling are some of the things AdvAgg does. It's also faster then core's
-    file aggregation.
-
-[1] http://fileconveyor.org/
-[2] http://smushit.com/
-[3] http://developer.yahoo.com/yui/compressor/
-[4] http://code.google.com/closure/compiler/
-[5] http://wimleers.com/article/key-properties-of-a-cdn
-
-
-Supported CDNs
---------------
-- Origin Pull mode: any Origin Pull CDN (or alternatively: domains that point
-  to your main domain, by using so called "CNAME" DNS records).
-- File Conveyor mode: any Origin Pull CDN and any push CDN that supports FTP.
-  Support for other transfer protocols is welcomed and encouraged: your
-  patches are welcome! Amazon S3, Amazon CloudFront and Rackspace CloudFiles
-  are also supported.
-
 
 Installation
 ------------
-1) Place this module directory in your "modules" folder (this will usually be
-   "sites/all/modules/"). Don't install your module in Drupal core's "modules"
-   folder, since that will cause problems and is bad practice in general. If
-   "sites/all/modules" doesn't exist yet, just create it.
+1) Place this module directory in your "modules" folder
 
 2) Enable the module.
 
-3) Visit "admin/config/development/cdn" to learn about the various settings.
+3) Visit "/admin/config/development/cdn" to learn about the various settings.
 
 4) Go to your CDN provider's control panel and set up a "CDN instance" (Amazon
    CloudFront calls this a "distribution"). There, you will have to specify
@@ -109,31 +59,11 @@ Installation
    you want to support HTTPS transparently, it is recommended to enter it as
    `//d85nwn7m5gl3y.cloudfront.net` instead — this is a protocol-relative URL.
 
-7) Go to "admin/reports/status". The CDN module will report its status here.
+7) Go to "/admin/reports/status". The CDN module will report its status here.
 
 8) Enable the display of statistics at "admin/config/development/cdn", browse
    your site with your root/admin (user id 1) account. The statistics will
    show which files are served from the CDN!
-
-
-File Conveyor mode
-------------------
-
-1) If you want to use File Conveyor mode, install and configure the File
-   Conveyor first. You can download it at http://fileconveyor.org/
-   Then follow the instructions in the included INSTALL.txt and README.txt.
-   Use the sample config.xml file that is included in this module, copy it to
-   your File Conveyor installation and modify it to comply with your setup and
-   to suit your needs. You will always need to modify this file to suit your
-   needs.
-   Note: the CDN integration module requires PDO extension for PHP to be
-   installed, as well as the PDO SQLite driver.
-
-2) Go to "admin/reports/status". The CDN module will report its status here.
-   If you've enabled File Conveyor mode and have set up File Conveyor daemon,
-   you will see some basic stats here as well, and you can check here to see
-   if File Conveyor is currently running.
-   You can also see here if you've applied the patches correctly!
 
 
 Cross-Origin Resource Sharing (CORS)
@@ -182,13 +112,6 @@ Q: Does this module only work with Apache or also with nginx, lighttpd, etc.?
 A: This module only affects HTML, so it doesn't matter which web server you
    use!
 
-Q: What does the config.xml file of the CDN module do?
-A: Nothing. It only serves as a sample for using File Conveyor. It's used for
-   nothing and can safely be deleted.
-
-Q: How to use different CDNs based on the domain name of an i18n site?
-A: See http://drupal.org/node/1483962#comment-5744830.
-
 
 No cookies should be sent to the CDN
 ------------------------------------
@@ -213,8 +136,8 @@ If you just use the CDN's URL (e.g. myaccount.cdn.com), all cookie issues are
 avoided automatically.
 
 
-Origin Pull mode's "Far Future expiration" setting
---------------------------------------------------
+The "Far Future expiration" setting
+-----------------------------------
 For small sites, or sites with relatively few assets, the Far Future
 expiration functionality should work just fine out of the box. The CDN module
 serves all files through PHP with all headers configured perfectly. Since the
@@ -312,57 +235,6 @@ your .htaccess file:
     </FilesMatch>
   </IfModule>
   ### CDN END ###
-
-
-When using multiple servers/CDNs: picking one based on advanced criteria
-------------------------------------------------------------------------
-You only need this when you're using multiple servers/CDNs and you can't rely
-on picking a server/CDN based on the file extension, i.e. if you need more
-advanced criteria than only file extension.
-
-NOTE: this function is only called for file X if >1 server/CDN is available
-for file X.
-
-For this purpose, you can implement the cdn_pick_server() function:
-  /**
-   * Implements cdn_pick_server().
-   */
-  function cdn_pick_server($servers_for_file) {
-    // The data that you get - one nested array per server from which the file
-    // can be served:
-    //   $servers_for_file[0] = array('url' => 'http://cdn1.com/image.jpg', 'server' => 'cdn1.com')
-    //   $servers_for_file[1] = array('url' => 'http://cdn2.net/image.jpg', 'server' => 'cdn2.net')
-
-    $which = your_logic_to_pick_a_server();
-
-    // Return one of the nested arrays.
-    return $servers_for_file[$which];
-  }
-
-So to get the default behavior (pick the first server found), one would write:
-  /**
-   * Implements cdn_pick_server().
-   */
-  function cdn_pick_server($servers_for_file) {
-    return $servers_for_file[0];
-  }
-
-Or if you want to balance the number of files served by each CDN (i.e. on
-average, each CDN serves the same amount of files on a page) instead of
-picking the CDN based purely on filetype, one could write:
-  /**
-   * Implements cdn_pick_server().
-   */
-  function cdn_pick_server($servers_for_file) {
-    $filename = basename($servers_for_file[0]['url']);
-    $unique_file_id = hexdec(substr(md5($filename), 0, 5));
-    return $servers_for_file[$unique_file_id % count($servers_for_file)];
-  }
-
-Sponsors
---------
-* Port of Far Future expiration functionality to Drupal 7:
-   ONE Agency, http://www.one-agency.be.
 
 
 Author
