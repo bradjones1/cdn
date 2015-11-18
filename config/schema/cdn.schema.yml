@@ -1,0 +1,10 @@
+# Schema for the configuration files of the CDN module.
+
+cdn.settings:
+  type: config_object
+  label: 'CDN settings'
+  mapping:
+    status:
+      type: integer
+      # disabled (0), testing (1) or enabled (2)
+      label: 'CDN status'
