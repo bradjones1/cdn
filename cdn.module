@@ -318,51 +318,6 @@ function cdn_menu() {
 }
 
 /**
- * Implements hook_node_view_alter().
- */
-function cdn_node_view_alter(&$build) {
-  if (!cdn_status_is_enabled()) {
-    return;
-  }
-
-  $build['#post_render'][] = 'cdn_post_render_html_alter';
-}
-
-/**
- * Implements hook_block_view_alter().
- */
-function cdn_block_view_alter(&$data, $block) {
-  if (!cdn_status_is_enabled()) {
-    return;
-  }
-
-  if (isset($data['content'])) {
-    // Blocks with render arrays.
-    if (is_array($data['content']) && $data['content']) {
-      $data['content']['#post_render'][] = 'cdn_post_render_html_alter';
-    }
-    // Blocks without render arrays (typically custom blocks).
-    elseif (is_string($data['content'])) {
-      $data['content'] = cdn_post_render_html_alter($data['content']);
-    }
-  }
-}
-
-/**
- * Implements hook_ctools_render_alter().
- */
-function cdn_ctools_render_alter(&$info, $page, $context) {
-  if (!cdn_status_is_enabled()) {
-    return;
-  }
-
-  // Nodes in Panel panes.
-  if ($context['task']['name'] === 'node_view' && !empty($info['content']) && is_string($info['content'])) {
-    $info['content'] = cdn_post_render_html_alter($info['content']);
-  }
-}
-
-/**
  * Implements hook_theme().
  */
 function cdn_theme() {
@@ -841,17 +796,6 @@ function cdn_check_file($uri) {
  */
 function cdn_load_include($basename) {
   module_load_include('inc', 'cdn', "cdn.$basename");
-}
-
-/**
- * Alter file URLs in the given HTML (currently only image file URLs).
- *
- * Can be used as a #post_render callback.
- */
-function cdn_post_render_html_alter($html, $elements = array()) {
-  cdn_load_include('fallback');
-  cdn_html_alter_image_urls($html);
-  return $html;
 }
 
 
