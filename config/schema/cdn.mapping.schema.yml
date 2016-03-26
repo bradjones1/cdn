@@ -1,0 +1,40 @@
+cdn.mapping_base:
+  type: mapping
+  mapping:
+    type:
+      type: string
+      label: 'CDN mapping type'
+
+cdn.mapping.simple:
+  type: cdn.mapping_base
+  mapping:
+    domain:
+      type: cdn.domain
+      label: 'A single CDN domain.'
+    conditions:
+      type: cdn.conditions
+
+cdn.mapping.auto-balanced:
+  type: cdn.mapping_base
+  mapping:
+    domains:
+      type: sequence
+      label: 'Multiple CDN domains across which to auto-balance files (in a consistent manner).'
+      sequence:
+        type: cdn.domain
+        label: 'A CDN domain.'
+    conditions:
+      type: cdn.conditions
+
+cdn.mapping.complex:
+  type: cdn.mapping_base
+  label: 'Complex'
+  mapping:
+    fallback_domain:
+      type: cdn.domain
+      nullable: true
+      label: 'The optional fallback CDN domain to use when none of the other domains are selected.'
+    domains:
+      type: sequence
+      sequence:
+        type: cdn.mapping.[type]
