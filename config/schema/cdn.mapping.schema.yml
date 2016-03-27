@@ -1,3 +1,4 @@
+# The base type all mapping types must extend.
 cdn.mapping_base:
   type: mapping
   mapping:
@@ -5,17 +6,24 @@ cdn.mapping_base:
       type: string
       label: 'CDN mapping type'
 
-cdn.mapping.simple:
+# The base type all mapping types that have conditions must extend.
+cdn.mapping_with_conditions_base:
   type: cdn.mapping_base
+  mapping:
+    conditions:
+      type: cdn.conditions
+
+# 'simple': a single CDN domain, with conditions.
+cdn.mapping.simple:
+  type: cdn.mapping_with_conditions_base
   mapping:
     domain:
       type: cdn.domain
       label: 'A single CDN domain.'
-    conditions:
-      type: cdn.conditions
 
+# 'auto-balanced': auto-balanced domains, with conditions.
 cdn.mapping.auto-balanced:
-  type: cdn.mapping_base
+  type: cdn.mapping_with_conditions_base
   mapping:
     domains:
       type: sequence
@@ -23,9 +31,8 @@ cdn.mapping.auto-balanced:
       sequence:
         type: cdn.domain
         label: 'A CDN domain.'
-    conditions:
-      type: cdn.conditions
 
+# 'complex': a mapping that allows to conditionally use different CDN domains.
 cdn.mapping.complex:
   type: cdn.mapping_base
   label: 'Complex'
@@ -37,4 +44,5 @@ cdn.mapping.complex:
     domains:
       type: sequence
       sequence:
+        # @todo How to prevent recursion? This should only accept 'simple', 'auto-balanced' and whichever ones are added in the future.
         type: cdn.mapping.[type]

@@ -19,29 +19,6 @@ function cdn_admin_general_settings_form($form, &$form_state) {
   $perm_url = url('admin/people/permissions',
                   array('fragment' => 'module-cdn'));
 
-  $form[CDN_STATUS_VARIABLE] = array(
-    '#type' => 'radios',
-    '#title' => t('Status'),
-    '#description' => t(
-      "If you don't want to use the CDN to serve files to your visitors yet,
-      but you do want to see if it's working well for your site, then enable
-      testing mode.<br />Users will only get the files from the CDN if they
-      have the <a href=\"!perm-url\">%cdn-testing-mode-permission
-      permission</a>.",
-      array(
-        '!perm-url' => $perm_url,
-        '%cdn-testing-mode-permission' => 'access files on CDN when in testing mode',
-      )
-    ),
-    '#required' => TRUE,
-    '#options' => array(
-      CDN_DISABLED => t('Disabled'),
-      CDN_TESTING  => t('Testing mode'),
-      CDN_ENABLED  => t('Enabled'),
-    ),
-    '#default_value' => variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED),
-  );
-
   $form[CDN_STATS_VARIABLE] = array(
     '#type' => 'checkbox',
     '#title' => t('Display statistics'),
@@ -72,39 +49,6 @@ function cdn_admin_details_form($form, &$form_state) {
   $form = array();
   _cdn_settings_form_prepare($form, $form_state);
 
-  $form[CDN_MODE_VARIABLE] = array(
-    '#type' => 'radios',
-    '#title' => t('Mode'),
-    '#description' => _cdn_help('admin-details-mode') . t('Choose a CDN integration mode.'),
-    '#required' => TRUE,
-    '#options'  => array(
-      CDN_MODE_BASIC    => t('Origin Pull'),
-      CDN_MODE_ADVANCED => t('File Conveyor'),
-    ),
-    '#default_value' => variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC),
-  );
-
-  $form['settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Mode-specific settings'),
-  );
-
-  //
-  // Origin Pull mode settings.
-  //
-
-  $form['settings'][CDN_BASIC_MAPPING_VARIABLE] = array(
-    '#type'          => 'textarea',
-    '#title'         => t('CDN mapping'),
-    '#description'   => _cdn_help('admin-details-mode-pull-cdn-mapping') . t("Define which files are mapped to which CDN."),
-    '#size'          => 35,
-    '#default_value' => variable_get(CDN_BASIC_MAPPING_VARIABLE, ''),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_BASIC),
-      )
-    ),
-  );
   $form['settings'][CDN_BASIC_FARFUTURE_VARIABLE] = array(
     '#type' => 'checkbox',
     '#title' => t('Far Future expiration'),

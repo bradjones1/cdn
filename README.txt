@@ -32,7 +32,9 @@ Installation
 
 2) Enable the module.
 
-3) Visit "/admin/config/development/cdn" to learn about the various settings.
+3) Configure the CDN module. Either modify and import the cdn.settings.yml
+   configuration file manually or install the included CDN UI module to
+   configure it through a UI.
 
 4) Go to your CDN provider's control panel and set up a "CDN instance" (Amazon
    CloudFront calls this a "distribution"). There, you will have to specify
