@@ -16,28 +16,6 @@ function cdn_admin_general_settings_form($form, &$form_state) {
   $form = array();
   _cdn_settings_form_prepare($form, $form_state);
 
-  $perm_url = url('admin/people/permissions',
-                  array('fragment' => 'module-cdn'));
-
-  $form[CDN_STATS_VARIABLE] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display statistics'),
-    '#description' => t(
-      'Shows the CDN integration statistics of the current page, to users with
-        the <a href="!perm-url">%access-per-page-statistics permission</a>.',
-        array(
-          '!perm-url' => $perm_url,
-          '%access-per-page-statistics' => 'access per-page statistics',
-        )
-    ),
-    '#return_value'  => CDN_ENABLED,
-    '#default_value' => variable_get(CDN_STATS_VARIABLE, CDN_DISABLED),
-    '#states' => array(
-      'invisible' => array(
-        ':input[name="' . CDN_STATUS_VARIABLE . '"]' => array('value' => '' . CDN_DISABLED),
-      ),
-    ),
-  );
 
   return system_settings_form($form);
 }

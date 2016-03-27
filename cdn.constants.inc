@@ -5,11 +5,6 @@
  * Constants used by the CDN module.
  */
 
-// Permissions.
-define('CDN_PERM_ACCESS_STATS',   'access per-page statistics');
-define('CDN_PERM_ACCESS_TESTING', 'access files on CDN when in testing mode');
-define('CDN_PERM_TOUCH',          'touch files');
-
 // Variables and values.
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 define('CDN_HTTPS_SUPPORT_VARIABLE', 'cdn_https_support');
