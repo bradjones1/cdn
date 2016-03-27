@@ -99,11 +99,11 @@ function cdn_file_url_alter(&$original_uri) {
 
     // Load the include file that contains the logic for the mode that's
     // currently enabled.
-    cdn_load_include(($mode == CDN_MODE_BASIC) ? 'basic' : 'advanced');
+    cdn_load_include('basic');
 
     // Depending on the mode, use a different function to get the servers on
     // which the file is available.
-    $servers = ($mode == CDN_MODE_BASIC) ? cdn_basic_get_servers($uri) : cdn_advanced_get_servers($uri);
+    $servers = cdn_basic_get_servers($uri);
 
     // The file is not available on any server.
     if (count($servers) == 0) {
@@ -463,29 +463,6 @@ function cdn_get_domains() {
         }
         $domains[] = parse_url($part, PHP_URL_HOST);
       }
-    }
-  }
-  // File Conveyor mode domains.
-  elseif (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_ADVANCED) {
-    cdn_load_include('advanced');
-    $db = _cdn_advanced_get_db_connection();
-
-    // In case no connection to the database could be made, pretend no
-    // domains are being used.
-    if (!$db) {
-      return array();
-    }
-
-    // Retrieve all unique domains (by retrieving one URL per server) and then
-    // parsing the domain names in those URLs.
-    $sql = "SELECT url
-            FROM synced_files
-            GROUP BY server";
-    $stmt = $db->prepare($sql);
-    $stmt->execute();
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($rows as $row) {
-      $domains[] = parse_url($row['url'], PHP_URL_HOST);
     }
   }
 

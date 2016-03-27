@@ -40,12 +40,3 @@ define('CDN_BASIC_FARFUTURE_REMOVE_HEADERS', "Set-Cookie\nETag");
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_VARIABLE', 'cdn_farfuture_unique_identifier_mapping');
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_MAPPING_DEFAULT', "misc/*:modules/*:themes/*|drupal_version\nsites/*|mtime\nsites/*|.avi .m4v .mov .mp4 .wmv .flv|perpetual");
 define('CDN_BASIC_FARFUTURE_UNIQUE_IDENTIFIER_DEFAULT', 'mtime');
-
-// Variables for advanced mode.
-define('CDN_ADVANCED_PID_FILE_VARIABLE', 'cdn_advanced_pid_file');
-define('CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE', 'cdn_advanced_synced_files_db');
-
-// Hardcoded settings for accessing the daemon's metadata, to show statistics.
-define('CDN_DAEMON_SYNCED_FILES_DB', 'synced_files.db');
-define('CDN_DAEMON_PERSISTENT_DATA_DB', 'persistent_data.db');
-define('CDN_DAEMON_FSMONITOR_DB', 'fsmonitor.db');

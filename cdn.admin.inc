@@ -146,22 +146,7 @@ function cdn_admin_other_settings_form($form, &$form_state) {
   $form = array();
   _cdn_settings_form_prepare($form, $form_state);
 
-  if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_ADVANCED) {
-    $form[CDN_DRUPAL_ROOT_VARIABLE] = array(
-      '#type' => 'textfield',
-      '#title' => t('Drupal root directory'),
-      '#description' => t(
-        'In 99% of the cases the default value is sufficient and correct. In
-        some advanced setups that make use of symbolic links however, it is
-        possible that the Drupal root directory is incorrectly detected. In
-        those cases, you should enter it here.<br />
-        <strong>This setting only affects the status report, it does not affect
-        the CDN integration itself in any way.</strong>'
-      ),
-      '#required'      => TRUE,
-      '#default_value' => variable_get(CDN_DRUPAL_ROOT_VARIABLE, realpath('.')),
-    );
-  }
+
 
   $form['cdn_seo'] = array(
     '#type' => 'fieldset',
@@ -329,18 +314,6 @@ function cdn_admin_other_settings_form($form, &$form_state) {
  * Default validate callback for the details form.
  */
 function cdn_admin_details_form_validate($form, &$form_state) {
-  // If ctools_dependent supported required dependent form items, this ugly
-  // piece of code would not be necessary.
-  if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_BASIC) {
-    if (empty($form_state['values'][CDN_BASIC_MAPPING_VARIABLE])) {
-      form_error($form['settings'][CDN_BASIC_MAPPING_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_BASIC_MAPPING_VARIABLE]['#title'])));
-    }
-  }
-  else {
-    if (empty($form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE])) {
-      form_error($form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE], t('!name field is required.', array('!name' => $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE]['#title'])));
-    }
-  }
 
   // When in Origin Pull mode, check the CDN mapping for CDNs/reverse proxies.
   if ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_BASIC) {
@@ -384,11 +357,6 @@ function cdn_admin_details_form_validate($form, &$form_state) {
       ), 'warning');
     }
   }
-  // When in advanced mode, validate the synced files DB.
-  elseif ($form_state['values'][CDN_MODE_VARIABLE] == CDN_MODE_ADVANCED) {
-    $synced_files_db = $form_state['values'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE];
-    _cdn_admin_validate_synced_files_db($synced_files_db, CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE);
-  }
 }
 
 /**
@@ -422,38 +390,6 @@ function cdn_admin_settings_submit_show_cache_warning($form, &$form_state) {
 
 //----------------------------------------------------------------------------
 // Private functions.
-
-/**
- * Helper function to validate a possible synced files DB value.
- *
- * @param $synced_files_db
- *   A user-entered synced files DB value.
- * @param $name
- *   The name of the form item on which to set errors, if any.
- * @return
- *   FALSE if there were any errors, TRUE if there weren't any.
- */
-function _cdn_admin_validate_synced_files_db($synced_files_db, $name) {
-  // Validate the file name.
-  if (strpos($synced_files_db, CDN_DAEMON_SYNCED_FILES_DB) === FALSE) {
-    form_set_error($name, t('The synced files database should have the file name %name.', array('%name' => CDN_DAEMON_SYNCED_FILES_DB)));
-    return FALSE;
-  }
-
-  // Validate the entered synced files database.
-  if (!file_exists($synced_files_db)) {
-    form_set_error($name, t('The synced files database does not exist.'));
-    return FALSE;
-  }
-  else {
-    if (!@fopen($synced_files_db, 'r')) {
-      form_set_error($name, t('The synced files database could not be opened for reading.'));
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
 
 /**
  * Helper function to check if the requirements of the CDN module have been
