@@ -1,0 +1,7 @@
+cdn.settings:
+  path: '/admin/config/services/cdn'
+  defaults:
+    _form: 'Drupal\cdn\Form\CdnSettingsForm'
+    _title: 'CDN settings'
+  requirements:
+    _permission: 'administer CDN configuration'

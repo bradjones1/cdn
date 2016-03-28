@@ -1,0 +1,5 @@
+cdn.admin_overview:
+  title: 'CDN integration'
+  description: 'Configure which assets (CSS, JS, images …) should be served from a CDN.'
+  route_name: cdn.settings
+  parent: system.admin_config_services
