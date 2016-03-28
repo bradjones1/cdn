@@ -1,0 +1,6 @@
+services:
+  cdn.settings:
+    class: Drupal\cdn\EventSubscriber\CdnSettingsSaveSubscriber
+    arguments: ['@cache_tags.invalidator']
+    tags:
+      - { name: event_subscriber }
