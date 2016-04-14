@@ -7,7 +7,6 @@
 
 // Variables and values.
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
-define('CDN_HTTPS_SUPPORT_VARIABLE', 'cdn_https_support');
 
 // Variables for exceptions.
 define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE', 'cdn_exception_file_path_blacklist');
@@ -28,8 +27,6 @@ define('CDN_SEO_FORBIDDEN_EXTENSIONS_VARIABLE', "cdn_seo_forbidden_extensions");
 define('CDN_SEO_FORBIDDEN_EXTENSIONS_DEFAULT', "html\nhtm\nphp");
 
 // Variables for basic mode.
-define('CDN_BASIC_MAPPING_VARIABLE', 'cdn_basic_mapping');
-define('CDN_BASIC_MAPPING_HTTPS_VARIABLE', 'cdn_basic_mapping_https');
 define('CDN_BASIC_FARFUTURE_VARIABLE', 'cdn_farfuture_status');
 define('CDN_BASIC_FARFUTURE_DEFAULT', FALSE);
 define('CDN_BASIC_FARFUTURE_EXTENSIONS_VARIABLE', "cdn_farfuture_extensions");

@@ -15,52 +15,24 @@ require_once('cdn.constants.inc');
 /**
  * Implements hook_file_url_alter().
  */
-function cdn_file_url_alter(&$original_uri) {
-  $mode                  = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-  $farfuture             = variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT);
-  $https_support         = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
-  $maintenance_mode      = variable_get('maintenance_mode', FALSE);
-  $is_https_page         = cdn_request_is_https();
-
+function cdn_file_url_alter(&$uri) {
   // Don't alter file URLs when running update.php.
   if (defined('MAINTENANCE_MODE')) {
     return;
   }
 
+  $result = \Drupal::service('cdn.file_url_generator')->generate($uri);
+
+  if ($result) {
+    $uri = $result;
+  }
+
+  return;
+  // @todo Far Future support
+  $farfuture             = variable_get(CDN_BASIC_FARFUTURE_VARIABLE, CDN_BASIC_FARFUTURE_DEFAULT);
+  $maintenance_mode      = variable_get('maintenance_mode', FALSE);
+
   if (cdn_status_is_enabled()) {
-    $scheme = file_uri_scheme($original_uri);
-
-    // If the current URI is an absolute or protocol-relative URI, return
-    // immediately.
-    if (($scheme && ($scheme == 'http' || $scheme == 'https'))
-        || drupal_substr($original_uri, 0, 2) == '//'
-       )
-    {
-      return;
-    }
-    elseif ($scheme) {
-      // Only alter URLs for local stream wrappers. If a file is served
-      // remotely, it doesn't make sense to serve it from a CDN.
-      $local_schemes = array_keys(file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL));
-      if (!in_array($scheme, $local_schemes)) {
-        return;
-      }
-
-      // Attempt to get an external URL using the appropriate wrapper.
-      if ($wrapper = file_stream_wrapper_get_instance_by_uri($original_uri)) {
-        $uri = str_replace($GLOBALS['base_url'] . '/', '', $wrapper->getExternalUrl());
-      }
-      else {
-        return;
-      }
-    }
-    else {
-      $uri = $original_uri;
-    }
-
-    if (!cdn_check_protocol()) {
-      return;
-    }
     if (!cdn_check_drupal_path(current_path())) {
       return;
     }
@@ -95,55 +67,6 @@ function cdn_file_url_alter(&$original_uri) {
       $path_info = pathinfo(urldecode($uri));
       $token = drupal_hmac_base64($ufi . $path_info['filename'], drupal_get_private_key() . drupal_get_hash_salt());
       $uri = "cdn/farfuture/$token/$ufi/$uri";
-    }
-
-    // Load the include file that contains the logic for the mode that's
-    // currently enabled.
-    cdn_load_include('basic');
-
-    // Depending on the mode, use a different function to get the servers on
-    // which the file is available.
-    $servers = cdn_basic_get_servers($uri);
-
-    // The file is not available on any server.
-    if (count($servers) == 0) {
-      $cdn_url    = FALSE;
-      $server = FALSE;
-    }
-    // If the file is available from multiple servers, then allow a special
-    // function to pick the desired server. The decision can be made on any
-    // desired criteria: user's location, user's role, current date …
-    elseif (count($servers) > 1 && function_exists('cdn_pick_server')) {
-      $picked_server = cdn_pick_server($servers);
-      $cdn_url = $picked_server['url'];
-      $server  = $picked_server['server'];
-    }
-    // The file is available from multiple servers; pick a server randomly
-    // (yet consistently: this uses consistent hashing!), so that each server
-    // will serve approximately the same number of files.
-    elseif (count($servers > 1)) {
-      $filename = basename($servers[0]['url']);
-      $unique_file_id = hexdec(substr(md5($filename), 0, 5));
-      $choice = $unique_file_id % count($servers);
-      $cdn_url = $servers[$choice]['url'];
-      $server  = $servers[$choice]['server'];
-    }
-    // The file is only avaible from one server.
-    else {
-      $cdn_url = $servers[0]['url'];
-      $server  = $servers[0]['server'];
-    }
-
-    // If the current page is being served via HTTPS, and the CDN supports
-    // HTTPS, then use the HTTPS file URL.
-    if ($is_https_page && $https_support && !empty($cdn_url)) {
-      $cdn_url = preg_replace('/^http:/', 'https:', $cdn_url);
-    }
-
-    // Override the path with the corresponding CDN URL, *if* the file is
-    // available on the CDN (it may only be not available in advanced mode).
-    if ($cdn_url !== FALSE) {
-      $original_uri = $cdn_url;
     }
   }
 }
@@ -474,61 +397,6 @@ function cdn_get_blacklist($reset = FALSE) {
   }
 
   return $blacklist;
-}
-
-/**
- * Check if CDN module should serve files from a HTTPS location.
- */
-function cdn_serve_from_https() {
-  return variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE)
-         && cdn_request_is_https();
-}
-
-/**
- * Check if the current request is over HTTPS.
- */
-function cdn_request_is_https() {
-  return (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')
-         ||
-         (
-           isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-           &&
-           $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
-         )
-         ||
-         (
-           isset($_SERVER['HTTP_X_FORWARDED_PROTOCOL'])
-           &&
-           $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] == 'https'
-         );
-}
-
-/**
- * Check if the CDN module is enabled.
- */
-function cdn_status_is_enabled() {
-  $status = variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED);
-  return $status == CDN_ENABLED
-         ||
-         ($status == CDN_TESTING && user_access(CDN_PERM_ACCESS_TESTING));
-}
-
-/**
- * Check if the current protocol is supported by the CDN.
- *
- * Note: currently only checks HTTPS, in the future possibly also SPDY.
- */
-function cdn_check_protocol() {
-  $https_support = variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE);
-
-  // If the current page is being served via HTTPS, and the CDN does not
-  // support HTTPS, then don't rewrite the file URL, because it would make the
-  // visit insecure.
-  if (cdn_request_is_https() && !$https_support) {
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 /**

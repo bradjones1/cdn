@@ -4,3 +4,6 @@ services:
     arguments: ['@cache_tags.invalidator']
     tags:
       - { name: event_subscriber }
+  cdn.file_url_generator:
+    class: Drupal\cdn\File\FileUrlGenerator
+    arguments: ['@file_system', '@stream_wrapper_manager', '@request_stack', '@config.factory']

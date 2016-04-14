@@ -26,10 +26,12 @@ mapping:
 #   fallback_domain: cdn-c.com
 #   domains:
 #     -
+#       type: simple
 #       domain: cdn-a.com
 #       conditions:
 #         extensions: [css, jpg, jpeg, png]
 #     -
+#       type: simple
 #       domain: cdn-b.com
 #       conditions:
 #         extensions: [zip]

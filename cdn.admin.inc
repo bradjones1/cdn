@@ -177,42 +177,6 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     ),
   );
 
-  $form['https'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('HTTPS'),
-  );
-  $form['https'][CDN_HTTPS_SUPPORT_VARIABLE] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('CDN supports HTTPS'),
-    '#default_value' => variable_get(CDN_HTTPS_SUPPORT_VARIABLE, FALSE),
-    '#description' => _cdn_help('admin-other-https') . t('Enable if you use HTTPS and your CDN supports it too.'),
-  );
-  if (variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC) == CDN_MODE_BASIC) {
-    $form['https'][CDN_BASIC_MAPPING_HTTPS_VARIABLE] = array(
-      '#type'          => 'textarea',
-      '#title'         => t('CDN mapping for HTTPS'),
-      '#description'   => t('If your CDN supports HTTPS, but requires you to
-                            use different URLs, then you can define an
-                            alternative CDN mapping here. This overrides the
-                            "regular" CDN mapping completely, when using
-                            HTTPS.'),
-      '#size'          => 35,
-      '#default_value' => variable_get(CDN_BASIC_MAPPING_HTTPS_VARIABLE, ''),
-      '#states' => array(
-        'visible' => array(
-          ':input[name="' . CDN_HTTPS_SUPPORT_VARIABLE . '"]' => array('checked' => TRUE),
-        )
-      ),
-    );
-  }
-
-  $path_explanation = t(
-    "Enter one file pattern per line. The '*' character is a wildcard.<br />
-    Example file patterns are <code>*.js</code> for all JavaScript files and
-    <code>mytheme/*.css</code> for all CSS files in the <code>mytheme</code>
-    directory."
-  );
-
   $form['exceptions'] = array(
     '#type' => 'fieldset',
     '#title' => t('Exceptions'),
