@@ -331,26 +331,6 @@ function cdn_admin_other_settings_form_validate($form, &$form_state) {
   unset($form_state['values']['cdn_hook_blacklist']);
 }
 
-/**
- * Submit callback for all settings forms, that shows a warning whenever
- * settings have been changed: the caches might need to be cleared.
- */
-function cdn_admin_settings_submit_show_cache_warning($form, &$form_state) {
-  drupal_set_message(t('You have just changed some settings. This might affect
-                        the file URLs that have been cached in nodes, views,
-                        aggregated CSS files or elsewhere.<br />
-                        You now may want to clear all caches, to ensure that
-                        the new CDN file URLs are used immediately. This can
-                        be done in the <a href="!link">"Clear cache"
-                        field set</a> on the "Performance" settings form.',
-                        array(
-                          '!link' => url('admin/config/development/performance')
-                        )
-                      ),
-                      'info'
-  );
-}
-
 
 //----------------------------------------------------------------------------
 // Private functions.
@@ -406,9 +386,6 @@ function _cdn_settings_form_prepare(&$form, $form_state) {
     $form['#attributes']['class'] = 'cdn-settings';
     $form['#attached']['css'][] = drupal_get_path('module', 'cdn') . '/cdn.admin.css';
   }
-
-  // Form.
-  $form['#submit'] = array('cdn_admin_settings_submit_show_cache_warning');
 }
 
 function _cdn_check_advanced_help() {

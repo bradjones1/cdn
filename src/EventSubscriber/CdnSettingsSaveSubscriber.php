@@ -42,7 +42,12 @@ class CdnSettingsSaveSubscriber implements EventSubscriberInterface {
    */
   public function onSave(ConfigCrudEvent $event) {
     if ($event->getConfig()->getName() === 'cdn.settings') {
-      $this->cacheTagsInvalidator->invalidateTags(['rendered']);
+      $this->cacheTagsInvalidator->invalidateTags([
+        // Rendered output that is cached. (HTML containing URLs.)
+        'rendered',
+        // Processed assets that are cached. (CSS aggregates containing URLs).
+        'library_info',
+      ]);
     }
   }
 

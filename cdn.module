@@ -137,22 +137,6 @@ function cdn_cdn_unique_file_identifier_info() {
 }
 
 /**
- * Implements hook_element_info_alter().
- */
-function cdn_element_info_alter(&$type) {
-  if (!cdn_status_is_enabled()) {
-    return;
-  }
-
-  $mode = variable_get(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-  if ($mode == CDN_MODE_BASIC) {
-    // Override Drupal's CSS aggregation system.
-    cdn_load_include('basic.css');
-    $type['styles']['#aggregate_callback'] = '_cdn_aggregate_css';
-  }
-}
-
-/**
  * Implements hook_menu().
  */
 function cdn_menu() {
@@ -275,14 +259,6 @@ function cdn_boot() {
 function cdn_flush_caches() {
   // Force refresh of the blacklist.
   cdn_get_blacklist(TRUE);
-
-  // Clear aggregated CSS files for pages served via HTTP.
-  variable_del('cdn_css_cache_files_http');
-  file_scan_directory('public://cdn/css/http', '/.*/', array('callback' => 'drupal_delete_file_if_stale'));
-
-  // Clear aggregated CSS files for pages served via HTTPS.
-  variable_del('cdn_css_cache_files_https');
-  file_scan_directory('public://cdn/css/https', '/.*/', array('callback' => 'drupal_delete_file_if_stale'));
 }
 
 /**
