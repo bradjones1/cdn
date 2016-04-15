@@ -148,57 +148,6 @@ function cdn_admin_other_settings_form($form, &$form_state) {
     ),
   );
 
-  $form['exceptions'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Exceptions'),
-    '#description' => _cdn_help('admin-other-exceptions') .
-                      t('Which files should be served from a CDN is not as
-                         simple as it seems: there are bound to be exceptions.
-                         You can easily define those exceptions here, either
-                         by file URL, Drupal path or by Drupal path for
-                         authenticated users.'),
-  );
-  $form['exceptions']['drupal_path'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Drupal path'),
-    '#description' => t("Drupal paths entered in this blacklist will not serve
-                         any files from the CDN. This blacklist is applied for
-                         <em>all</em> users."),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['exceptions']['drupal_path'][CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE] = array(
-    '#type' => 'textarea',
-    '#title' => t('Blacklist'),
-    '#default_value' => variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT),
-    '#description' => t(
-      "Enter one page per line as Drupal paths. The '*' character is a
-      wildcard. Example paths are %blog for the blog page and %blog-wildcard
-      for every personal blog. %front is the front page.",
-      array(
-       '%blog'          => 'blog',
-       '%blog-wildcard' => 'blog/*',
-       '%front'         => '<front>',
-      )
-    ),
-  );
-
-  $form['exceptions']['auth_users'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Drupal path for authenticated users'),
-    '#description' => t("Drupal paths entered in this blacklist will not serve
-                         any files from the CDN. This blacklist is applied for
-                         <em>authenticated users only</em>."),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['exceptions']['auth_users'][CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE] = array(
-    '#type'          => 'textarea',
-    '#title'         => t('Blacklist'),
-    '#default_value' => variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT),
-    '#description'   => $path_explanation,
-  );
-
   return system_settings_form($form);
 }
 

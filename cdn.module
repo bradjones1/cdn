@@ -33,10 +33,6 @@ function cdn_file_url_alter(&$uri) {
   $maintenance_mode      = variable_get('maintenance_mode', FALSE);
 
   if (cdn_status_is_enabled()) {
-    if (!cdn_check_drupal_path(current_path())) {
-      return;
-    }
-
     // Alter the file path when using Origin Pull mode and using that mode's
     // Far Future setting.
     if ($mode == CDN_MODE_BASIC && $farfuture && !$maintenance_mode) {
@@ -194,32 +190,6 @@ function cdn_boot() {
 
 //----------------------------------------------------------------------------
 // Public functions.
-
-/**
- * Check if a Drupal path should serve files from the CDN (i.e.: is the Drupal
- * path blacklisted?).
- *
- * @param $path
- *   A Drupal path.
- */
-function cdn_check_drupal_path($path) {
-  global $user;
-  $blacklist       = variable_get(CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT);
-  $auth_blacklist  = variable_get(CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE, CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT);
-
-  // Check if the Drupal path matches one of the blacklisted Drupal paths.
-  if (drupal_match_path($path, $blacklist)) {
-    return FALSE;
-  }
-
-  // If logged in user, apply a secondary blacklist.
-  if ($user->uid > 0 && drupal_match_path($path, $auth_blacklist)) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 
 /**
  * Helper function to efficiently load include files for this module.

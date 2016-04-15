@@ -8,12 +8,6 @@
 // Variables and values.
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 
-// Variables for exceptions.
-define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE', 'cdn_exception_drupal_path_blacklist');
-define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT',  '');
-define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE', 'cdn_exception_auth_users_blacklist');
-define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_DEFAULT', 'admin*');
-
 // Variables for SEO duplicate content prevention.
 define('CDN_SEO_REDIRECT_VARIABLE', 'cdn_seo_redirect');
 define('CDN_SEO_REDIRECT_DEFAULT', TRUE);
