@@ -187,49 +187,6 @@ function cdn_admin_other_settings_form($form, &$form_state) {
                          by file URL, Drupal path or by Drupal path for
                          authenticated users.'),
   );
-
-  $form['exceptions']['file_path'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('File URL'),
-    '#description' => t("Files that are marked to not be served from the CDN
-    because of a match in the blacklist, can be overridden to be served from
-    the CDN after all, if they have a match in the whitelist."),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE
-  );
-  $form['exceptions']['file_path'][CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE] = array(
-    '#type' => 'textarea',
-    '#title' => t('Blacklist'),
-    '#default_value' => variable_get(CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT),
-    '#description' => $path_explanation,
-  );
-  $blacklist_modules = module_implements('cdn_blacklist');
-  $blacklist_modules = array_unique(array_merge($blacklist_modules, module_implements('cdn_blacklist_alter')));
-  $blacklist_modules_string = '';
-  for ($i = 0; $i < count($blacklist_modules); $i++) {
-    $blacklist_modules_string .= '<code>' . $blacklist_modules[$i] . '</code>';
-    if ($i < count($blacklist_modules) - 1) {
-      $blacklist_modules_string .= ', ';
-    }
-  }
-  $form['exceptions']['file_path']['cdn_hook_blacklist'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Blacklist from modules'),
-    '#default_value' => cdn_get_blacklist(TRUE),
-    '#description' => t('Blacklist from <code>hook_cdn_blacklist()</code> and
-                        <code>hook_cdn_blacklist_alter()</code>. Automatically
-                        updated when cron runs. Generated from the following
-                        modules: !module-list.',
-                        array('!module-list' => $blacklist_modules_string)),
-    '#disabled' => TRUE,
-  );
-  $form['exceptions']['file_path'][CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE] = array(
-    '#type' => 'textarea',
-    '#title' => t('Whitelist'),
-    '#default_value' => variable_get(CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE, CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT),
-    '#description' => $path_explanation,
-  );
-
   $form['exceptions']['drupal_path'] = array(
     '#type' => 'fieldset',
     '#title' => t('Drupal path'),
@@ -321,14 +278,6 @@ function cdn_admin_details_form_validate($form, &$form_state) {
       ), 'warning');
     }
   }
-}
-
-/**
- * Default validate callback for the other settings form.
- */
-function cdn_admin_other_settings_form_validate($form, &$form_state) {
-  // Remove the non-variable.
-  unset($form_state['values']['cdn_hook_blacklist']);
 }
 
 

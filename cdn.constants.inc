@@ -9,10 +9,6 @@
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 
 // Variables for exceptions.
-define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_VARIABLE', 'cdn_exception_file_path_blacklist');
-define('CDN_EXCEPTION_FILE_PATH_BLACKLIST_DEFAULT',  "");
-define('CDN_EXCEPTION_FILE_PATH_WHITELIST_VARIABLE', 'cdn_exception_file_path_whitelist');
-define('CDN_EXCEPTION_FILE_PATH_WHITELIST_DEFAULT',  "misc/*.js\nmodules/*.js");
 define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_VARIABLE', 'cdn_exception_drupal_path_blacklist');
 define('CDN_EXCEPTION_DRUPAL_PATH_BLACKLIST_DEFAULT',  '');
 define('CDN_EXCEPTION_AUTH_USERS_BLACKLIST_VARIABLE', 'cdn_exception_auth_users_blacklist');
