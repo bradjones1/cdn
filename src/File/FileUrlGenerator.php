@@ -2,9 +2,8 @@
 
 namespace Drupal\cdn\File;
 
+use Drupal\cdn\CdnSettings;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\ConfigValueException;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
@@ -39,18 +38,11 @@ class FileUrlGenerator {
   protected $requestStack;
 
   /**
-   * The CDN settings.
+   * The CDN settings service.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\cdn\CdnSettings
    */
   protected $settings;
-
-  /**
-   * The lookup table.
-   *
-   * @var array
-   */
-  protected $lookupTable;
 
   /**
    * Constructs a new CDN file URL generator object.
@@ -61,15 +53,14 @@ class FileUrlGenerator {
    *   The stream wrapper manager.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
+   * @param \Drupal\cdn\CdnSettings $cdn_settings
+   *   The CDN settings service.
    */
-  public function __construct(FileSystemInterface $file_system, StreamWrapperManagerInterface $stream_wrapper_manager, RequestStack $request_stack, ConfigFactoryInterface $config_factory) {
+  public function __construct(FileSystemInterface $file_system, StreamWrapperManagerInterface $stream_wrapper_manager, RequestStack $request_stack, CdnSettings $cdn_settings) {
     $this->fileSystem = $file_system;
     $this->streamWrapperManager = $stream_wrapper_manager;
     $this->requestStack = $request_stack;
-    $this->settings = $config_factory->get('cdn.settings');
-    $this->lookupTable = $this->buildLookupTable($this->settings->get('mapping'));
+    $this->settings = $cdn_settings;
   }
 
   /**
@@ -93,11 +84,9 @@ class FileUrlGenerator {
    *   file URI should not be served from a CDN.
    */
   public function generate($uri) {
-    $status = $this->settings->get('status');
-    if ($status === 0) {
+    if (!$this->settings->isEnabled()) {
       return FALSE;
     }
-    // @todo testing mode, but testing mode's permission only lives in the CDN UI module…
 
     $root_relative_url = $this->getRootRelativeUrl($uri);
     if ($root_relative_url === FALSE) {
@@ -106,11 +95,12 @@ class FileUrlGenerator {
 
     // Extension-specific mapping.
     $file_extension = Unicode::strtolower(pathinfo($uri, PATHINFO_EXTENSION));
-    if (isset($this->lookupTable[$file_extension])) {
+    $lookup_table = $this->settings->getLookupTable();
+    if (isset($lookup_table[$file_extension])) {
       $key = $file_extension;
     }
     // Generic or fallback mapping.
-    elseif (isset($this->lookupTable['*'])) {
+    elseif (isset($lookup_table['*'])) {
       $key = '*';
     }
     // No mapping.
@@ -118,7 +108,7 @@ class FileUrlGenerator {
       return FALSE;
     }
 
-    $result = $this->lookupTable[$key];
+    $result = $lookup_table[$key];
 
     // If there are multiple results, pick one using consistent hashing: ensure
     // the same file is always served from the same CDN domain.
@@ -165,70 +155,6 @@ class FileUrlGenerator {
       ? str_replace($request->getSchemeAndHttpHost(), '', $this->streamWrapperManager->getViaUri($uri)->getExternalUrl())
       // Shipped file.
       : $request->getBasePath() . '/' . $uri;
-  }
-
-  /**
-   * Builds a lookup table: file extension to CDN domain(s).
-   *
-   * @param array $mapping
-   *   An array matching either of the mappings in cdn.mapping.schema.yml.
-   *
-   * @return array
-   *   A lookup table. Keys are lowercase file extensions or the asterisk.
-   *   Values are CDN domains (either string if only one, or array of strings if
-   *   multiple).
-   *
-   * @throws \Drupal\Core\Config\ConfigValueException
-   *
-   * @todo Abstract this out further in the future if the need arises, i.e. if
-   *       more conditions besides extensions are added. For now, KISS.
-   */
-  protected function buildLookupTable(array $mapping) {
-    $lookup_table = [];
-    if ($mapping['type'] === 'simple') {
-      $domain = $mapping['domain'];
-      assert('strpos($domain, "/") === FALSE && strpos($domain, ":") === FALSE', "The provided domain $domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
-      if (empty($mapping['conditions'])) {
-        $lookup_table['*'] = $domain;
-      }
-      else {
-        if (empty($mapping['conditions']['extensions'])) {
-          $lookup_table['*'] = $domain;
-        }
-        else {
-          foreach ($mapping['conditions']['extensions'] as $extension) {
-            $lookup_table[$extension] = $domain;
-          }
-        }
-      }
-    }
-    elseif ($mapping['type'] === 'complex') {
-      $fallback_domain = NULL;
-      if (isset($mapping['fallback_domain'])) {
-        $fallback_domain = $mapping['fallback_domain'];
-        assert('strpos($fallback_domain, "/") === FALSE && strpos($fallback_domain, ":") === FALSE', "The provided fallback domain $fallback_domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
-        $lookup_table['*'] = $fallback_domain;
-      }
-      foreach ($mapping['domains'] as $nested_mapping) {
-        $lookup_table += $this->buildLookupTable($nested_mapping);
-      }
-    }
-    elseif ($mapping['type'] === 'auto-balanced') {
-      if (empty($mapping['conditions']) || empty($mapping['conditions']['extensions'])) {
-        throw new ConfigValueException('It does not make sense to apply auto-balancing to all files, regardless of extension.');
-      }
-      $domains = $mapping['domains'];
-      foreach ($domains as $domain) {
-        assert('strpos($domain, "/") === FALSE && strpos($domain, ":") === FALSE', "The provided domain $domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
-      }
-      foreach ($mapping['conditions']['extensions'] as $extension) {
-        $lookup_table[$extension] = $domains;
-      }
-    }
-    else {
-      throw new ConfigValueException('Unknown CDN mapping type specified.');
-    }
-    return $lookup_table;
   }
 
 }
