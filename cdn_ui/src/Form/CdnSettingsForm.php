@@ -123,7 +123,7 @@ class CdnSettingsForm extends ConfigFormBase {
       '#title_display' => 'invisible',
       '#placeholder' => 'css js jpg jpeg png zip',
       '#size' => 30,
-      '#default_value' => implode(' ', $config->get('mapping.conditions.extensions')),
+      '#default_value' => implode(' ', $config->get('mapping.conditions.extensions') ?: []),
       '#states' => [
         'visible' => [
           ':input[name="mapping[simple][extensions_condition_toggle]"]' => ['value' => 'limited'],
