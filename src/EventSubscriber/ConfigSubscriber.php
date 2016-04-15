@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\cdn\EventSubscriber\CdnSettingsSaveSubscriber.
- */
-
 namespace Drupal\cdn\EventSubscriber;
 
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
@@ -13,9 +8,9 @@ use Drupal\Core\Config\ConfigEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * A subscriber reacting to the saving of the 'cdn.settings' configuration.
+ * A subscriber invalidating cache tags when CDN config is saved.
  */
-class CdnSettingsSaveSubscriber implements EventSubscriberInterface {
+class ConfigSubscriber implements EventSubscriberInterface {
 
   /**
    * The cache tags invalidator.
@@ -25,7 +20,7 @@ class CdnSettingsSaveSubscriber implements EventSubscriberInterface {
   protected $cacheTagsInvalidator;
 
   /**
-   * Constructs a CdnSettingsSaveSubscriber object.
+   * Constructs a ConfigSubscriber object.
    *
    * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $cache_tags_invalidator
    *   The cache tags invalidator.
