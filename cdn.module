@@ -160,65 +160,6 @@ function cdn_menu() {
 }
 
 /**
- * Implements hook_html_head_alter().
- *
- * Adding dns-prefetch <link> elements via hook instead of drupal_add_html_head
- * to place them as early in the head as possible so that the browser acts upon
- * them ASAP.
- *
- * @see https://github.com/h5bp/html5-boilerplate/blob/master/doc/extend.md
- */
-function cdn_html_head_alter(&$head_elements) {
-  if (!cdn_status_is_enabled()) {
-    return;
-  }
-
-  $domains = cdn_get_domains();
-  // Two sets of markups: because IE9 interprets rel="prefetch" as "dns-prefetch".
-  // IE10 intreprets both dns-prefetch and prefetch as DNS pre-resolve.
-  $markup = null;
-  $ie_markup = null;
-
-  if (count($domains)) {
-    // Enable prefetching.
-    $head_elements['cdn_dns_prefetch_meta'] = array(
-      '#type' => 'html_tag',
-      '#tag' => 'link',
-      '#attributes' => array(
-        'http-equiv' => 'x-dns-prefetch-control',
-        'content'    => 'on',
-      ),
-      // System meta for content-type is at weight -1000. We'll insert the DNS tags
-      // shortly after that.
-      '#weight' => -900.9999,
-    );
-    // The domain names to prefetch. Use protocol-relative URLs.
-    foreach ($domains as $domain) {
-      $element = array(
-        '#tag' => 'link',
-        '#attributes' => array(
-          'rel' => 'dns-prefetch',
-          'href'    => '//' . $domain,
-        )
-      );
-
-      $link_el = theme('html_tag', array('element' => $element));
-      $markup .= $link_el;
-      $ie_markup .= preg_replace('/rel="dns-prefetch"/', 'rel="prefetch"', $link_el);
-    }
-    $markup .= '<!--[if IE 9]>' . PHP_EOL;
-    $markup .= $ie_markup;
-    $markup .= '<![endif]-->' . PHP_EOL;
-
-    $head_elements['cdn_dns_prefetch_block'] = array(
-      '#type' => 'markup',
-      '#markup' => $markup,
-      '#weight' => -900,
-    );
-  }
-}
-
-/**
  * Implements hook_boot().
  */
 function cdn_boot() {
@@ -253,48 +194,6 @@ function cdn_boot() {
 
 //----------------------------------------------------------------------------
 // Public functions.
-
-/**
- * Get all domains from which files might be served. This information is
- * necessary for some modules, e.g. Boost.
- *
- * @return
- *   An array of domain names.
- */
-function cdn_get_domains() {
-  $domains = array();
-
-  // Origin Pull mode domains.
-  if (variable_get(CDN_MODE_VARIABLE, FALSE) == CDN_MODE_BASIC) {
-    cdn_load_include('basic');
-    $mapping = cdn_basic_get_mapping();
-    $lines = preg_split("/[\n\r]+/", $mapping, -1, PREG_SPLIT_NO_EMPTY);
-    foreach ($lines as $line) {
-      // Ignore empty lines.
-      $line = trim($line);
-      if (empty($line)) {
-        continue;
-      }
-
-      // Parse this line. It may or may not limit the CDN URL to a list of
-      // file extensions.
-      $parts = explode('|', $line);
-      // It may also list more than one domain.
-      foreach (explode(' ', $parts[0]) as $part) {
-        // Remove white space.
-        $part = trim($part);
-        // Allow for protocol-relative domains. We prepend "http:", otherwise
-        // parse_url() won't return anything.
-        if (strpos($part, '//') === 0) {
-          $part = 'http:' . $part;
-        }
-        $domains[] = parse_url($part, PHP_URL_HOST);
-      }
-    }
-  }
-
-  return array_unique($domains);
-}
 
 /**
  * Check if a Drupal path should serve files from the CDN (i.e.: is the Drupal

@@ -13,3 +13,8 @@ services:
     arguments: ['@cache_tags.invalidator']
     tags:
       - { name: event_subscriber }
+  cdn.html_response_subscriber:
+    class: Drupal\cdn\EventSubscriber\HtmlResponseSubscriber
+    arguments: ['@cdn.settings']
+    tags:
+      - { name: event_subscriber }
