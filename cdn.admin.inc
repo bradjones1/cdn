@@ -107,35 +107,6 @@ function cdn_admin_details_form($form, &$form_state) {
     '#suffix' => '</div>',
   );
 
-  //
-  // File Conveyor mode settings.
-  //
-
-  $form['settings'][CDN_ADVANCED_PID_FILE_VARIABLE] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('PID file'),
-    '#description'   => _cdn_help('admin-details-mode-fc-pid') . t('Full path to File Conveyor\'s PID file.'),
-    '#size'          => 60,
-    '#default_value' => variable_get(CDN_ADVANCED_PID_FILE_VARIABLE, ''),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_ADVANCED),
-      ),
-    ),
-  );
-  $form['settings'][CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Synced files database'),
-    '#description'   => _cdn_help('admin-details-mode-fc-db') . t('Full path to File Conveyor\'s synced files database file.'),
-    '#size'          => 60,
-    '#default_value' => variable_get(CDN_ADVANCED_SYNCED_FILES_DB_VARIABLE, ''),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="' . CDN_MODE_VARIABLE . '"]' => array('value' => CDN_MODE_ADVANCED),
-      ),
-    ),
-  );
-
   return system_settings_form($form);
 }
 
