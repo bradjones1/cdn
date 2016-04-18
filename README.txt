@@ -2,29 +2,27 @@
 Description
 -----------
 This module provide easy Content Delivery Network integration for Drupal sites.
-It alters file URLs, so that files are downloaded from a CDN instead of your
-web server.
+It alters file URLs, so that files/assets (CSS, JS, images, fonts, videos  …)
+are downloaded from a CDN instead of your web server.
+
+It does *not* put your entire website behind a CDN.
 
 Only "Origin Pull" CDNs are supported. These are CDNs that only require you to
 replace the domain name with another domain name. The CDN will then
-automatically fetch (pull) the files from your server (the origin).
+automatically fetch (pull) the files from your server (the origin). Nowadays
+pretty much every CDN is an Origin Pull CDN (2015 and later).
 
 The CDN module aims to do only one thing and do it well: altering URLs to
-point to files on CDNs.
-However, in later versions, it does as much as possible to make CDN
-integration frictionless:
+point to files on CDNs. It supports:
     • Any sort of CDN mapping
-    • optimal Far Future expiration (http://drupal.org/node/974350)
-        - CORS (http://drupal.org/node/982188)
-        - signed URLs prevent abuse
-        - disabled by default, automatically disabled when in maintenance mode
-        - *requires* a CDN or reverse proxy, not Apache/nginx/lighttpd/…!
-    • Advanced Help integration to guide you (http://drupal.org/node/1413162)
-    • DNS prefetching (http://drupal.org/node/982188)
-    • CSS aggregation (http://drupal.org/node/1428530)
+    • DNS prefetching
+    • CSS aggregation
     • auto-balance files over multiple CDNs (http://drupal.org/node/1452092)
     • … and many more details that are taken care of automatically
 
+Not yet ported:
+    • optimal Far Future expiration
+    • SEO: prevent origin pull CDN from serving HTML content, only allow assets
 
 Installation
 ------------
@@ -32,11 +30,7 @@ Installation
 
 2) Enable the module.
 
-3) Configure the CDN module. Either modify and import the cdn.settings.yml
-   configuration file manually or install the included CDN UI module to
-   configure it through a UI.
-
-4) Go to your CDN provider's control panel and set up a "CDN instance" (Amazon
+3) Go to your CDN provider's control panel and set up a "CDN instance" (Amazon
    CloudFront calls this a "distribution"). There, you will have to specify
    the origin server (Amazon CloudFront calls this a "custom origin"), which
    is simply the domain name of your Drupal site.
@@ -48,7 +42,7 @@ Installation
    Relevant links:
    - Amazon CloudFront: http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/CreatingDistributions.html?r=4212
 
-5) Optionally, you can create a CNAME alias to the delivery address on your
+4) Optionally, you can create a CNAME alias to the delivery address on your
    DNS server. This way, it's not immediately obvious from the links in the
    HTMl that you're using an external service (that's why it's also called a
    vanity domain name).
@@ -56,16 +50,10 @@ Installation
    domains will break things (because SSL certificates are bound to domain
    names).
 
-6) Enter the domain name (`http://d85nwn7m5gl3y.cloudfront.net`, or the vanity
-   domain/CNAME if you used that instead) at admin/settings/cdn/details. If
-   you want to support HTTPS transparently, it is recommended to enter it as
-   `//d85nwn7m5gl3y.cloudfront.net` instead — this is a protocol-relative URL.
-
-7) Go to "/admin/reports/status". The CDN module will report its status here.
-
-8) Enable the display of statistics at "admin/config/development/cdn", browse
-   your site with your root/admin (user id 1) account. The statistics will
-   show which files are served from the CDN!
+5) Configure the CDN module. Either modify and import the `cdn.settings.yml`
+   configuration file manually or install the included CDN UI module to
+   configure it through a UI. Provide the (vanity) domain name that your CDN
+   has given you (`d85nwn7m5gl3y.cloudfront.net` in our example).
 
 
 Cross-Origin Resource Sharing (CORS)
@@ -103,12 +91,6 @@ A: Yes. The CDN module won't break private files, they will continue to work
    each have their own way of doing this (there is no standard). So private
    files will continue to be served by Drupal, which may or may not be
    acceptable for your use case.
-
-Q: Why are JavaScript files not being served from the CDN?
-A: The answer can be found at "admin/config/development/cdn/other".
-
-Q: Why are CSS files not being served from the CDN?
-A: This may be caused by your theme: http://drupal.org/node/1061588.
 
 Q: Does this module only work with Apache or also with nginx, lighttpd, etc.?
 A: This module only affects HTML, so it doesn't matter which web server you
