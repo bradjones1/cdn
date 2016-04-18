@@ -147,6 +147,10 @@ class FileUrlGenerator {
     elseif (Unicode::substr($uri, 0, 2) === '//') {
       return FALSE;
     }
+    // The private:// stream wrapper is explicitly not supported.
+    elseif ($scheme === 'private') {
+      return FALSE;
+    }
 
     $request = $this->requestStack->getCurrentRequest();
 

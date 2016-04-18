@@ -65,9 +65,10 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'shipped file with querystring (e.g. in url() in CSS)' => ['core/misc/something.else?foo=bar&baz=qux', '//cdn.example.com/core/misc/something.else?foo=bar&baz=qux'],
       'shipped file with fragment (e.g. in url() in CSS)' => ['core/misc/something.else#llama', '//cdn.example.com/core/misc/something.else#llama'],
       'shipped file with querystring & fragment (e.g. in url() in CSS)' => ['core/misc/something.else?foo=bar&baz=qux#llama', '//cdn.example.com/core/misc/something.else?foo=bar&baz=qux#llama'],
-      'managed file (fallback)' => ['public://something.else', '//cdn.example.com/sites/default/files/something.else'],
-      'managed file (simple)' => ['public://simple.css', '//static.example.com/sites/default/files/simple.css'],
-      'managed file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/sites/default/files/auto-balanced.png'],
+      'managed public public file (fallback)' => ['public://something.else', '//cdn.example.com/sites/default/files/something.else'],
+      'managed public public file (spublic public imple)' => ['public://simple.css', '//static.example.com/sites/default/files/simple.css'],
+      'managed public public file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/sites/default/files/auto-balanced.png'],
+      'managed private file (fallback)' => ['private://something.else', FALSE],
     ];
 
     $cases_subdir = [
@@ -79,9 +80,10 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'shipped file with querystring (e.g. in url() in CSS)' => ['core/misc/something.else?foo=bar&baz=qux', '//cdn.example.com/subdir/core/misc/something.else?foo=bar&baz=qux'],
       'shipped file with fragment (e.g. in url() in CSS)' => ['core/misc/something.else#llama', '//cdn.example.com/subdir/core/misc/something.else#llama'],
       'shipped file with querystring & fragment (e.g. in url() in CSS)' => ['core/misc/something.else?foo=bar&baz=qux#llama', '//cdn.example.com/subdir/core/misc/something.else?foo=bar&baz=qux#llama'],
-      'managed file (fallback)' => ['public://something.else', '//cdn.example.com/subdir/sites/default/files/something.else'],
-      'managed file (simple)' => ['public://simple.css', '//static.example.com/subdir/sites/default/files/simple.css'],
-      'managed file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/subdir/sites/default/files/auto-balanced.png'],
+      'managed public file (fallback)' => ['public://something.else', '//cdn.example.com/subdir/sites/default/files/something.else'],
+      'managed public file (simple)' => ['public://simple.css', '//static.example.com/subdir/sites/default/files/simple.css'],
+      'managed public file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/subdir/sites/default/files/auto-balanced.png'],
+      'managed private file (fallback)' => ['private://something.else', FALSE],
     ];
 
     $cases = [];
@@ -128,7 +130,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       });
     $stream_wrapper_manager = $this->prophesize(StreamWrapperManagerInterface::class);
     $stream_wrapper_manager->getWrappers(StreamWrapperInterface::LOCAL)
-      ->willReturn(['public' => TRUE]);
+      ->willReturn(['public' => TRUE, 'private' => TRUE]);
     $stream_wrapper_manager->getViaUri(Argument::that(function ($uri) {
       return substr($uri, 0, 9) === 'public://';
     }))
