@@ -141,7 +141,7 @@ class CdnSettingsForm extends ConfigFormBase {
     ];
     $form['mapping']['advanced'] = [
       '#type' => 'item',
-      '#markup' => '<em>' . $this->t('Not configurable through the UI. Modify <code>cdn.settings.yml</code> directly, and <a href=":url">import it</a>. It is safe to edit all other settings via the UI.', [':url' => Url::fromRoute('config.import_single')->toString(TRUE)->getGeneratedUrl()]) . '</em>',
+      '#markup' => '<em>' . $this->t('Not configurable through the UI. Modify <code>cdn.settings.yml</code> directly, and <a href=":url">import it</a>. It is safe to edit all other settings via the UI.', [':url' => 'https://www.drupal.org/documentation/administer/config']) . '</em>',
       '#states' => [
         'visible' => [
           ':input[name="mapping[type]"]' => ['value' => 'advanced'],
