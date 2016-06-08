@@ -475,41 +475,6 @@ class CDNImageTestCase extends CDNUnitTestCase {
   }
 }
 
-class CDNCssUrlTestCase extends CDNWebTestCase {
-  public static function getInfo() {
-    return array(
-      'name' => 'CSS URLs',
-      'description' => 'Verify URLs in CSS files are rewritten properly.',
-      'group' => 'CDN',
-    );
-  }
-
-  function setUp() {
-    parent::setUp();
-    $this->loadFile('cdn.basic.css.inc');
-    variable_set(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-    variable_set(CDN_BASIC_FARFUTURE_VARIABLE, TRUE);
-  }
-
-  // Makes sure the URL components are preserved.
-  function testCssUrl() {
-    global $base_url;
-    $css_info = array(
-      array(
-        'type' => 'file',
-        'data' => drupal_get_path('module', 'cdn') . '/tests/css/orig/url.css',
-      ),
-    );
-    try {
-      // Make sure the URL in the supplied CSS file matches what we expect.
-      // trim() is needed to avoid issues with differences in newlines.
-      $this->assertEqual(trim(file_get_contents(_cdn_build_css_cache($css_info))), '.home{background:url('. $base_url . '/' . drupal_get_path('module', 'cdn') . '/tests/css/orig/geo-md-webfont.eot?#iefix);}');
-    } catch (Exception $exc) {
-      $this->fail($exc);
-    }
-  }
-}
-
 class CDNSEOTestCase extends CDNUnitTestCase {
   public static function getInfo() {
     return array(
