@@ -111,47 +111,6 @@ function cdn_admin_details_form($form, &$form_state) {
 }
 
 /**
- * Form definition; other settings.
- */
-function cdn_admin_other_settings_form($form, &$form_state) {
-  $form = array();
-  _cdn_settings_form_prepare($form, $form_state);
-
-
-
-  $form['cdn_seo'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('SEO: duplicate content prevention'),
-    '#description' => t(
-      "By default most CDNs will cache full HTML pages if accessed. This means
-      that a copy of your site may appear in search engines. This is confusing, unprofessional and potentially bad for SEO.
-      <br />
-      <em>Duplicate content prevention</em> is enabled by default and ensures the CDN will redirect users to your actual ('canonical') site."
-    )
-  );
-  $form['cdn_seo'][CDN_SEO_REDIRECT_VARIABLE] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable duplicate content prevention'),
-    '#default_value' => variable_get(CDN_SEO_REDIRECT_VARIABLE, CDN_SEO_REDIRECT_DEFAULT),
-  );
-  $form['cdn_seo'][CDN_SEO_USER_AGENTS_VARIABLE] = array(
-    '#type' => 'textarea',
-    '#title' => t('CDN user agents'),
-    '#description' => t(
-      'A case-insensitive list of CDN user agents. These will be substring-matched against the detected user agent of a request. One per line.'
-    ),
-    '#default_value' => variable_get(CDN_SEO_USER_AGENTS_VARIABLE, CDN_SEO_USER_AGENTS_DEFAULT),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="' . CDN_SEO_REDIRECT_VARIABLE . '"]' => array('checked' => TRUE),
-      )
-    ),
-  );
-
-  return system_settings_form($form);
-}
-
-/**
  * Default validate callback for the details form.
  */
 function cdn_admin_details_form_validate($form, &$form_state) {

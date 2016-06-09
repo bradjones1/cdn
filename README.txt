@@ -18,11 +18,11 @@ point to files on CDNs. It supports:
     • DNS prefetching
     • CSS aggregation
     • auto-balance files over multiple CDNs (http://drupal.org/node/1452092)
+    • SEO: prevent CDN from serving HTML and REST responses, only allow assets
     • … and many more details that are taken care of automatically
 
 Not yet ported:
     • optimal Far Future expiration
-    • SEO: prevent origin pull CDN from serving HTML content, only allow assets
 
 Installation
 ------------
@@ -54,6 +54,11 @@ Installation
    configuration file manually or install the included CDN UI module to
    configure it through a UI. Provide the (vanity) domain name that your CDN
    has given you (`d85nwn7m5gl3y.cloudfront.net` in our example).
+
+6) If your site is behind a reverse proxy such as Varnish, so that your stack
+   looks like: CDN <-> reverse proxy <-> web server, then you need to take extra
+   measures if you want to prevent duplicate content showing up on the CDN. See
+   \Drupal\cdn\StackMiddleware\DuplicateContentPreventionMiddleware for details.
 
 
 Cross-Origin Resource Sharing (CORS)

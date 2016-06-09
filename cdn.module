@@ -155,38 +155,6 @@ function cdn_menu() {
   return $items;
 }
 
-/**
- * Implements hook_boot().
- */
-function cdn_boot() {
-  // Bail if the status is "disabled" (i.e. don't when "enabled" or "testing").
-  if (variable_get(CDN_STATUS_VARIABLE, CDN_DISABLED) === CDN_DISABLED) {
-    return;
-  }
-
-  // Inspired by common.inc/_drupal_bootstrap_full().
-  require_once DRUPAL_ROOT . '/includes/common.inc';
-  require_once DRUPAL_ROOT . '/' . variable_get('path_inc', 'includes/path.inc');
-  require_once DRUPAL_ROOT . '/includes/unicode.inc';
-
-  // Prevent the CDN from returning content pages. We only want the CDN to
-  // return static files like images, CSS files, JavaScript files, etc. By
-  // default it will return anything. Since those static files aren't served by
-  // Drupal.
-  $redirect_url = _cdn_seo_should_redirect(current_path());
-  if ($redirect_url !== FALSE) {
-    // A 301 is SEO friendly, as it tells the search engine what the canonical
-    // URL is for this content.
-    header('HTTP/1.0 301 Moved Permanently');
-    // @see http://googlewebmastercentral.blogspot.com/2011/06/supporting-relcanonical-http-headers.html
-    header('Link: <' . $redirect_url . '>; rel="canonical"');
-    header('Location: ' . $redirect_url);
-
-    // To ensure this redirect occurs immediately we don't use drupal_exit().
-    exit();
-  }
-}
-
 
 //----------------------------------------------------------------------------
 // Public functions.
@@ -210,46 +178,4 @@ function cdn_load_include($basename) {
  */
 function _cdn_ufi_deployment_id($path) {
   return CDN_DEPLOYMENT_ID;
-}
-
-/**
- * Determines whether a redirect should be performed for the given path for SEO
- * considerations (prevent duplicate HTML content on the CDN), and if so, the
- * URL to which the requesting User Agent should be redirected.
- *
- * @param $path
- *   The path for which to determine the redirect URL.
- * @return
- *   FALSE if no redirect should occur, or the URL to redirect to.
- */
-function _cdn_seo_should_redirect($path) {
-  if (variable_get(CDN_SEO_REDIRECT_VARIABLE, CDN_SEO_REDIRECT_DEFAULT)) {
-    // If the path ends in an extension that is not in the list of forbidden
-    // extensions, then return FALSE to indicate that no redirect should occur.
-    // The rationale is: menu_get_item() doesn't allow us to detect whether a
-    // page callback will generate a file; hence we (ab)use this heuristic.
-    // An added benefit is that we don't need the menu system to be loaded,
-    // meaning that we can do all of this during hook_boot(), meaning we can use
-    // this same code for cached pages, which we need to support anyway.
-    // @todo: improve Drupal core so that contrib modules can know whether
-    // certain menu callbacks generate files or not.
-    $forbidden_extensions = variable_get(CDN_SEO_FORBIDDEN_EXTENSIONS_VARIABLE, CDN_SEO_FORBIDDEN_EXTENSIONS_DEFAULT);
-    $extension = drupal_strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    if (!empty($extension) && !in_array($extension, explode("\n", $forbidden_extensions))) {
-      return FALSE;
-    }
-
-    // Use case-insensitive substring matching to match the current User-Agent
-    // to the list of CDN user agents.
-    if (isset($_SERVER['HTTP_USER_AGENT'])) {
-      $ua = drupal_strtolower($_SERVER['HTTP_USER_AGENT']);
-      $cdn_user_agents = explode("\n", drupal_strtolower(variable_get(CDN_SEO_USER_AGENTS_VARIABLE, CDN_SEO_USER_AGENTS_DEFAULT)));
-      foreach ($cdn_user_agents as $cdn_ua) {
-        if (strstr($ua, trim($cdn_ua))) {
-          return url($path, array('absolute' => TRUE));
-        }
-      }
-    }
-  }
-  return FALSE;
 }

@@ -8,14 +8,6 @@
 // Variables and values.
 define('CDN_DRUPAL_ROOT_VARIABLE', 'cdn_drupal_root');
 
-// Variables for SEO duplicate content prevention.
-define('CDN_SEO_REDIRECT_VARIABLE', 'cdn_seo_redirect');
-define('CDN_SEO_REDIRECT_DEFAULT', TRUE);
-define('CDN_SEO_USER_AGENTS_VARIABLE', 'cdn_seo_user_agents');
-define('CDN_SEO_USER_AGENTS_DEFAULT', "Amazon Cloudfront\nAkamai");
-define('CDN_SEO_FORBIDDEN_EXTENSIONS_VARIABLE', "cdn_seo_forbidden_extensions");
-define('CDN_SEO_FORBIDDEN_EXTENSIONS_DEFAULT', "html\nhtm\nphp");
-
 // Variables for basic mode.
 define('CDN_BASIC_FARFUTURE_VARIABLE', 'cdn_farfuture_status');
 define('CDN_BASIC_FARFUTURE_DEFAULT', FALSE);
