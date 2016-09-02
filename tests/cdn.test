@@ -203,36 +203,6 @@ class CDNGeneralTestCase extends CDNUnitTestCase {
   }
 }
 
-class CDNOriginPullTestCase extends CDNUnitTestCase {
-  public static function getInfo() {
-    return array(
-      'name' => 'Origin Pull mode',
-      'description' => 'Verify Origin Pull mode-related functionality.',
-      'group' => 'CDN',
-    );
-  }
-
-  function setUp() {
-    parent::setUp();
-    $this->loadFile('cdn.basic.inc');
-    $this->loadFile('cdn.basic.farfuture.inc');
-    $this->variableSet(CDN_MODE_VARIABLE, CDN_MODE_BASIC);
-  }
-
-  function testFileUrlAlterHook() {
-    // Provide a very basic CDN mapping.
-    $this->variableSet(CDN_BASIC_MAPPING_VARIABLE, 'http://cdn-a.com');
-
-    $filename = 'újjáépítésérol — 100% in B&W.jpg';
-    $uri = "public://$filename";
-    $this->touchFile($uri);
-
-    cdn_file_url_alter($uri);
-    $expected = 'http://cdn-a.com' . base_path() . variable_get('file_public_path', conf_path() . '/files') . '/' . drupal_encode_path($filename);
-    $this->assertIdentical($uri, $expected, 'cdn_file_url_alter() works correctly.');
-  }
-}
-
 class CDNOriginPullFarFutureTestCase extends CDNUnitTestCase {
   public static function getInfo() {
     return array(

@@ -69,6 +69,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'managed public public file (spublic public imple)' => ['public://simple.css', '//static.example.com/sites/default/files/simple.css'],
       'managed public public file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/sites/default/files/auto-balanced.png'],
       'managed private file (fallback)' => ['private://something.else', FALSE],
+      'unicode' => ['public://újjáépítésérol — 100% in B&W.jpg', '//img1.example.com/sites/default/files/újjáépítésérol — 100% in B&W.jpg'],
     ];
 
     $cases_subdir = [
@@ -84,6 +85,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'managed public file (simple)' => ['public://simple.css', '//static.example.com/subdir/sites/default/files/simple.css'],
       'managed public file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/subdir/sites/default/files/auto-balanced.png'],
       'managed private file (fallback)' => ['private://something.else', FALSE],
+      'unicode' => ['public://újjáépítésérol — 100% in B&W.jpg', '//img1.example.com/subdir/sites/default/files/újjáépítésérol — 100% in B&W.jpg'],
     ];
 
     $cases = [];
@@ -98,7 +100,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
   }
 
   /**
-   * Creates a BigPipeResponseAttachmentsProcessor with mostly dummies.
+   * Creates a FileUrlGenerator with mostly dummies.
    *
    * @param string $base_path
    *   The base path to let Request::getBasePath() return.
