@@ -54,7 +54,7 @@ class CdnSettingsForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => $this->t('Status'),
       '#title_display' => 'invisible',
-      '#description' => t(
+      '#description' => $this->t(
         'If you do not want to use the CDN to serve files to your visitors yet,
         but you do want to see if it is working well for your site, then enable
         testing mode.<br />Users will only get the files from the CDN if they

@@ -3,6 +3,7 @@ status: 0
 mapping:
   type: simple
   domain: null
+  conditions: []
 
 # Serve all files from a single CDN:
 #
