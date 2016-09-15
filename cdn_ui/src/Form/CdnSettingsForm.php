@@ -8,6 +8,7 @@ namespace Drupal\cdn_ui\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 
 /**
@@ -149,6 +150,19 @@ class CdnSettingsForm extends ConfigFormBase {
       ],
     ];
 
+    $form['farfuture'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Forever cacheable files'),
+      '#group' => 'cdn_settings',
+      '#tree' => TRUE,
+    ];
+    $form['farfuture']['status'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Make files cacheable forever'),
+      '#description' => $this->t('Better performance thanks to better caching of files by the visitor. When a file changes a different URL is used, to ensure instantaneous updates for your visitors.'),
+      '#default_value' => $config->get('farfuture.status'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -181,6 +195,9 @@ class CdnSettingsForm extends ConfigFormBase {
         $config->set('mapping.conditions', $conditions);
       }
     }
+
+    // Vertical tab: 'Forever cacheable files'.
+    $config->set('farfuture.status', (bool) $form_state->getValue(['farfuture', 'status']));
 
     $config->save();
 

@@ -44,6 +44,13 @@ class CdnSettings {
   }
 
   /**
+   * @return bool
+   */
+  public function farfutureIsEnabled() {
+    return $this->rawSettings->get('farfuture.status');
+  }
+
+  /**
    * Returns the lookup table.
    *
    * @return array

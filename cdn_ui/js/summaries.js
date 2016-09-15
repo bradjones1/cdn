@@ -30,6 +30,9 @@
         }
       });
 
+      $('[data-drupal-selector="edit-farfuture"]').drupalSetSummary(function () {
+        return document.querySelector('input[name="farfuture[status]"]').checked ? Drupal.t('Enabled') : Drupal.t('Disabled');
+      });
     }
   };
 

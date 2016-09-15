@@ -2,16 +2,16 @@
 
 namespace Drupal\cdn\Tests;
 
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Site\Settings;
 use Drupal\file\Entity\File;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * Tests that uninstalling the CDN module causes CDN file URLs to disappear.
- *
  * @group cdn
  */
-class CdnUninstallTest extends BrowserTestBase {
+class CdnIntegrationTest extends BrowserTestBase {
 
   /**
    * Modules to enable.
@@ -65,9 +65,14 @@ class CdnUninstallTest extends BrowserTestBase {
     $this->config('cdn.settings')
       ->set('mapping', ['type' => 'simple', 'domain' => 'cdn'])
       ->set('status', 2)
+      // Disable the farfuture functionality: simpler file URL assertions.
+      ->set('farfuture', ['status' => FALSE])
       ->save();
   }
 
+  /**
+   * Tests that uninstalling the CDN module causes CDN file URLs to disappear.
+   */
   public function testUninstall() {
     $session = $this->getSession();
 
@@ -83,6 +88,25 @@ class CdnUninstallTest extends BrowserTestBase {
     $this->drupalGet('/node/1');
     $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'));
     $this->assertSession()->responseContains('src="' . base_path() . $this->siteDirectory . '/files/druplicon.png"');
+  }
+
+  /**
+   * Tests that the cdn.farfuture.download route/controller work as expected.
+   */
+  public function testFarfuture() {
+    $drupal_js_mtime = filemtime(DRUPAL_ROOT . '/core/misc/drupal.js');
+    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime. '/core/misc/drupal.js', \Drupal::service('private_key')->get() . Settings::getHashSalt());
+
+    $this->drupalGet('/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js');
+    $this->assertSession()->statusCodeEquals(200);
+    // Assert presence of headers that \Drupal\cdn\CdnFarfutureController sets.
+    $this->assertSame('Wed, 20 Jan 1988 04:20:42 GMT', $this->getSession()->getResponseHeader('Last-Modified'));
+    // Assert presence of headers that Symfony's BinaryFileResponse sets.
+    $this->assertSame('bytes', $this->getSession()->getResponseHeader('Accept-Ranges'));
+
+    // Any chance to the security token should cause a 403.
+    $this->drupalGet('/cdn/farfuture/' . substr($drupal_js_security_token, 1) . '/' . $drupal_js_mtime . '/core/misc/drupal.js');
+    $this->assertSession()->statusCodeEquals(403);
   }
 
 }

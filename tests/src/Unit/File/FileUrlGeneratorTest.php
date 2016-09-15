@@ -4,7 +4,10 @@ namespace Drupal\Tests\cdn\Unit\File;
 
 use Drupal\cdn\CdnSettings;
 use Drupal\cdn\File\FileUrlGenerator;
+use Drupal\Component\Utility\Crypt;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\File\FileSystem;
+use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
@@ -20,6 +23,20 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @group cdn
  */
 class FileUrlGeneratorTest extends UnitTestCase {
+
+  static protected $privateKey = 'super secret key that really is just some string';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp();
+
+    $settings = [
+      'hash_salt' => $this->randomMachineName(),
+    ];
+    new Settings($settings);
+  }
 
   /**
    * @covers ::generate
@@ -49,6 +66,9 @@ class FileUrlGeneratorTest extends UnitTestCase {
               'extensions' => ['jpg', 'jpeg', 'png'],
             ],
           ]
+        ],
+        'farfuture' => [
+          'status' => FALSE,
         ],
       ],
     ]);
@@ -100,6 +120,28 @@ class FileUrlGeneratorTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::generate
+   */
+  public function testGenerateFarfuture() {
+    $gen = $this->createFileUrlGenerator('', [
+      'status' => 2,
+      'mapping' => [
+        'type' => 'simple',
+        'domain' => 'cdn.example.com',
+        'conditions' => [],
+      ],
+      'farfuture' => [
+        'status' => TRUE,
+      ],
+    ]);
+
+    $this->assertSame('//cdn.example.com/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
+    $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
+    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime. '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
+    $this->assertSame('//cdn.example.com/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
+  }
+
+  /**
    * Creates a FileUrlGenerator with mostly dummies.
    *
    * @param string $base_path
@@ -141,17 +183,73 @@ class FileUrlGeneratorTest extends UnitTestCase {
         $current_uri = $args[0];
         return $s;
       });
+    $private_key = $this->prophesize(PrivateKey::class);
+    $private_key->get()
+      ->willReturn(static::$privateKey);
 
     return new FileUrlGenerator(
+      $this->root,
       new FileSystem(
         $this->prophesize(StreamWrapperManagerInterface::class)->reveal(),
-        new Settings([]),
+        Settings::getInstance(),
         $this->prophesize(LoggerInterface::class)->reveal()
       ),
       $stream_wrapper_manager->reveal(),
       $request_stack->reveal(),
+      $private_key->reveal(),
       new CdnSettings($this->getConfigFactoryStub(['cdn.settings' => $raw_config]))
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Overridden, because the way ImmutableConfig::get() is mocked, does not
+   * match the actual implementation, which then causes tests to fail.
+   */
+  public function getConfigFactoryStub(array $configs = array()) {
+    $config_get_map = array();
+    $config_editable_map = array();
+    // Construct the desired configuration object stubs, each with its own
+    // desired return map.
+    foreach ($configs as $config_name => $map) {
+      $get = function ($key) use ($map) {
+        $parts = explode('.', $key);
+        if (count($parts) == 1) {
+          return isset($map[$key]) ? $map[$key] : NULL;
+        }
+        else {
+          $value = NestedArray::getValue($map, $parts, $key_exists);
+          return $key_exists ? $value : NULL;
+        }
+      };
+
+      $immutable_config_object = $this->getMockBuilder('Drupal\Core\Config\ImmutableConfig')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $immutable_config_object->expects($this->any())
+        ->method('get')
+        ->willReturnCallback($get);
+      $config_get_map[] = array($config_name, $immutable_config_object);
+
+      $mutable_config_object = $this->getMockBuilder('Drupal\Core\Config\Config')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $mutable_config_object->expects($this->any())
+        ->method('get')
+        ->willReturnCallback($get);
+      $config_editable_map[] = array($config_name, $mutable_config_object);
+    }
+    // Construct a config factory with the array of configuration object stubs
+    // as its return map.
+    $config_factory = $this->getMock('Drupal\Core\Config\ConfigFactoryInterface');
+    $config_factory->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap($config_get_map));
+    $config_factory->expects($this->any())
+      ->method('getEditable')
+      ->will($this->returnValueMap($config_editable_map));
+    return $config_factory;
   }
 
 }

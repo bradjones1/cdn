@@ -33,7 +33,11 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
   protected function setUp() {
     parent::setUp();
     $this->installConfig(['system', 'cdn']);
-    $this->config('cdn.settings')->set('mapping', ['type' => 'simple', 'domain' => 'cdn-a.com'])->save();
+    $this->config('cdn.settings')
+      ->set('mapping', ['type' => 'simple', 'domain' => 'cdn-a.com'])
+      // Disable the farfuture functionality: simpler file URL assertions.
+      ->set('farfuture', ['status' => FALSE])
+      ->save();
     $this->installEntitySchema('file');
     $this->installSchema('file', ['file_usage']);
 

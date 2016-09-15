@@ -55,3 +55,6 @@ mapping:
 #         - cdn-c.com
 #       conditions:
 #         extensions: [jpg, jpeg, png]
+
+farfuture:
+  status: true
