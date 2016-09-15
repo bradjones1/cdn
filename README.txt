@@ -60,29 +60,6 @@ Installation
    \Drupal\cdn\StackMiddleware\DuplicateContentPreventionMiddleware for details.
 
 
-Cross-Origin Resource Sharing (CORS)
-------------------------------------
-By integrating a CDN, and depending on your actual configuration, resources
-might be served from (a) domain(s) different than your site's domain. This
-could cause browsers to refuse to use certain resources since they violate the
-same-origin policy. This primarily affects font and JavaScript files.
-
-To circumvent this, you can configure your server to serve those files with an
-additional Access-Control-Allow-Origin header, containing a space-separated
-list of domains that are allowed to make cross-domain use of a resource. Note
-that this will only work if your CDN provider does not strip this header.
-
-For server-specific instructions on adding this header, see
-http://www.w3.org/wiki/CORS_Enabled#At_the_HTTP_Server_level...
-
-If you are unable to add this header, or if your CDN provider ignores it, you
-can add the files to the CDN module's blacklist to exclude them being served
-by the CDN, or in the case of fonts, you can embed them in stylesheets via
-data URIs (see https://developer.mozilla.org/en/data_URIs).
-
-The "Forever cacheable files" functionality takes care of this automatically!
-
-
 FAQ
 ---
 Q: Is the CDN module compatible with Drupal's page caching?
@@ -99,29 +76,6 @@ A: Yes. The CDN module won't break private files, they will continue to work
 Q: Does this module only work with Apache or also with nginx, lighttpd, etc.?
 A: This module only affects HTML, so it doesn't matter which web server you
    use!
-
-
-No cookies should be sent to the CDN
-------------------------------------
-Please note though that you should ensure no cookies are sent to the CDN: this
-would slow down HTTP requests to the CDN (since the requests become larger:
-they piggyback the cookie data).
-You can achieve this in two ways:
-  1) When you are using cookies that are bound to your www subdomain only
-     (i.e. not an example.com, but on www.example.com), you can safely use
-     another subdomain for your CDN.
-  2) When you are using cookies on your main domain (example.com), you'll have
-     to use a completely different domain for the CDN if you don't want
-     cookies to be sent.
-     So then you should use the CDN's URL (e.g. myaccount.cdn.com). But now
-     you should be careful to avoid JavaScript issues: you may run into "same
-     origin policy" problems. See admin/config/development/cdn/other for
-     details.
-
-Drupal 7 no longer sets cookies for anonymous users.
-
-If you just use the CDN's URL (e.g. myaccount.cdn.com), all cookie issues are
-avoided automatically.
 
 
 The "Forever cacheable files" (farfuture) setting

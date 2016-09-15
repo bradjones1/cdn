@@ -1,18 +1,6 @@
 <?php
 
 /**
- * @file
- * Implements the core hooks, public and private functions.
- */
-
-
-require_once('cdn.constants.inc');
-
-
-//----------------------------------------------------------------------------
-// Drupal core.
-
-/**
  * Implements hook_file_url_alter().
  */
 function cdn_file_url_alter(&$uri) {
@@ -25,15 +13,4 @@ function cdn_file_url_alter(&$uri) {
   if ($result) {
     $uri = $result;
   }
-}
-
-
-//----------------------------------------------------------------------------
-// Public functions.
-
-/**
- * Helper function to efficiently load include files for this module.
- */
-function cdn_load_include($basename) {
-  module_load_include('inc', 'cdn', "cdn.$basename");
 }
