@@ -2,32 +2,34 @@
 Description
 -----------
 This module provide easy Content Delivery Network integration for Drupal sites.
-It alters file URLs, so that files/assets (CSS, JS, images, fonts, videos  …)
-are downloaded from a CDN instead of your web server.
+It alters file URLs, so that files (CSS, JS, images, fonts, videos …) are
+downloaded from a CDN instead of your web server.
 
 It does *not* put your entire website behind a CDN.
 
 Only "Origin Pull" CDNs are supported. These are CDNs that only require you to
 replace the domain name with another domain name. The CDN will then
 automatically fetch (pull) the files from your server (the origin). Nowadays
-pretty much every CDN is an Origin Pull CDN (2015 and later).
+pretty much every CDN is an Origin Pull CDN.
 
 The CDN module aims to do only one thing and do it well: altering URLs to
 point to files on CDNs. It supports:
     • Any sort of CDN mapping
+    • DNS prefetching: lets browsers connect to the CDN faster
+    • SEO: prevents CDN from serving HTML and REST responses, only allow files
     • Forever cacheable files (optimal far future expiration)
-    • DNS prefetching
-    • CSS aggregation
-    • auto-balance files over multiple CDNs (http://drupal.org/node/1452092)
-    • SEO: prevent CDN from serving HTML and REST responses, only allow assets
+    • Auto-balancing files over multiple CDNs
     • … and many more details that are taken care of automatically
+
+The "CDN UI" module is included, and can be used for configuring the CDN module.
+Once set up, it can be uninstalled.
 
 
 Installation
 ------------
 1) Place this module directory in your "modules" folder
 
-2) Enable the module.
+2) Install the module.
 
 3) Go to your CDN provider's control panel and set up a "CDN instance" (Amazon
    CloudFront calls this a "distribution"). There, you will have to specify
@@ -62,7 +64,7 @@ Installation
 
 FAQ
 ---
-Q: Is the CDN module compatible with Drupal's page caching?
+Q: Is the CDN module compatible with Drupal's Page Cache?
 A: Yes.
 
 Q: Is the CDN module compatible with Drupal's "private files" functionality?
@@ -74,8 +76,7 @@ A: Yes. The CDN module won't break private files, they will continue to work
    acceptable for your use case.
 
 Q: Does this module only work with Apache or also with nginx, lighttpd, etc.?
-A: This module only affects HTML, so it doesn't matter which web server you
-   use!
+A: This module only affects HTML, so it doesn't matter which web server you use!
 
 
 The "Forever cacheable files" (farfuture) setting
