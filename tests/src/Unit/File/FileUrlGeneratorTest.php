@@ -44,7 +44,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
    */
   public function testGenerate($base_path, $uri, $expected_result) {
     $gen = $this->createFileUrlGenerator($base_path, [
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'complex',
         'fallback_domain' => 'cdn.example.com',
@@ -124,7 +124,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
    */
   public function testGenerateFarfuture() {
     $gen = $this->createFileUrlGenerator('', [
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'simple',
         'domain' => 'cdn.example.com',

@@ -1,5 +1,5 @@
 langcode: en
-status: 0
+status: false
 mapping:
   type: simple
   domain: null

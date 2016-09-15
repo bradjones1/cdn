@@ -27,7 +27,7 @@ class CdnSettingsTest extends UnitTestCase {
     return [
       'simple, no conditions' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'simple',
             'domain' => 'cdn.example.com',
@@ -39,7 +39,7 @@ class CdnSettingsTest extends UnitTestCase {
       ],
       'simple, oone empty condition' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'simple',
             'domain' => 'cdn.example.com',
@@ -53,7 +53,7 @@ class CdnSettingsTest extends UnitTestCase {
       ],
       'simple, on, one condition' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'simple',
             'domain' => 'cdn.example.com',
@@ -71,7 +71,7 @@ class CdnSettingsTest extends UnitTestCase {
       ],
       'auto-balanced, on, no fallback' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'auto-balanced',
             'domains' => [
@@ -91,7 +91,7 @@ class CdnSettingsTest extends UnitTestCase {
       ],
       'complex containing two simple mappings, with fallback' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'complex',
             'fallback_domain' => 'cdn.example.com',
@@ -125,7 +125,7 @@ class CdnSettingsTest extends UnitTestCase {
       ],
       'complex containing two simple mappings, without fallback' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'complex',
             'fallback_domain' => NULL,
@@ -158,7 +158,7 @@ class CdnSettingsTest extends UnitTestCase {
       ],
       'complex containing one simple and one auto-balanced mapping, without fallback' => [
         [
-          'status' => 2,
+          'status' => TRUE,
           'mapping' => [
             'type' => 'complex',
             'fallback_domain' => NULL,
@@ -202,7 +202,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testAbsoluteUrlAsSimpleDomain() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'simple',
         'domain' => 'http://cdn.example.com'
@@ -217,7 +217,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testProtocolRelativeUrlAsSimpleDomain() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'simple',
         'domain' => '//cdn.example.com'
@@ -232,7 +232,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testAbsoluteUrlAsComplexFallbackDomain() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'complex',
         'fallback_domain' => 'http://cdn.example.com'
@@ -247,7 +247,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testProtocolRelativeUrlAsComplexFallbackDomain() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'complex',
         'fallback_domain' => '//cdn.example.com'
@@ -262,7 +262,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testAbsoluteUrlAsAutobalancedDomain() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'auto-balanced',
         'domains' => [
@@ -285,7 +285,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testProtocolRelativeUrlAsAutobalancedDomain() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'auto-balanced',
         'domains' => [
@@ -308,7 +308,7 @@ class CdnSettingsTest extends UnitTestCase {
    */
   public function testAutobalancedWithoutConditions() {
     $this->createCdnSettings([
-      'status' => 2,
+      'status' => TRUE,
       'mapping' => [
         'type' => 'auto-balanced',
         'fallback_domain' => NULL,

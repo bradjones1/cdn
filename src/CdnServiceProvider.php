@@ -34,7 +34,7 @@ class CdnServiceProvider implements ServiceProviderInterface {
    * @return bool
    */
   protected function cdnStatusIsEnabled() {
-    return BootstrapConfigStorageFactory::get()->read('cdn.settings')['status'] !== 0;
+    return BootstrapConfigStorageFactory::get()->read('cdn.settings')['status'] === TRUE;
   }
 
 }

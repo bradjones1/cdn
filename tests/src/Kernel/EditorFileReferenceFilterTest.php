@@ -47,11 +47,11 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
   }
 
   protected function disableCDN() {
-    $this->config('cdn.settings')->set('status', 0)->save();
+    $this->config('cdn.settings')->set('status', FALSE)->save();
   }
 
   protected function enableCDN() {
-    $this->config('cdn.settings')->set('status', 2)->save();
+    $this->config('cdn.settings')->set('status', TRUE)->save();
   }
 
   /**

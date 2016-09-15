@@ -64,7 +64,7 @@ class CdnIntegrationTest extends BrowserTestBase {
     // Configure CDN integration.
     $this->config('cdn.settings')
       ->set('mapping', ['type' => 'simple', 'domain' => 'cdn'])
-      ->set('status', 2)
+      ->set('status', TRUE)
       // Disable the farfuture functionality: simpler file URL assertions.
       ->set('farfuture', ['status' => FALSE])
       ->save();

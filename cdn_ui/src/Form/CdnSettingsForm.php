@@ -55,23 +55,18 @@ class CdnSettingsForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => $this->t('Status'),
       '#title_display' => 'invisible',
-      '#description' => $this->t(
-        'If you do not want to use the CDN to serve files to your visitors yet,
-        but you do want to see if it is working well for your site, then enable
-        testing mode.<br />Users will only get the files from the CDN if they
-        have the <a href=":perm-url"><em>Access files on the CDN when in testing
-        mode</em> permission</a>.',
-        [
-          ':perm-url' => Url::fromRoute('user.admin_permissions')->setOption('fragment', 'module-cdn_ui')->toString(TRUE)->getGeneratedUrl(),
-        ]
-      ),
       '#required' => TRUE,
       '#options' => [
         0 => $this->t('Disabled'),
-        1 => $this->t('Testing mode'),
         2 => $this->t('Enabled'),
       ],
       '#default_value' => $config->get('status'),
+    ];
+    $form['status']['status'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Serve files from CDN'),
+      '#description' => $this->t('Better performance thanks to better caching of files by the visitor. When a file changes a different URL is used, to ensure instantaneous updates for your visitors.'),
+      '#default_value' => $config->get('farfuture.status'),
     ];
 
     $form['mapping'] = [
@@ -173,7 +168,7 @@ class CdnSettingsForm extends ConfigFormBase {
     $config = $this->config('cdn.settings');
 
     // Vertical tab: 'Status'.
-    $config->set('status', $form_state->getValue('status'));
+    $config->set('status', (bool) $form_state->getValue('status'));
 
     // Vertical tab: 'Mapping'.
     if ($form_state->getValue(['mapping', 'type']) === 'simple') {
