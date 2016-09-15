@@ -3,14 +3,12 @@
 namespace Drupal\cdn\EventSubscriber;
 
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
-use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Invalidates cache tags & enables CSS aggregation when CDN config is saved.

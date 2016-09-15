@@ -1,15 +1,9 @@
 <?php
-/**
- * @file
- * Contains \Drupal\cdn_ui\Form\CdnSettingsForm.
- */
 
 namespace Drupal\cdn_ui\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Site\Settings;
-use Drupal\Core\Url;
 
 /**
  * Configure CDN settings for this site.

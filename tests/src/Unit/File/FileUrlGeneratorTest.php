@@ -65,7 +65,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
             'conditions' => [
               'extensions' => ['jpg', 'jpeg', 'png'],
             ],
-          ]
+          ],
         ],
         'farfuture' => [
           'status' => FALSE,
@@ -137,7 +137,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
 
     $this->assertSame('//cdn.example.com/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
     $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
-    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime. '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
+    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
     $this->assertSame('//cdn.example.com/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
   }
 
@@ -162,9 +162,9 @@ class FileUrlGeneratorTest extends UnitTestCase {
     $request_stack->getCurrentRequest()
       ->willReturn($request->reveal());
 
-    // @todo make this more elegant: the current URI is normally stored on
-    //       the PublicStream instance, but while it is prophesized, that does
-    //       not seem possible.
+    // @todo make this more elegant: the current URI is normally stored on the
+    //   PublicStream instance, but while it is prophesized, that does not seem
+    //   possible.
     $current_uri = '';
 
     $public_stream_wrapper = $this->prophesize(PublicStream::class);
@@ -178,7 +178,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
     $stream_wrapper_manager->getViaUri(Argument::that(function ($uri) {
       return substr($uri, 0, 9) === 'public://';
     }))
-      ->will(function($args) use (&$public_stream_wrapper, &$current_uri) {
+      ->will(function ($args) use (&$public_stream_wrapper, &$current_uri) {
         $s = $public_stream_wrapper->reveal();
         $current_uri = $args[0];
         return $s;

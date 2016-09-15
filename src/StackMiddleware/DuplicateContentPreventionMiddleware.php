@@ -83,9 +83,8 @@ class DuplicateContentPreventionMiddleware implements HttpKernelInterface {
    *
    * Hardcoded to avoid costly I/O.
    *
-   * @note To add more CDN user agents, file a feature request at https://www.drupal.org/node/add/project-issue/cdn
-   *
    * @var string[]
+   * @note To add more CDN user agents, file a feature request at https://www.drupal.org/node/add/project-issue/cdn
    */
   protected $cdnUserAgents = ['amazon cloudfront', 'akamai'];
 

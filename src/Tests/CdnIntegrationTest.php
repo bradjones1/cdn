@@ -95,7 +95,7 @@ class CdnIntegrationTest extends BrowserTestBase {
    */
   public function testFarfuture() {
     $drupal_js_mtime = filemtime(DRUPAL_ROOT . '/core/misc/drupal.js');
-    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime. '/core/misc/drupal.js', \Drupal::service('private_key')->get() . Settings::getHashSalt());
+    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', \Drupal::service('private_key')->get() . Settings::getHashSalt());
 
     $this->drupalGet('/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js');
     $this->assertSession()->statusCodeEquals(200);

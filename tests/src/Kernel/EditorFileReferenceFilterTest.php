@@ -46,26 +46,32 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $this->filters = $bag->getAll();
   }
 
-  protected function disableCDN() {
+  /**
+   * Enables CDN integration.
+   */
+  protected function disableCdn() {
     $this->config('cdn.settings')->set('status', FALSE)->save();
   }
 
-  protected function enableCDN() {
+  /**
+   * Disables CDN integration.
+   */
+  protected function enableCdn() {
     $this->config('cdn.settings')->set('status', TRUE)->save();
   }
 
   /**
    * Tests the editor file reference filter.
    *
-   * Verifies that it works as expected when CDN integration is enabled, but also
-   * when it is disabled: this ensures that we know whether core breaks.
+   * Verifies that it works as expected when CDN integration is enabled, but
+   * also when it is disabled: this ensures that we know whether core breaks.
    *
    * @see \Drupal\Tests\editor\Kernel\EditorFileReferenceFilterTest::testEditorFileReferenceFilter()
    */
-  function testEditorFileReferenceFilter() {
+  public function testEditorFileReferenceFilter() {
     $filter = $this->filters['editor_file_reference'];
 
-    $test = function($input) use ($filter) {
+    $test = function ($input) use ($filter) {
       return $filter->process($input, 'und');
     };
 
@@ -79,11 +85,11 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
-    $this->enableCDN();
+    $this->enableCdn();
     $expected_output = '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
-    $this->disableCDN();
+    $this->disableCdn();
 
     $this->assertTrue(TRUE, 'Two identical cases, must result in identical CDN file URLs.');
     $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
@@ -92,12 +98,12 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $expected_output .= '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
-    $this->enableCDN();
+    $this->enableCdn();
     $expected_output = '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $expected_output .= '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
-    $this->disableCDN();
+    $this->disableCdn();
   }
 
 }

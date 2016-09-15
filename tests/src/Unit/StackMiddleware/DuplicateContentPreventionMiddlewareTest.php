@@ -38,7 +38,7 @@ class DuplicateContentPreventionMiddlewareTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $url_assembler_prophecy = $this->prophesize(UnroutedUrlAssemblerInterface::class);
     $url_assembler_prophecy->assemble(Argument::type('string'), ['absolute' => TRUE], FALSE)
-      ->will(function($args) {
+      ->will(function ($args) {
         return str_replace('base:', 'http://🐷.com', $args[0]);
       });
     $container->set('unrouted_url_assembler', $url_assembler_prophecy->reveal());

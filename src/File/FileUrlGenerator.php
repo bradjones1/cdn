@@ -66,9 +66,9 @@ class FileUrlGenerator {
    *
    * @param string $root
    *   The app root.
-   * @param \Drupal\Core\File\FileSystemInterface
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
-   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
    *   The stream wrapper manager.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack.
@@ -102,7 +102,7 @@ class FileUrlGenerator {
    *   The URI to a file for which we need a CDN URL, or the path to a shipped
    *   file.
    *
-   * @return string|FALSE
+   * @return string|false
    *   A string containing the protocol-relative CDN file URI, or FALSE if this
    *   file URI should not be served from a CDN.
    */
@@ -156,7 +156,7 @@ class FileUrlGenerator {
       // Generate a security token. Ensures that users can not request any file
       // they want by manipulating the URL (they could otherwise request
       // settings.php for example). See https://www.drupal.org/node/1441502.
-      $calculated_token = Crypt::hmacBase64($mtime  . $root_relative_url, $this->privateKey->get() . Settings::getHashSalt());
+      $calculated_token = Crypt::hmacBase64($mtime . $root_relative_url, $this->privateKey->get() . Settings::getHashSalt());
       return '//' . $cdn_domain . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $root_relative_url;
     }
 

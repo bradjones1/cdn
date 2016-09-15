@@ -4,9 +4,7 @@ namespace Drupal\cdn;
 
 use Drupal\Core\Config\BootstrapConfigStorageFactory;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\DependencyInjection\ServiceProviderBase;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**

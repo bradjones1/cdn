@@ -18,7 +18,7 @@
       $('[data-drupal-selector="edit-mapping"]').drupalSetSummary(function () {
         if (document.querySelector('select[name="mapping[type]"]').value === 'simple') {
           var domain = document.querySelector('input[name="mapping[simple][domain]"]').value;
-          return Drupal.t('Simple: !domain', {'!domain': domain ? domain : Drupal.t('none configured yet') });
+          return Drupal.t('Simple: !domain', {'!domain': domain ? domain : Drupal.t('none configured yet')});
         }
         else {
           return Drupal.t('Advanced: <code>cdn.settings.yml</code>');

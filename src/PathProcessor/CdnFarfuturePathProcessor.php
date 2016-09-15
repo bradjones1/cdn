@@ -3,7 +3,6 @@
 namespace Drupal\cdn\PathProcessor;
 
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
-use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -24,7 +23,7 @@ class CdnFarfuturePathProcessor implements InboundPathProcessorInterface {
       return $path;
     }
 
-    // Parse the token, unique file identifier method and root-relative file URL.
+    // Parse the security token, mtime and root-relative file URL.
     $tail = substr($path, strlen('/cdn/farfuture/'));
     list($security_token, $mtime, $root_relative_file_url) = explode('/', $tail, 3);
 

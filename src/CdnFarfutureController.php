@@ -75,8 +75,8 @@ class CdnFarfutureController implements ContainerInjectionInterface {
     }
 
     $farfuture_headers = [
-      // Instead of being powered by PHP, tell the world this resource was powered
-      // by the CDN module!
+      // Instead of being powered by PHP, tell the world this resource was
+      // powered by the CDN module!
       'X-Powered-By' => 'Drupal CDN module (https://www.drupal.org/project/cdn)',
       // Browsers that implement the W3C Access Control specification might
       // refuse to use certain resources such as fonts if those resources
@@ -92,7 +92,7 @@ class CdnFarfutureController implements ContainerInjectionInterface {
       // Set a far future Cache-Control header (480 weeks), which prevents
       // intermediate caches from transforming the data and allows any
       // intermediate cache to cache it, since it's marked as a public resource.
-      'Cache-Control' =>  'max-age=290304000, no-transform, public',
+      'Cache-Control' => 'max-age=290304000, no-transform, public',
       // Set a far future Expires header. The maximum UNIX timestamp is
       // somewhere in 2038. Set it to a date in 2037, just to be safe.
       'Expires' => 'Tue, 20 Jan 2037 04:20:42 GMT',

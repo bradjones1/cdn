@@ -80,7 +80,7 @@ class CdnSettingsTest extends UnitTestCase {
             ],
             'conditions' => [
               'extensions' => ['jpg', 'png'],
-            ]
+            ],
           ],
         ],
         [
@@ -109,7 +109,7 @@ class CdnSettingsTest extends UnitTestCase {
                 'conditions' => [
                   'extensions' => ['zip'],
                 ],
-              ]
+              ],
             ],
           ],
         ],
@@ -143,7 +143,7 @@ class CdnSettingsTest extends UnitTestCase {
                 'conditions' => [
                   'extensions' => ['zip'],
                 ],
-              ]
+              ],
             ],
           ],
         ],
@@ -179,7 +179,7 @@ class CdnSettingsTest extends UnitTestCase {
                 'conditions' => [
                   'extensions' => ['jpg', 'jpeg', 'png'],
                 ],
-              ]
+              ],
             ],
           ],
         ],
@@ -205,7 +205,7 @@ class CdnSettingsTest extends UnitTestCase {
       'status' => TRUE,
       'mapping' => [
         'type' => 'simple',
-        'domain' => 'http://cdn.example.com'
+        'domain' => 'http://cdn.example.com',
       ],
     ])->getLookupTable();
   }
@@ -220,7 +220,7 @@ class CdnSettingsTest extends UnitTestCase {
       'status' => TRUE,
       'mapping' => [
         'type' => 'simple',
-        'domain' => '//cdn.example.com'
+        'domain' => '//cdn.example.com',
       ],
     ])->getLookupTable();
   }
@@ -235,7 +235,7 @@ class CdnSettingsTest extends UnitTestCase {
       'status' => TRUE,
       'mapping' => [
         'type' => 'complex',
-        'fallback_domain' => 'http://cdn.example.com'
+        'fallback_domain' => 'http://cdn.example.com',
       ],
     ])->getLookupTable();
   }
@@ -250,7 +250,7 @@ class CdnSettingsTest extends UnitTestCase {
       'status' => TRUE,
       'mapping' => [
         'type' => 'complex',
-        'fallback_domain' => '//cdn.example.com'
+        'fallback_domain' => '//cdn.example.com',
       ],
     ])->getLookupTable();
   }
