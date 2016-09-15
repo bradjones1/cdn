@@ -13,7 +13,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
  * Redirects CDN user agents' requests for HTML to the canonical location.
  *
  * Prevents the CDN from returning content (HTML pages). We only want the CDN to
- * serve assets like images, CSS, JavaScript, et cetera. Without this, it will
+ * serve files like images, CSS, JavaScript, et cetera. Without this, it will
  * return anything.
  *
  * This prevents that infamous "duplicate content" SEO problem by redirecting
@@ -21,11 +21,11 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
  *
  * Of course, the web servers will only execute Drupal for URLs
  * that don't have a file on disk. So this code is only executed for actual
- * responses Drupal needs to send … but also for generated assets, such as
+ * responses Drupal needs to send … but also for generated files, such as
  * image styles.
  * So, this code assumes that URLs without file extensions (or HTML-like file
  * extensions) is for HTML responses. Anything else is assumed to be for
- * generated assets, such as image styles.
+ * generated files, such as image styles.
  *
  * However, a consequence of this is that if your site is behind a reverse proxy
  * (such as Varnish) that indiscriminately caches responses for anonymous users,
@@ -134,7 +134,7 @@ class DuplicateContentPreventionMiddleware implements HttpKernelInterface {
     // We cannot assume that this can only happen inside the /sites directory,
     // because a Drupal 8 site can choose to use a different directory for
     // generated files. We use a blacklist rather than a whitelist of extensions
-    // to ensure that any current and future assets can be served.
+    // to ensure that any current and future files can be served.
     $extension = Unicode::strtolower(pathinfo($path, PATHINFO_EXTENSION));
     if (!in_array($extension, $this->forbiddenExtensions)) {
       return FALSE;

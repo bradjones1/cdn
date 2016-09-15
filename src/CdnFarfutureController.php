@@ -84,7 +84,7 @@ class CdnFarfutureController implements ContainerInjectionInterface {
       // cross-domain use of those resources. (This is called Cross-Origin
       // Resource Sharing, or CORS.)
       // The CDN module allows any domain to access it by default, which means
-      // hotlinking of these assets is possible. If you want to prevent this,
+      // hotlinking of these files is possible. If you want to prevent this,
       // implement a KernelEvents::RESPONSE subscriber that modifies this header
       // for this route.
       'Access-Control-Allow-Origin' => '*',

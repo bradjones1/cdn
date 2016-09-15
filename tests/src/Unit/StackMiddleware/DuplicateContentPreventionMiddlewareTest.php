@@ -75,10 +75,10 @@ class DuplicateContentPreventionMiddlewareTest extends UnitTestCase {
       ['/node/1.html', 'Amazon CloudFront', 'http://🐷.com/node/1.html'],
       ['/node/1.htm',  'Amazon CloudFront', 'http://🐷.com/node/1.htm'],
       ['/node/1.php',  'Amazon CloudFront', 'http://🐷.com/node/1.php'],
-      // Asset requested: the response is never a redirect.
+      // File requested: the response is never a redirect.
       ['/misc/jquery.js', 'Mozilla', FALSE],
       ['/misc/jquery.js', 'Amazon CloudFront', FALSE],
-      // Generated asset requested: the response is never a redirect.
+      // Generated file requested: the response is never a redirect.
       ['/sites/default/files/styles/thumbnail/foobar.png', 'Mozilla', FALSE],
       ['/sites/default/files/styles/thumbnail/foobar.png', 'Amazon CloudFront', FALSE],
     ];
