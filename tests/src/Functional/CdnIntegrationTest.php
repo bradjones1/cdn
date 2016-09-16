@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\cdn\Tests;
+namespace Drupal\Tests\cdn\Functional;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
