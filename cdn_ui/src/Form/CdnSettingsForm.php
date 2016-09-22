@@ -46,21 +46,10 @@ class CdnSettingsForm extends ConfigFormBase {
       '#group' => 'cdn_settings',
     ];
     $form['status']['status'] = [
-      '#type' => 'radios',
-      '#title' => $this->t('Status'),
-      '#title_display' => 'invisible',
-      '#required' => TRUE,
-      '#options' => [
-        0 => $this->t('Disabled'),
-        2 => $this->t('Enabled'),
-      ],
-      '#default_value' => $config->get('status'),
-    ];
-    $form['status']['status'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Serve files from CDN'),
       '#description' => $this->t('Better performance thanks to better caching of files by the visitor. When a file changes a different URL is used, to ensure instantaneous updates for your visitors.'),
-      '#default_value' => $config->get('farfuture.status'),
+      '#default_value' => $config->get('status'),
     ];
 
     $form['mapping'] = [
