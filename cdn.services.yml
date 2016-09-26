@@ -29,3 +29,10 @@ services:
     class: Drupal\cdn\PathProcessor\CdnFarfuturePathProcessor
     tags:
       - { name: path_processor_inbound }
+
+  # Decorators.
+  cdn.asset.css.optimizer:
+    public: false
+    class: Drupal\cdn\Asset\CssOptimizer
+    decorates: asset.css.optimizer
+    arguments: ['@cdn.asset.css.optimizer.inner']

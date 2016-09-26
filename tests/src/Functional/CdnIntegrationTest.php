@@ -63,11 +63,73 @@ class CdnIntegrationTest extends BrowserTestBase {
 
     // Configure CDN integration.
     $this->config('cdn.settings')
-      ->set('mapping', ['type' => 'simple', 'domain' => 'cdn'])
+      ->set('mapping', ['type' => 'simple', 'domain' => 'cdn.example.com'])
       ->set('status', TRUE)
       // Disable the farfuture functionality: simpler file URL assertions.
       ->set('farfuture', ['status' => FALSE])
       ->save();
+
+    // \Drupal\Tests\BrowserTestBase::installDrupal() overrides some of the
+    // defaults for easier test debugging. But for a CDN integration test, we do
+    // want the defaults to be applied, because that is what we want to test.
+    $this->config('system.performance')
+      ->set('css.preprocess', TRUE)
+      ->set('js.preprocess', TRUE)
+      ->save();
+  }
+
+  /**
+   * Tests that CSS aggregates never use CDN URLs, and changes are immediate.
+   *
+   * @see \Drupal\cdn\Asset\CssOptimizer
+   */
+  public function testCss() {
+    $session = $this->getSession();
+
+    // Verify Page Cache is enabled.
+    $this->drupalGet('<front>');
+    $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'));
+    $this->drupalGet('<front>');
+    $this->assertSame('HIT', $session->getResponseHeader('X-Drupal-Cache'));
+
+    // CDN disabled.
+    $this->config('cdn.settings')->set('status', FALSE)->save();
+    $this->drupalGet('<front>');
+    $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'), 'Changing CDN settings causes Page Cache miss: setting changes have immediate effect.');
+    $href = $this->cssSelect('link[rel=stylesheet]')[0]->getAttribute('href');
+    $regexp = '#/' . $this->siteDirectory . '/files/css/css_[a-zA-Z0-9_]{43}\.css\?[a-z0-9]{6}#';
+    $this->assertSame(1, preg_match($regexp, $href));
+    $this->assertCssFileUsesRootRelativeUrl($this->baseUrl . $href);
+
+    // CDN enabled, "Forever cacheable files" disabled.
+    $this->config('cdn.settings')->set('status', TRUE)->save();
+    $this->drupalGet('<front>');
+    $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'), 'Changing CDN settings causes Page Cache miss: setting changes have immediate effect.');
+    $href = $this->cssSelect('link[rel=stylesheet]')[0]->getAttribute('href');
+    $regexp = '#//cdn.example.com' . base_path() . $this->siteDirectory . '/files/css/css_[a-zA-Z0-9_]{43}\.css\?[a-z0-9]{6}#';
+    $this->assertSame(1, preg_match($regexp, $href));
+    $this->assertCssFileUsesRootRelativeUrl($this->baseUrl . str_replace('//cdn.example.com', '', $href));
+
+    // CDN enabled, "Forever cacheable files" enabled.
+    $this->config('cdn.settings')->set('farfuture.status', TRUE)->save();
+    $this->drupalGet('<front>');
+    $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'), 'Changing CDN settings causes Page Cache miss: setting changes have immediate effect.');
+    $href = $this->cssSelect('link[rel=stylesheet]')[0]->getAttribute('href');
+    $regexp = '#//cdn.example.com' . base_path() . 'cdn/farfuture/[a-zA-Z0-9_-]{43}/[0-9]{10}/' . $this->siteDirectory . '/files/css/css_[a-zA-Z0-9_]{43}\.css\?[a-z0-9]{6}#';
+    $this->assertSame(1, preg_match($regexp, $href));
+    $this->assertCssFileUsesRootRelativeUrl($this->baseUrl . str_replace('//cdn.example.com', '', $href));
+  }
+
+  /**
+   * Downloads the given CSS file and verifies its file URLs are root-relative.
+   *
+   * @param string $css_file_url
+   *   The URL to a CSS file.
+   */
+  protected function assertCssFileUsesRootRelativeUrl($css_file_url) {
+    $this->drupalGet($css_file_url);
+    $this->assertSession()->responseContains('url(', 'CSS references other files.');
+    $this->assertSession()->responseContains('url(' . base_path() . 'core/themes/stable/images/core/tree.png)', 'CSS references other files by root-relative URL, not CDN URL.');
   }
 
   /**
@@ -78,7 +140,7 @@ class CdnIntegrationTest extends BrowserTestBase {
 
     $this->drupalGet('/node/1');
     $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'));
-    $this->assertSession()->responseContains('src="//cdn' . base_path() . $this->siteDirectory . '/files/druplicon.png"');
+    $this->assertSession()->responseContains('src="//cdn.example.com' . base_path() . $this->siteDirectory . '/files/druplicon.png"');
     $this->drupalGet('/node/1');
     $this->assertSame('HIT', $session->getResponseHeader('X-Drupal-Cache'));
 
