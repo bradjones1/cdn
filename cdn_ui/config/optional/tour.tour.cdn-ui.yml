@@ -4,7 +4,7 @@ dependencies:
   module:
     - cdn_ui
 id: cdn-ui
-label: 'Configure the CDN module'
+label: 'Configuring CDN integration'
 module: cdn_ui
 routes:
   -

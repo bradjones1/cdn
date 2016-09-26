@@ -9,20 +9,21 @@ use Drupal\Core\Url;
 function cdn_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
       case 'help.page.cdn':
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The CDN module provides easy Content Delivery Network integration for Drupal sites. It alters file URLs, so that files (such as CSS, JS, images, fonts, videos …) are downloaded from a CDN instead of your web server. For more information, see the <a href=":online">online documentation for the CDN module</a>.', [':online' => 'https://www.drupal.org/docs/8/managing-site-performance-and-scalability/content-delivery-network-cdn']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
-      $output .= '<dl>';
-      $output .= '<dt>' . t('General') . '</dt>';
-      $output .= '<dd>' . t('A content delivery network (CDN) is a collection of web servers distributed across multiple locations to deliver content more efficiently to users. The server selected for delivering content to a specific user is typically based on a measure of network proximity.') . '</dd>';
-      $output .= '<dt>' . t('Origin pull') . '</dt>';
-      $output .= '<dd>' . t('The CDN module aims to support any CDN that supports <em>Origin Pull</em>. Pull requires virtually no work on your side: all you have to do, is rewrite the URLs to your files: replace your own domain name with the CDN’s domain name. The CDN will then apply the Origin Pull technique and will periodically pull the files from the origin (that is your server). How often that is, depends on how you have configured headers (particularly the Expires header).') . '</dd>';
-      $output .= '</dl>';
-      $output .= '<p>' . t('(ref: "Key Properties of a CDN." Weblog post. <em>Wim Leers.</em> Ed. Wim Leers. N.p., 26 Aug. 2009. Web. 18 Sept. 2016. <a href=":blog">http://www.wimleers.com/article/key-properties-of-a-cdn</a>.)', [':blog' => 'http://wimleers.com/article/key-properties-of-a-cdn']) . '</p>';
-      return $output;
+        $output = '';
+        $output .= '<h3>' . t('About') . '</h3>';
+        $output .= '<p>' . t('The CDN module can serve files (CSS, JavaScript, images, fonts, videos …) from a <abbr title="Content Delivery Network">CDN</abbr> instead of your web server(s). For more information, see the <a href=":online">online documentation for the CDN module</a>.', [':online' => 'https://www.drupal.org/docs/8/managing-site-performance-and-scalability/content-delivery-network-cdn']) . '</p>';
+        $output .= '<h3>' . t('Uses') . '</h3>';
+        $output .= '<dl>';
+        $output .= '<dt>' . t('General') . '</dt>';
+        $output .= '<dd>' . t('A content delivery network is a collection of web servers distributed across multiple locations around the world to deliver content more efficiently to users. The server selected for delivering content to a specific user is typically based on a measure of network proximity. For more information, see <a href="http://wimleers.com/article/key-properties-of-a-cdn"><q>Key Properties of a CDN</q>.</a>') . '</dd>';
+        $output .= '<dt>' . t('Improving performance') . '</dt>';
+        $output .= '<dd>' . t('Because a CDN automatically serves files from the location that is closest to the end user, files can be downloaded by end users faster. It can be faster in two ways: downloads start faster (lower latency) and downloads complete faster (higher bandwidth).') . '</dd>';
+        $output .= '<dt>' . t('Reducing server load & costs') . '</dt>';
+        $output .= '<dd>' . t('By letting a CDN serve files instead of your webserver(s), it is possible to significantly reduce the load on your server load and its costs. Note that it may just as well end up costing more — it depends on pricing of the CDN and your server(s).') . '</dd>';
+        $output .= '</dl>';
+        return $output;
   }
 }
-
 
 /**
  * Implements hook_file_url_alter().
