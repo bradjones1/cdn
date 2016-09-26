@@ -80,27 +80,42 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $image->save();
     $uuid = $image->uuid();
 
-    $this->assertTrue(TRUE, 'Simple case.');
+    file_put_contents('public://llama.mp4', $this->randomMachineName());
+    $video= File::create(['uri' => 'public://llama.mp4']);
+    $video->save();
+
+    $this->assertTrue(TRUE, 'Simple case: <img>.');
     $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $image->uuid() . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->enableCdn();
-    $expected_output = '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $expected_output = '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $image->uuid() . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->disableCdn();
 
-    $this->assertTrue(TRUE, 'Two identical cases, must result in identical CDN file URLs.');
+    $this->assertTrue(TRUE, 'Two identical <img> cases, must result in identical CDN file URLs.');
     $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $input .= '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output .= '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $image->uuid() . '" />';
+    $expected_output .= '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $image->uuid() . '" />';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->enableCdn();
-    $expected_output = '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output .= '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $expected_output = '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $image->uuid() . '" />';
+    $expected_output .= '<img src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $image->uuid() . '" />';
+    $output = $test($input);
+    $this->assertSame($expected_output, $output->getProcessedText());
+    $this->disableCdn();
+
+    $this->assertTrue(TRUE, 'Simple case: <video>.');
+    $input = '<video src="llama.mp4" data-entity-type="file" data-entity-uuid="' . $video->uuid() . '" poster="llama.jpg" />';
+    $expected_output = '<video src="/' . $this->siteDirectory . '/files/llama.mp4" data-entity-type="file" data-entity-uuid="' . $video->uuid() . '" poster="llama.jpg"></video>';
+    $output = $test($input);
+    $this->assertSame($expected_output, $output->getProcessedText());
+    $this->enableCdn();
+    $expected_output = '<video src="//cdn-a.com/' . $this->siteDirectory . '/files/llama.mp4" data-entity-type="file" data-entity-uuid="' . $video->uuid() . '" poster="llama.jpg"></video>';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->disableCdn();
