@@ -111,8 +111,8 @@ class FileUrlGenerator {
       return FALSE;
     }
 
-    $root_relative_url = $this->getRootRelativeUrl($uri);
-    if ($root_relative_url === FALSE) {
+    $relative_url = $this->getRelativeUrl($uri);
+    if ($relative_url === FALSE) {
       return FALSE;
     }
 
@@ -146,7 +146,7 @@ class FileUrlGenerator {
 
     // When farfuture is enabled, rewrite the file URL to let Drupal serve the
     // file with optimal headers. Only possible if the file exists.
-    $absolute_file_path = $this->root . $root_relative_url;
+    $absolute_file_path = $this->root . $relative_url;
     if ($this->settings->farfutureIsEnabled() && file_exists($absolute_file_path)) {
       // We do the filemtime() call separately, because a failed filemtime()
       // will cause a PHP warning to be written to the log, which would remove
@@ -156,15 +156,15 @@ class FileUrlGenerator {
       // Generate a security token. Ensures that users can not request any file
       // they want by manipulating the URL (they could otherwise request
       // settings.php for example). See https://www.drupal.org/node/1441502.
-      $calculated_token = Crypt::hmacBase64($mtime . $root_relative_url, $this->privateKey->get() . Settings::getHashSalt());
-      return '//' . $cdn_domain . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $root_relative_url;
+      $calculated_token = Crypt::hmacBase64($mtime . $relative_url, $this->privateKey->get() . Settings::getHashSalt());
+      return '//' . $cdn_domain . $this->getBasePath() . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $relative_url;
     }
 
-    return '//' . $cdn_domain . $root_relative_url;
+    return '//' . $cdn_domain . $this->getBasePath() . $relative_url;
   }
 
   /**
-   * Gets the root-relative URL for files that are shipped or in a local stream.
+   * Gets the relative URL for files that are shipped or in a local stream.
    *
    * @param string $uri
    *   The URI to a file for which we need a CDN URL, or the path to a shipped
@@ -172,9 +172,9 @@ class FileUrlGenerator {
    *
    * @return bool|string
    *   Returns FALSE if the URI is not for a shipped file or in a local stream.
-   *   Otherwise, returns the root-relative URL.
+   *   Otherwise, returns the relative URL.
    */
-  protected function getRootRelativeUrl($uri) {
+  protected function getRelativeUrl($uri) {
     $scheme = $this->fileSystem->uriScheme($uri);
 
     // If the URI is absolute — HTTP(S) or otherwise — return early, except if
@@ -195,9 +195,16 @@ class FileUrlGenerator {
 
     return $scheme
       // Local stream wrapper.
-      ? str_replace($request->getSchemeAndHttpHost(), '', $this->streamWrapperManager->getViaUri($uri)->getExternalUrl())
+      ? str_replace($request->getSchemeAndHttpHost() . $this->getBasePath(), '', $this->streamWrapperManager->getViaUri($uri)->getExternalUrl())
       // Shipped file.
-      : $request->getBasePath() . '/' . $uri;
+      : '/' . $uri;
+  }
+
+  /**
+   * @see \Symfony\Component\HttpFoundation\Request::getBasePath()
+   */
+  protected function getBasePath() {
+    return $this->requestStack->getCurrentRequest()->getBasePath();
   }
 
 }

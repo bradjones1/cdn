@@ -123,7 +123,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
    * @covers ::generate
    */
   public function testGenerateFarfuture() {
-    $gen = $this->createFileUrlGenerator('', [
+    $config = [
       'status' => TRUE,
       'mapping' => [
         'type' => 'simple',
@@ -133,12 +133,21 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'farfuture' => [
         'status' => TRUE,
       ],
-    ]);
+    ];
 
+    // In root.
+    $gen = $this->createFileUrlGenerator('', $config);
     $this->assertSame('//cdn.example.com/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
     $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
     $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
     $this->assertSame('//cdn.example.com/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
+
+    // In subdir.
+    $gen = $this->createFileUrlGenerator('/subdir', $config);
+    $this->assertSame('//cdn.example.com/subdir/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
+    $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
+    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
+    $this->assertSame('//cdn.example.com/subdir/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
   }
 
   /**
