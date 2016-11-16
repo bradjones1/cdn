@@ -117,7 +117,9 @@ class CdnSettings {
         assert('strpos($fallback_domain, "/") === FALSE && strpos($fallback_domain, ":") === FALSE', "The provided fallback domain $fallback_domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
         $lookup_table['*'] = $fallback_domain;
       }
-      foreach ($mapping['domains'] as $nested_mapping) {
+      for ($i = 0; $i < count($mapping['domains']); $i++) {
+        $nested_mapping = $mapping['domains'][$i];
+        assert('!empty($nested_mapping[\'conditions\'])', 'The nested mapping ' . $i . ' includes no conditions, which is not allowed for complex mappings.');
         $lookup_table += $this->buildLookupTable($nested_mapping);
       }
     }

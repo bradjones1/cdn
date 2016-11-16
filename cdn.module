@@ -19,7 +19,7 @@ function cdn_help($route_name, RouteMatchInterface $route_match) {
         $output .= '<dt>' . t('Improving performance') . '</dt>';
         $output .= '<dd>' . t('Because a CDN automatically serves files from the location that is closest to the end user, files can be downloaded by end users faster. It can be faster in two ways: downloads start faster (lower latency) and downloads complete faster (higher bandwidth).') . '</dd>';
         $output .= '<dt>' . t('Reducing server load & costs') . '</dt>';
-        $output .= '<dd>' . t('By letting a CDN serve files instead of your webserver(s), it is possible to significantly reduce the load on your server load and its costs. Note that it may just as well end up costing more — it depends on pricing of the CDN and your server(s).') . '</dd>';
+        $output .= '<dd>' . t('By letting a CDN serve files instead of your webserver(s), it is possible to significantly reduce the load on your server and its costs. Note that it may just as well end up costing more — it depends on pricing of the CDN and your server(s).') . '</dd>';
         $output .= '</dl>';
         return $output;
   }

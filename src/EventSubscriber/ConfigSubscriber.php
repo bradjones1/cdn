@@ -6,15 +6,12 @@ use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\DrupalKernelInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Invalidates cache tags & enables CSS aggregation when CDN config is saved.
+ * Invalidates cache tags & rebuilds container when necessary.
  */
 class ConfigSubscriber implements EventSubscriberInterface {
-
-  use StringTranslationTrait;
 
   /**
    * The cache tags invalidator.

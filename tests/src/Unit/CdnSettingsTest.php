@@ -25,7 +25,7 @@ class CdnSettingsTest extends UnitTestCase {
 
   public function settingsProvider() {
     return [
-      'simple, no conditions' => [
+      'simple, on, no conditions' => [
         [
           'status' => TRUE,
           'mapping' => [
@@ -37,7 +37,7 @@ class CdnSettingsTest extends UnitTestCase {
         ['*' => 'cdn.example.com'],
         ['cdn.example.com'],
       ],
-      'simple, oone empty condition' => [
+      'simple, on, one empty condition' => [
         [
           'status' => TRUE,
           'mapping' => [
@@ -69,7 +69,7 @@ class CdnSettingsTest extends UnitTestCase {
         ],
         ['cdn.example.com'],
       ],
-      'auto-balanced, on, no fallback' => [
+      'auto-balanced, on' => [
         [
           'status' => TRUE,
           'mapping' => [
@@ -315,6 +315,27 @@ class CdnSettingsTest extends UnitTestCase {
         'domains' => [
           'foo.example.com',
           'bar.example.com',
+        ],
+      ],
+    ])->getLookupTable();
+  }
+
+  /**
+   * @covers ::getLookupTable
+   * @expectedException \AssertionError
+   * @expectedExceptionMessage The nested mapping 0 includes no conditions, which is not allowed for complex mappings.
+   */
+  public function testComplexMappingWithoutConditions() {
+    $this->createCdnSettings([
+      'status' => TRUE,
+      'mapping' => [
+        'type' => 'complex',
+        'fallback_domain' => 'cdn.example.com',
+        'domains' => [
+          0 => [
+            'type' => 'simple',
+            'domain' => 'foo.example.com',
+          ],
         ],
       ],
     ])->getLookupTable();
