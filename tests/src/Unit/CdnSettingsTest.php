@@ -69,6 +69,26 @@ class CdnSettingsTest extends UnitTestCase {
         ],
         ['cdn.example.com'],
       ],
+      'simple, on, one negative condition' => [
+        [
+          'status' => TRUE,
+          'mapping' => [
+            'type' => 'simple',
+            'domain' => 'cdn.example.com',
+            'conditions' => [
+              'not' => [
+                'extensions' => ['css', 'js'],
+              ],
+            ],
+          ],
+        ],
+        [
+          '*' => 'cdn.example.com',
+          'css' => FALSE,
+          'js' => FALSE,
+        ],
+        ['cdn.example.com'],
+      ],
       'auto-balanced, on' => [
         [
           'status' => TRUE,
@@ -193,6 +213,60 @@ class CdnSettingsTest extends UnitTestCase {
         ['static.example.com', 'img1.example.com', 'img2.example.com'],
       ],
     ];
+  }
+
+  /**
+   * @covers ::getLookupTable
+   * @expectedException \AssertionError
+   * @expectedExceptionMessage It does not make sense to provide an 'extensions' condition as well as a negated 'extensions' condition.
+   */
+  public function testSimpleMappingWithConditionsAndNegatedConditions() {
+    $this->createCdnSettings([
+      'status' => TRUE,
+      'mapping' => [
+        'type' => 'simple',
+        'domain' => 'cdn.example.com',
+        'conditions' => [
+          'extensions' => ['foo', 'bar'],
+          'not' => [
+            'extensions' => ['baz', 'qux'],
+          ]
+        ]
+      ],
+    ])->getLookupTable();
+  }
+
+  /**
+   * @covers ::getLookupTable
+   * @expectedException \AssertionError
+   * @expectedExceptionMessage The nested mapping 1 includes negated conditions, which is not allowed for complex mappings: the fallback_domain already serves this purpose.
+   */
+  public function testComplexDomainWithNegatedConditions() {
+    $this->createCdnSettings([
+      'status' => TRUE,
+      'mapping' => [
+        'type' => 'complex',
+        'fallback_domain' => 'cdn.example.com',
+        'domains' => [
+          0 => [
+            'type' => 'simple',
+            'domain' => 'foo.example.com',
+            'conditions' => [
+              'extensions' => ['png'],
+            ]
+          ],
+          1 => [
+            'type' => 'simple',
+            'domain' => 'bar.example.com',
+            'conditions' => [
+              'not' => [
+                'extensions' => ['png'],
+              ]
+            ]
+          ],
+        ],
+      ],
+    ])->getLookupTable();
   }
 
   /**

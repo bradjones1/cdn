@@ -71,7 +71,7 @@ class CdnSettings {
    */
   public function getDomains() {
     $flattened = iterator_to_array(new \RecursiveIteratorIterator(new \RecursiveArrayIterator($this->getLookupTable())), FALSE);
-    $unique_domains = array_unique($flattened);
+    $unique_domains = array_unique(array_filter($flattened));
     return $unique_domains;
   }
 
@@ -108,6 +108,15 @@ class CdnSettings {
             $lookup_table[$extension] = $domain;
           }
         }
+
+        if (isset($mapping['conditions']['not'])) {
+          assert('!isset($mapping[\'conditions\'][\'extensions\'])', 'It does not make sense to provide an \'extensions\' condition as well as a negated \'extensions\' condition.');
+          if (!empty($mapping['conditions']['not']['extensions'])) {
+            foreach ($mapping['conditions']['not']['extensions'] as $not_extension) {
+              $lookup_table[$not_extension] = FALSE;
+            }
+          }
+        }
       }
     }
     elseif ($mapping['type'] === 'complex') {
@@ -120,6 +129,7 @@ class CdnSettings {
       for ($i = 0; $i < count($mapping['domains']); $i++) {
         $nested_mapping = $mapping['domains'][$i];
         assert('!empty($nested_mapping[\'conditions\'])', 'The nested mapping ' . $i . ' includes no conditions, which is not allowed for complex mappings.');
+        assert('!isset($nested_mapping[\'conditions\'][\'not\'])', 'The nested mapping ' . $i . ' includes negated conditions, which is not allowed for complex mappings: the fallback_domain already serves this purpose.');
         $lookup_table += $this->buildLookupTable($nested_mapping);
       }
     }

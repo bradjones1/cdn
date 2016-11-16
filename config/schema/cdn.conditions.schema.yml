@@ -1,6 +1,13 @@
+# AND logic applies: all conditions must be met.
 cdn.conditions:
   type: sequence
   label: 'Conditions'
+  sequence:
+    type: cdn.condition.[%key]
+
+cdn.condition.not:
+  type: sequence
+  label: 'Negated conditions'
   sequence:
     type: cdn.condition.[%key]
 

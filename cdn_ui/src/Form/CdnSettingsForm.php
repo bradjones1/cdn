@@ -91,16 +91,17 @@ class CdnSettingsForm extends ConfigFormBase {
       '#field_prefix' => $this->t('Serve'),
       '#options' => [
         'all' => $this->t('all files'),
+        'nocssjs' => $this->t('all files except CSS+JS'),
         'limited' => $this->t('only files'),
       ],
-      '#default_value' => empty($config->get('mapping.conditions.extensions')) ? 'all' : 'limited',
+      '#default_value' => $config->get('mapping.conditions') === ['not' => ['extensions' => ['css', 'js']]] ? 'nocssjs' : (empty($config->get('mapping.conditions.extensions')) ? 'all' : 'limited'),
     ];
     $form['mapping']['simple']['extensions_condition_value'] = [
       '#field_prefix' => $this->t('with the extension'),
       '#type' => 'textfield',
       '#title' => $this->t('Allowed file extensions'),
       '#title_display' => 'invisible',
-      '#placeholder' => 'css js jpg jpeg png zip',
+      '#placeholder' => 'jpg jpeg png zip',
       '#size' => 30,
       '#default_value' => implode(' ', $config->get('mapping.conditions.extensions') ?: []),
       '#states' => [
@@ -164,9 +165,17 @@ class CdnSettingsForm extends ConfigFormBase {
         // Set the 'extensions' condition unconditionally.
         $config->set('mapping.conditions.extensions', explode(' ', trim($simple_mapping['extensions_condition_value'])));
       }
+      // Plus one particular common preset: 'nocssjs', which means all files
+      // except CSS and JS.
+      else if ($simple_mapping['extensions_condition_toggle'] === 'nocssjs') {
+        $config->set('mapping.conditions', ['not' => ['extensions' => ['css', 'js']]]);
+      }
       else {
-        // Remove the 'extensions' condition if it is set.
+        // Remove the 'not' or 'extensions' conditions if set.
         $conditions = $config->getOriginal('mapping.type') === 'simple' ? $config->getOriginal('mapping.conditions') : [];
+        if (isset($conditions['not'])) {
+          unset($conditions['not']);
+        }
         if (isset($conditions['extensions'])) {
           unset($conditions['extensions']);
         }

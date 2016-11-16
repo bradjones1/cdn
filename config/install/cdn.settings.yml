@@ -3,7 +3,9 @@ status: false
 mapping:
   type: simple
   domain: null
-  conditions: []
+  conditions:
+    not:
+      extensions: [css, js]
 
 # Serve all files from a single CDN:
 #
@@ -11,6 +13,15 @@ mapping:
 #   type: simple
 #   domain: cdn-a.com
 #   conditions: []
+
+# Serve all files from a single CDN except CSS and JS:
+#
+# mapping:
+#   type: simple
+#   domain: cdn-a.com
+#   conditions:
+#     not:
+#       extensions: [css, js]
 
 # Serve only image files from a single CDN:
 #
