@@ -2,6 +2,7 @@
 
 namespace Drupal\cdn_ui\Form;
 
+use Drupal\cdn\CdnSettings;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -143,6 +144,20 @@ class CdnSettingsForm extends ConfigFormBase {
     ];
 
     return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $mapping = $form_state->getValue('mapping');
+    if ($mapping['type'] === 'simple') {
+      if (!CdnSettings::isValidCdnDomain($mapping['simple']['domain'])) {
+        $form_state->setErrorByName('mapping][simple][domain', $this->t('The provided domain %domain is not valid. Provide a hostname like <samp>cdn.com</samp> or <samp>cdn.example.com</samp>. IP addresses and ports are also allowed.', [
+          '%domain' => $mapping['simple']['domain'],
+        ]));
+      }
+    }
   }
 
   /**

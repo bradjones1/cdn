@@ -7,6 +7,8 @@ use Drupal\Core\Config\ConfigValueException;
 
 /**
  * Wraps the CDN settings configuration, contains all parsing.
+ *
+ * @internal
  */
 class CdnSettings {
 
@@ -95,7 +97,7 @@ class CdnSettings {
     $lookup_table = [];
     if ($mapping['type'] === 'simple') {
       $domain = $mapping['domain'];
-      assert('strpos($domain, "/") === FALSE && strpos($domain, ":") === FALSE', "The provided domain $domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
+      assert('\Drupal\cdn\CdnSettings::isValidCdnDomain($domain)', "The provided domain $domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
       if (empty($mapping['conditions'])) {
         $lookup_table['*'] = $domain;
       }
@@ -123,7 +125,7 @@ class CdnSettings {
       $fallback_domain = NULL;
       if (isset($mapping['fallback_domain'])) {
         $fallback_domain = $mapping['fallback_domain'];
-        assert('strpos($fallback_domain, "/") === FALSE && strpos($fallback_domain, ":") === FALSE', "The provided fallback domain $fallback_domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
+        assert('\Drupal\cdn\CdnSettings::isValidCdnDomain($fallback_domain)', "The provided fallback domain $fallback_domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
         $lookup_table['*'] = $fallback_domain;
       }
       for ($i = 0; $i < count($mapping['domains']); $i++) {
@@ -139,7 +141,7 @@ class CdnSettings {
       }
       $domains = $mapping['domains'];
       foreach ($domains as $domain) {
-        assert('strpos($domain, "/") === FALSE && strpos($domain, ":") === FALSE', "The provided domain $domain is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.");
+        assert('\Drupal\cdn\CdnSettings::isValidCdnDomain($domain)', "The provided domain $domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
       }
       foreach ($mapping['conditions']['extensions'] as $extension) {
         $lookup_table[$extension] = $domains;
@@ -149,6 +151,28 @@ class CdnSettings {
       throw new ConfigValueException('Unknown CDN mapping type specified.');
     }
     return $lookup_table;
+  }
+
+  /**
+   * Validates the given CDN domain.
+   *
+   * @param string $domain
+   *   A domain as expected by the CDN module. In fact, an "authority" as
+   *   defined in RFC3986. An authority consists of host, optional userinfo and
+   *   optional port. The host can be an IP address or registered domain name.
+   *
+   * @return bool
+   *
+   * @see https://tools.ietf.org/html/rfc3986#section-3.2
+   * @see ../config/schema/cdn.data_types.schema.yml
+   */
+  public static function isValidCdnDomain($domain) {
+    // Add a scheme so that we have a parseable URL.
+    $url = 'https://' . $domain;
+    $components = parse_url($url);
+
+    $forbidden_components = ['path', 'query', 'fragment'];
+    return $components === FALSE ? FALSE : empty(array_intersect($forbidden_components, array_keys($components)));
   }
 
 }

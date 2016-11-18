@@ -37,6 +37,30 @@ class CdnSettingsTest extends UnitTestCase {
         ['*' => 'cdn.example.com'],
         ['cdn.example.com'],
       ],
+      'simple, on, no conditions, IPv4 address + port' => [
+        [
+          'status' => TRUE,
+          'mapping' => [
+            'type' => 'simple',
+            'domain' => '127.0.0.1:8080',
+            'conditions' => [],
+          ],
+        ],
+        ['*' => '127.0.0.1:8080'],
+        ['127.0.0.1:8080'],
+      ],
+      'simple, on, no conditions, IPv6 address + port' => [
+        [
+          'status' => TRUE,
+          'mapping' => [
+            'type' => 'simple',
+            'domain' => '[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80',
+            'conditions' => [],
+          ],
+        ],
+        ['*' => '[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80'],
+        ['[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80'],
+      ],
       'simple, on, one empty condition' => [
         [
           'status' => TRUE,
@@ -114,7 +138,7 @@ class CdnSettingsTest extends UnitTestCase {
           'status' => TRUE,
           'mapping' => [
             'type' => 'complex',
-            'fallback_domain' => 'cdn.example.com',
+            'fallback_domain' => '[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:42',
             'domains' => [
               0 => [
                 'type' => 'simple',
@@ -134,14 +158,14 @@ class CdnSettingsTest extends UnitTestCase {
           ],
         ],
         [
-          '*' => 'cdn.example.com',
+          '*' => '[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:42',
           'css' => 'static.example.com',
           'jpg' => 'static.example.com',
           'jpeg' => 'static.example.com',
           'png' => 'static.example.com',
           'zip' => 'downloads.example.com',
         ],
-        ['cdn.example.com', 'static.example.com', 'downloads.example.com'],
+        ['[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:42', 'static.example.com', 'downloads.example.com'],
       ],
       'complex containing two simple mappings, without fallback' => [
         [
@@ -272,7 +296,7 @@ class CdnSettingsTest extends UnitTestCase {
   /**
    * @covers ::getLookupTable
    * @expectedException \AssertionError
-   * @expectedExceptionMessage The provided domain http://cdn.example.com is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.
+   * @expectedExceptionMessage The provided domain http://cdn.example.com is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.
    */
   public function testAbsoluteUrlAsSimpleDomain() {
     $this->createCdnSettings([
@@ -287,7 +311,7 @@ class CdnSettingsTest extends UnitTestCase {
   /**
    * @covers ::getLookupTable
    * @expectedException \AssertionError
-   * @expectedExceptionMessage The provided domain //cdn.example.com is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.
+   * @expectedExceptionMessage The provided domain //cdn.example.com is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.
    */
   public function testProtocolRelativeUrlAsSimpleDomain() {
     $this->createCdnSettings([
@@ -302,7 +326,7 @@ class CdnSettingsTest extends UnitTestCase {
   /**
    * @covers ::getLookupTable
    * @expectedException \AssertionError
-   * @expectedExceptionMessage The provided fallback domain http://cdn.example.com is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.
+   * @expectedExceptionMessage The provided fallback domain http://cdn.example.com is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.
    */
   public function testAbsoluteUrlAsComplexFallbackDomain() {
     $this->createCdnSettings([
@@ -317,7 +341,7 @@ class CdnSettingsTest extends UnitTestCase {
   /**
    * @covers ::getLookupTable
    * @expectedException \AssertionError
-   * @expectedExceptionMessage The provided fallback domain //cdn.example.com is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.
+   * @expectedExceptionMessage The provided fallback domain //cdn.example.com is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.
    */
   public function testProtocolRelativeUrlAsComplexFallbackDomain() {
     $this->createCdnSettings([
@@ -332,7 +356,7 @@ class CdnSettingsTest extends UnitTestCase {
   /**
    * @covers ::getLookupTable
    * @expectedException \AssertionError
-   * @expectedExceptionMessage The provided domain http://foo.example.com is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.
+   * @expectedExceptionMessage The provided domain http://foo.example.com is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.
    */
   public function testAbsoluteUrlAsAutobalancedDomain() {
     $this->createCdnSettings([
@@ -355,7 +379,7 @@ class CdnSettingsTest extends UnitTestCase {
   /**
    * @covers ::getLookupTable
    * @expectedException \AssertionError
-   * @expectedExceptionMessage The provided domain //foo.example.com is not a valid domain. Provide domains or hostnames of the form 'cdn.com', 'cdn.example.com'. IP addresses and ports are also allowed.
+   * @expectedExceptionMessage The provided domain //foo.example.com is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.
    */
   public function testProtocolRelativeUrlAsAutobalancedDomain() {
     $this->createCdnSettings([
