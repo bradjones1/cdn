@@ -138,7 +138,7 @@ class FileUrlGenerator {
     }
     // If there are multiple results, pick one using consistent hashing: ensure
     // the same file is always served from the same CDN domain.
-    else if (is_array($result)) {
+    elseif (is_array($result)) {
       $filename = basename($uri);
       $hash = hexdec(substr(md5($filename), 0, 5));
       $cdn_domain = $result[$hash % count($result)];

@@ -81,4 +81,5 @@ class CdnDefaultSettingsUpdateTest extends UpdatePathTestBase {
     $cdn_settings = $this->config('cdn.settings');
     $this->assertIdentical($expected_mapping, $cdn_settings->get('mapping'));
   }
+
 }

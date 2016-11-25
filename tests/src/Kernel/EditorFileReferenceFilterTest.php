@@ -81,7 +81,7 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $uuid = $image->uuid();
 
     file_put_contents('public://llama.mp4', $this->randomMachineName());
-    $video= File::create(['uri' => 'public://llama.mp4']);
+    $video = File::create(['uri' => 'public://llama.mp4']);
     $video->save();
 
     $this->assertTrue(TRUE, 'Simple case: <img>.');

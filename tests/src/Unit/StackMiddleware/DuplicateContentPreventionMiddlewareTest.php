@@ -63,6 +63,7 @@ class DuplicateContentPreventionMiddlewareTest extends UnitTestCase {
   }
 
   public function duplicateContentPreventionProvider() {
+    // @codingStandardsIgnoreStart
     return [
       // HTML requested: the response is a redirect when requested by a CDN.
       ['/',            'Mozilla', FALSE],
@@ -82,6 +83,7 @@ class DuplicateContentPreventionMiddlewareTest extends UnitTestCase {
       ['/sites/default/files/styles/thumbnail/foobar.png', 'Mozilla', FALSE],
       ['/sites/default/files/styles/thumbnail/foobar.png', 'Amazon CloudFront', FALSE],
     ];
+    // @codingStandardsIgnoreEnd
   }
 
 }

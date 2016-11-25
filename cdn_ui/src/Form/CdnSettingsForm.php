@@ -182,7 +182,7 @@ class CdnSettingsForm extends ConfigFormBase {
       }
       // Plus one particular common preset: 'nocssjs', which means all files
       // except CSS and JS.
-      else if ($simple_mapping['extensions_condition_toggle'] === 'nocssjs') {
+      elseif ($simple_mapping['extensions_condition_toggle'] === 'nocssjs') {
         $config->set('mapping.conditions', ['not' => ['extensions' => ['css', 'js']]]);
       }
       else {
