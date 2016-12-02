@@ -110,6 +110,8 @@ class DuplicateContentPreventionMiddleware implements HttpKernelInterface {
       return new RedirectResponse($redirect_url, 301, [
         // @see http://googlewebmastercentral.blogspot.com/2011/06/supporting-relcanonical-http-headers.html
         'Link' => '<' . $redirect_url . '>; rel="canonical"',
+        // Informative header to simplify debugging.
+        'Drupal-CDN-Redirect' => 'duplicate content prevention',
       ]);
     }
 

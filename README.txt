@@ -60,6 +60,9 @@ Installation
    looks like: CDN <-> reverse proxy <-> web server, then you need to take extra
    measures if you want to prevent duplicate content showing up on the CDN. See
    \Drupal\cdn\StackMiddleware\DuplicateContentPreventionMiddleware for details.
+   It's possible in this situation to end up with redirect loops; for that
+   reason the CDN module adds a debugging header to the 301 redirects it emits
+   in order to facilitate troubleshooting.
 
 
 FAQ
