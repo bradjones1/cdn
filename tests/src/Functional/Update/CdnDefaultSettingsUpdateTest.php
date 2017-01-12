@@ -19,7 +19,7 @@ class CdnDefaultSettingsUpdateTest extends UpdatePathTestBase {
    */
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
-      __DIR__ . '/../../../../../../core/modules/system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
+      DRUPAL_ROOT . '/core/modules/system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
       __DIR__ . '/../../../fixtures/update/drupal-8.cdn-cdn_update_8001.php',
     ];
   }
