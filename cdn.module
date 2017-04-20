@@ -39,7 +39,7 @@ function cdn_file_url_alter(&$uri) {
   }
 
   // Don't alter CSS file URLs while settings.php is disabling CSS aggregation.
-  if (substr($uri, -4) === '.css' && isset($GLOBALS['config']['system.performance']['css']) && $GLOBALS['config']['system.performance']['css']['preprocess'] === FALSE) {
+  if (substr($uri, -4) === '.css' && isset($GLOBALS['config']['system.performance']['css']['preprocess']) && $GLOBALS['config']['system.performance']['css']['preprocess'] === FALSE) {
     return;
   }
 
