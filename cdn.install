@@ -5,10 +5,6 @@
  * Update functions for the CDN module.
  */
 
-/**
- * @addtogroup updates-8.x-1.x-beta
- * @{
- */
 
 /**
  * Update the default settings if they are not modified by the user.
@@ -25,7 +21,3 @@ function cdn_update_8001() {
     $cdn_settings->save();
   }
 }
-
-/**
- * @} End of "addtogroup updates-8.x-1.x-beta".
- */
