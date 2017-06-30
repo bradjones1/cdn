@@ -116,6 +116,42 @@ class FileUrlGenerator {
       return FALSE;
     }
 
+    $cdn_domain = $this->getCdnDomain($uri);
+    if ($cdn_domain === FALSE) {
+      return FALSE;
+    }
+
+    // When farfuture is enabled, rewrite the file URL to let Drupal serve the
+    // file with optimal headers. Only possible if the file exists.
+    $absolute_file_path = $this->root . $relative_url;
+    if ($this->settings->farfutureIsEnabled() && file_exists($absolute_file_path)) {
+      // We do the filemtime() call separately, because a failed filemtime()
+      // will cause a PHP warning to be written to the log, which would remove
+      // any performance gain achieved by removing the file_exists() call.
+      $mtime = filemtime($absolute_file_path);
+
+      // Generate a security token. Ensures that users can not request any file
+      // they want by manipulating the URL (they could otherwise request
+      // settings.php for example). See https://www.drupal.org/node/1441502.
+      $calculated_token = Crypt::hmacBase64($mtime . $relative_url, $this->privateKey->get() . Settings::getHashSalt());
+      return '//' . $cdn_domain . $this->getBasePath() . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $relative_url;
+    }
+
+    return '//' . $cdn_domain . $this->getBasePath() . $relative_url;
+  }
+
+  /**
+   * Gets the CDN domain to use for the given file URI.
+   *
+   * @param string $uri
+   *   The URI to a file for which we need a CDN URL, or the path to a shipped
+   *   file.
+   *
+   * @return bool|string
+   *   Returns FALSE if the URI has an extension is not configured to be served
+   *   from a CDN. Otherwise, returns a CDN domain.
+   */
+  protected function getCdnDomain($uri) {
     // Extension-specific mapping.
     $file_extension = Unicode::strtolower(pathinfo($uri, PATHINFO_EXTENSION));
     $lookup_table = $this->settings->getLookupTable();
@@ -141,29 +177,11 @@ class FileUrlGenerator {
     elseif (is_array($result)) {
       $filename = basename($uri);
       $hash = hexdec(substr(md5($filename), 0, 5));
-      $cdn_domain = $result[$hash % count($result)];
+      return $result[$hash % count($result)];
     }
     else {
-      $cdn_domain = $result;
+      return $result;
     }
-
-    // When farfuture is enabled, rewrite the file URL to let Drupal serve the
-    // file with optimal headers. Only possible if the file exists.
-    $absolute_file_path = $this->root . $relative_url;
-    if ($this->settings->farfutureIsEnabled() && file_exists($absolute_file_path)) {
-      // We do the filemtime() call separately, because a failed filemtime()
-      // will cause a PHP warning to be written to the log, which would remove
-      // any performance gain achieved by removing the file_exists() call.
-      $mtime = filemtime($absolute_file_path);
-
-      // Generate a security token. Ensures that users can not request any file
-      // they want by manipulating the URL (they could otherwise request
-      // settings.php for example). See https://www.drupal.org/node/1441502.
-      $calculated_token = Crypt::hmacBase64($mtime . $relative_url, $this->privateKey->get() . Settings::getHashSalt());
-      return '//' . $cdn_domain . $this->getBasePath() . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $relative_url;
-    }
-
-    return '//' . $cdn_domain . $this->getBasePath() . $relative_url;
   }
 
   /**
