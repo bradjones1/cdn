@@ -35,24 +35,46 @@ class HtmlResponseSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    if (!$this->settings->isEnabled()) {
+      return;
+    }
+
+    // Optimal, so first.
+    $this->addPreConnectLinkHeaders($response);
+    // Fallback, so second.
     $this->addDnsPrefetchLinkHeaders($response);
   }
 
   /**
    * Adds DNS prefetch link headers to the HTML response.
    *
+   * @see https://www.w3.org/TR/resource-hints/#dns-prefetch
+   * @todo Remove when http://caniuse.com/link-rel-preconnect has support in all browsers or is equivalent with http://caniuse.com/#feat=link-rel-dns-prefetch
+   *
    * @param \Drupal\Core\Render\HtmlResponse $response
    *   The HTML response to update.
    */
   protected function addDnsPrefetchLinkHeaders(HtmlResponse $response) {
-    if ($this->settings->isEnabled()) {
-      $domains = $this->settings->getDomains();
-      if (count($domains)) {
-        $response->headers->set('x-dns-prefetch-control', 'on');
-        foreach ($domains as $domain) {
-          $response->headers->set('Link', '<//' . $domain . '>; rel=dns-prefetch', FALSE);
-        }
+    $domains = $this->settings->getDomains();
+    if (count($domains)) {
+      $response->headers->set('x-dns-prefetch-control', 'on');
+      foreach ($domains as $domain) {
+        $response->headers->set('Link', '<//' . $domain . '>; rel=dns-prefetch', FALSE);
       }
+    }
+  }
+
+  /**
+   * Adds preconnect link headers to the HTML response.
+   *
+   * @see https://www.w3.org/TR/resource-hints/#preconnect
+   *
+   * @param \Drupal\Core\Render\HtmlResponse $response
+   *   The HTML response to update.
+   */
+  protected function addPreconnectLinkHeaders(HtmlResponse $response) {
+    foreach ($this->settings->getDomains() as $domain) {
+      $response->headers->set('Link', '<//' . $domain . '>; rel=preconnect; crossorigin', FALSE);
     }
   }
 
