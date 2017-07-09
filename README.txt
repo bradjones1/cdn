@@ -38,10 +38,12 @@ Installation
    The CDN will provide you with a "delivery address", this is the address
    that we'll use to download files from the CDN instead of the Drupal server.
    Suppose this is `http://d85nwn7m5gl3y.cloudfront.net`.
+   Be sure to forward query strings from the CDN to the origin! Otherwise image
+   style derivatives will not work.
    (It acts like a globally distributed, super fast proxy server.)
 
    Relevant links:
-   - Amazon CloudFront: http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/CreatingDistributions.html?r=4212
+   - Amazon CloudFront gotcha: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/QueryStringParameters.html
 
 4) Optionally, you can create a CNAME alias to the delivery address on your
    DNS server. This way, it's not immediately obvious from the links in the
