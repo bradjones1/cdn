@@ -95,7 +95,7 @@ class CdnFarfutureController implements ContainerInjectionInterface {
       // Finally, it's also marked as "immutable", which helps avoid
       // revalidation, see:
       // - https://bitsup.blogspot.be/2016/05/cache-control-immutable.html
-      // - https://tools.ietf.org/html/draft-mcmanus-immutable-00
+      // - https://tools.ietf.org/html/rfc8246
       'Cache-Control' => 'max-age=290304000, no-transform, public, immutable',
       // Set a far future Expires header. The maximum UNIX timestamp is
       // somewhere in 2038. Set it to a date in 2037, just to be safe.
