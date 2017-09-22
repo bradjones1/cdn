@@ -5,7 +5,6 @@
  * Update functions for the CDN module.
  */
 
-
 /**
  * Update the default settings if they are not modified by the user.
  */

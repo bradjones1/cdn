@@ -216,9 +216,9 @@ class FileUrlGeneratorTest extends UnitTestCase {
    * Overridden, because the way ImmutableConfig::get() is mocked, does not
    * match the actual implementation, which then causes tests to fail.
    */
-  public function getConfigFactoryStub(array $configs = array()) {
-    $config_get_map = array();
-    $config_editable_map = array();
+  public function getConfigFactoryStub(array $configs = []) {
+    $config_get_map = [];
+    $config_editable_map = [];
     // Construct the desired configuration object stubs, each with its own
     // desired return map.
     foreach ($configs as $config_name => $map) {
@@ -239,7 +239,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       $immutable_config_object->expects($this->any())
         ->method('get')
         ->willReturnCallback($get);
-      $config_get_map[] = array($config_name, $immutable_config_object);
+      $config_get_map[] = [$config_name, $immutable_config_object];
 
       $mutable_config_object = $this->getMockBuilder('Drupal\Core\Config\Config')
         ->disableOriginalConstructor()
@@ -247,7 +247,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       $mutable_config_object->expects($this->any())
         ->method('get')
         ->willReturnCallback($get);
-      $config_editable_map[] = array($config_name, $mutable_config_object);
+      $config_editable_map[] = [$config_name, $mutable_config_object];
     }
     // Construct a config factory with the array of configuration object stubs
     // as its return map.
