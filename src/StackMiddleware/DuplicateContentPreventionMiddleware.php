@@ -2,6 +2,7 @@
 
 namespace Drupal\cdn\StackMiddleware;
 
+use Drupal\Component\Assertion\Inspector;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -152,8 +153,8 @@ class DuplicateContentPreventionMiddleware implements HttpKernelInterface {
       // @see \Drupal\Core\DrupalKernel::preHandle()
       $this->requestStack->push($request);
 
-      assert('\Drupal\Component\Assertion\Inspector::assertAllStrings($this->cdnUserAgents)', 'CDN user agents must be strings.');
-      assert('\Drupal\Component\Assertion\Inspector::assertAll(function($s) { return \Drupal\Component\Utility\Unicode::strtolower($s) === $s; }, $this->cdnUserAgents)', 'CDN user agents must be lower case strings.');
+      assert(Inspector::assertAllStrings($this->cdnUserAgents), 'CDN user agents must be strings.');
+      assert(Inspector::assertAll(function($s) { return Unicode::strtolower($s) === $s; }, $this->cdnUserAgents), 'CDN user agents must be lower case strings.');
       foreach ($this->cdnUserAgents as $cdn_ua) {
         if (strstr($ua, $cdn_ua)) {
           return Url::fromUri('base:' . $path)->setAbsolute(TRUE)->toString(FALSE);

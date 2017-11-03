@@ -109,7 +109,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
     ];
 
     $cases = [];
-    assert('count($cases_root) === count($cases_subdir)');
+    assert(count($cases_root) === count($cases_subdir));
     foreach ($cases_root as $description => $case) {
       $cases['root, ' . $description] = array_merge([''], $case);
     }

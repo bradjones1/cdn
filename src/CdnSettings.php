@@ -97,7 +97,7 @@ class CdnSettings {
     $lookup_table = [];
     if ($mapping['type'] === 'simple') {
       $domain = $mapping['domain'];
-      assert('\Drupal\cdn\CdnSettings::isValidCdnDomain($domain)', "The provided domain $domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
+      assert(CdnSettings::isValidCdnDomain($domain), "The provided domain $domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
       if (empty($mapping['conditions'])) {
         $lookup_table['*'] = $domain;
       }
@@ -112,7 +112,7 @@ class CdnSettings {
         }
 
         if (isset($mapping['conditions']['not'])) {
-          assert('!isset($mapping[\'conditions\'][\'extensions\'])', 'It does not make sense to provide an \'extensions\' condition as well as a negated \'extensions\' condition.');
+          assert(!isset($mapping['conditions']['extensions']), 'It does not make sense to provide an \'extensions\' condition as well as a negated \'extensions\' condition.');
           if (!empty($mapping['conditions']['not']['extensions'])) {
             foreach ($mapping['conditions']['not']['extensions'] as $not_extension) {
               $lookup_table[$not_extension] = FALSE;
@@ -125,13 +125,13 @@ class CdnSettings {
       $fallback_domain = NULL;
       if (isset($mapping['fallback_domain'])) {
         $fallback_domain = $mapping['fallback_domain'];
-        assert('\Drupal\cdn\CdnSettings::isValidCdnDomain($fallback_domain)', "The provided fallback domain $fallback_domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
+        assert(CdnSettings::isValidCdnDomain($fallback_domain), "The provided fallback domain $fallback_domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
         $lookup_table['*'] = $fallback_domain;
       }
       for ($i = 0; $i < count($mapping['domains']); $i++) {
         $nested_mapping = $mapping['domains'][$i];
-        assert('!empty($nested_mapping[\'conditions\'])', 'The nested mapping ' . $i . ' includes no conditions, which is not allowed for complex mappings.');
-        assert('!isset($nested_mapping[\'conditions\'][\'not\'])', 'The nested mapping ' . $i . ' includes negated conditions, which is not allowed for complex mappings: the fallback_domain already serves this purpose.');
+        assert(!empty($nested_mapping['conditions']), 'The nested mapping ' . $i . ' includes no conditions, which is not allowed for complex mappings.');
+        assert(!isset($nested_mapping['conditions']['not']), 'The nested mapping ' . $i . ' includes negated conditions, which is not allowed for complex mappings: the fallback_domain already serves this purpose.');
         $lookup_table += $this->buildLookupTable($nested_mapping);
       }
     }
@@ -141,7 +141,7 @@ class CdnSettings {
       }
       $domains = $mapping['domains'];
       foreach ($domains as $domain) {
-        assert('\Drupal\cdn\CdnSettings::isValidCdnDomain($domain)', "The provided domain $domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
+        assert(CdnSettings::isValidCdnDomain($domain), "The provided domain $domain is not valid. Provide a host like 'cdn.com' or 'cdn.example.com'. IP addresses and ports are also allowed.");
       }
       foreach ($mapping['conditions']['extensions'] as $extension) {
         $lookup_table[$extension] = $domains;
