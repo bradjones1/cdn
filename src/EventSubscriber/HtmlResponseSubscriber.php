@@ -48,11 +48,11 @@ class HtmlResponseSubscriber implements EventSubscriberInterface {
   /**
    * Adds DNS prefetch link headers to the HTML response.
    *
-   * @see https://www.w3.org/TR/resource-hints/#dns-prefetch
-   * @todo Remove when http://caniuse.com/link-rel-preconnect has support in all browsers or is equivalent with http://caniuse.com/#feat=link-rel-dns-prefetch
-   *
    * @param \Drupal\Core\Render\HtmlResponse $response
    *   The HTML response to update.
+   *
+   * @see https://www.w3.org/TR/resource-hints/#dns-prefetch
+   * @todo Remove when http://caniuse.com/link-rel-preconnect has support in all browsers or is equivalent with http://caniuse.com/#feat=link-rel-dns-prefetch
    */
   protected function addDnsPrefetchLinkHeaders(HtmlResponse $response) {
     $domains = $this->settings->getDomains();
@@ -67,10 +67,10 @@ class HtmlResponseSubscriber implements EventSubscriberInterface {
   /**
    * Adds preconnect link headers to the HTML response.
    *
-   * @see https://www.w3.org/TR/resource-hints/#preconnect
-   *
    * @param \Drupal\Core\Render\HtmlResponse $response
    *   The HTML response to update.
+   *
+   * @see https://www.w3.org/TR/resource-hints/#preconnect
    */
   protected function addPreconnectLinkHeaders(HtmlResponse $response) {
     foreach ($this->settings->getDomains() as $domain) {

@@ -166,7 +166,11 @@ class CdnSettingsTest extends UnitTestCase {
           'png' => 'static.example.com',
           'zip' => 'downloads.example.com',
         ],
-        ['[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:42', 'static.example.com', 'downloads.example.com'],
+        [
+          '[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:42',
+          'static.example.com',
+          'downloads.example.com',
+        ],
       ],
       'complex containing two simple mappings, without fallback' => [
         [
@@ -254,8 +258,8 @@ class CdnSettingsTest extends UnitTestCase {
           'extensions' => ['foo', 'bar'],
           'not' => [
             'extensions' => ['baz', 'qux'],
-          ]
-        ]
+          ],
+        ],
       ],
     ])->getLookupTable();
   }
@@ -276,7 +280,7 @@ class CdnSettingsTest extends UnitTestCase {
             'domain' => 'foo.example.com',
             'conditions' => [
               'extensions' => ['png'],
-            ]
+            ],
           ],
           1 => [
             'type' => 'simple',
@@ -284,8 +288,8 @@ class CdnSettingsTest extends UnitTestCase {
             'conditions' => [
               'not' => [
                 'extensions' => ['png'],
-              ]
-            ]
+              ],
+            ],
           ],
         ],
       ],

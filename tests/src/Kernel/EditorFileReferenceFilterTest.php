@@ -16,11 +16,17 @@ use Drupal\KernelTests\KernelTestBase;
 class EditorFileReferenceFilterTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['system', 'filter', 'editor', 'field', 'file', 'user', 'cdn'];
+  public static $modules = [
+    'system',
+    'filter',
+    'editor',
+    'field',
+    'file',
+    'user',
+    'cdn',
+  ];
 
   /**
    * @var \Drupal\filter\Plugin\FilterInterface[]

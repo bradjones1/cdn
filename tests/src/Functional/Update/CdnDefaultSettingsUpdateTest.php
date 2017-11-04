@@ -25,6 +25,8 @@ class CdnDefaultSettingsUpdateTest extends UpdatePathTestBase {
   }
 
   /**
+   * Tests default settings can be detected, and are updated.
+   *
    * It's possible to automatically update the settings as long as the only
    * thing that's modified by the end user is the 'domain' (NULL by default).
    */
@@ -56,6 +58,8 @@ class CdnDefaultSettingsUpdateTest extends UpdatePathTestBase {
   }
 
   /**
+   * Tests customized settings can be detected, and are ignored.
+   *
    * We consider the CDN mapping settings "customized" as soon as the 'type' or
    * 'conditions' keys are modified.
    */

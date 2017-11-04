@@ -45,8 +45,8 @@ function cdn_file_url_alter(&$uri) {
 
   // Don't alter file URLs while processing a CSS file.
   // @see \Drupal\cdn\Asset\CssOptimizer
-  global $cdn_in_css_file;
-  if ($cdn_in_css_file) {
+  global $_cdn_in_css_file;
+  if ($_cdn_in_css_file) {
     return;
   }
 

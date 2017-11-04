@@ -2,8 +2,9 @@
 
 /**
  * @file
- * Contains database additions to drupal-8.bare.standard.php.gz for testing the
- * upgrade path of cdn_update_8001().
+ * Contains database additions for testing the update path of cdn_update_8001().
+ *
+ * @depends core/modules/system/tests/fixtures/update/drupal-8.bare.standard.php.gz
  */
 
 use Drupal\Core\Database\Database;
@@ -54,6 +55,6 @@ $data = $connection->insert('config')
   ->fields([
     'name' => 'cdn.settings',
     'data' => serialize($config),
-    'collection' => ''
+    'collection' => '',
   ])
   ->execute();

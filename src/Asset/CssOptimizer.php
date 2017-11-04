@@ -55,10 +55,10 @@ class CssOptimizer implements AssetOptimizerInterface {
    *   The result of the callable.
    */
   protected function runWithoutCdnFileAlteration(callable $callable) {
-    global $cdn_in_css_file;
-    $cdn_in_css_file = TRUE;
+    global $_cdn_in_css_file;
+    $_cdn_in_css_file = TRUE;
     $result = $callable();
-    $cdn_in_css_file = FALSE;
+    $_cdn_in_css_file = FALSE;
     return $result;
   }
 

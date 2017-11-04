@@ -154,7 +154,7 @@ class DuplicateContentPreventionMiddleware implements HttpKernelInterface {
       $this->requestStack->push($request);
 
       assert(Inspector::assertAllStrings($this->cdnUserAgents), 'CDN user agents must be strings.');
-      assert(Inspector::assertAll(function($s) { return Unicode::strtolower($s) === $s; }, $this->cdnUserAgents), 'CDN user agents must be lower case strings.');
+      assert(Inspector::assertAll(function($s) { return Unicode::strtolower($s) === $s; }, $this->cdnUserAgents), 'CDN user agents must be lower case strings.'); // @codingStandardsIgnoreLine
       foreach ($this->cdnUserAgents as $cdn_ua) {
         if (strstr($ua, $cdn_ua)) {
           return Url::fromUri('base:' . $path)->setAbsolute(TRUE)->toString(FALSE);
