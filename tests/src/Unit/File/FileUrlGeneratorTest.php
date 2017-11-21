@@ -6,6 +6,9 @@ use Drupal\cdn\CdnSettings;
 use Drupal\cdn\File\FileUrlGenerator;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
@@ -233,7 +236,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
         }
       };
 
-      $immutable_config_object = $this->getMockBuilder('Drupal\Core\Config\ImmutableConfig')
+      $immutable_config_object = $this->getMockBuilder(ImmutableConfig::class)
         ->disableOriginalConstructor()
         ->getMock();
       $immutable_config_object->expects($this->any())
@@ -241,7 +244,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
         ->willReturnCallback($get);
       $config_get_map[] = [$config_name, $immutable_config_object];
 
-      $mutable_config_object = $this->getMockBuilder('Drupal\Core\Config\Config')
+      $mutable_config_object = $this->getMockBuilder(Config::class)
         ->disableOriginalConstructor()
         ->getMock();
       $mutable_config_object->expects($this->any())
@@ -251,7 +254,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
     }
     // Construct a config factory with the array of configuration object stubs
     // as its return map.
-    $config_factory = $this->getMock('Drupal\Core\Config\ConfigFactoryInterface');
+    $config_factory = $this->getMock(ConfigFactoryInterface::class);
     $config_factory->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap($config_get_map));
