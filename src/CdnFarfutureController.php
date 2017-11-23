@@ -109,7 +109,11 @@ class CdnFarfutureController implements ContainerInjectionInterface {
       'Last-Modified' => 'Wed, 20 Jan 1988 04:20:42 GMT',
     ];
 
-    $response = new BinaryFileResponse(substr($root_relative_file_url, 1), 200, $farfuture_headers, TRUE, NULL, FALSE, FALSE);
+    // A relative URL for a file contains '%20' instead of spaces. A relative
+    // file path contains spaces.
+    $relative_file_path = rawurldecode($root_relative_file_url);
+
+    $response = new BinaryFileResponse(substr($relative_file_path, 1), 200, $farfuture_headers, TRUE, NULL, FALSE, FALSE);
     $response->isNotModified($request);
     return $response;
   }

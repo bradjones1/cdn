@@ -2,6 +2,7 @@
 
 namespace Drupal\cdn\PathProcessor;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -28,7 +29,7 @@ class CdnFarfuturePathProcessor implements InboundPathProcessorInterface {
     list($security_token, $mtime, $root_relative_file_url) = explode('/', $tail, 3);
 
     // Set the root-relative file URL as query parameter.
-    $request->query->set('root_relative_file_url', '/' . $root_relative_file_url);
+    $request->query->set('root_relative_file_url', '/' . UrlHelper::encodePath($root_relative_file_url));
 
     // Return the same path, but without the trailing file.
     return "/cdn/farfuture/$security_token/$mtime";

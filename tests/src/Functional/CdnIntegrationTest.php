@@ -3,6 +3,7 @@
 namespace Drupal\Tests\cdn\Functional;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Site\Settings;
 use Drupal\file\Entity\File;
 use Drupal\filter\Entity\FilterFormat;
@@ -44,8 +45,8 @@ class CdnIntegrationTest extends BrowserTestBase {
       'type' => 'article',
       'name' => 'Article',
     ]);
-    file_put_contents('public://druplicon.png', $this->randomMachineName());
-    $image = File::create(['uri' => 'public://druplicon.png']);
+    file_put_contents('public://druplicon ❤️.png', $this->randomMachineName());
+    $image = File::create(['uri' => 'public://druplicon ❤️.png']);
     $image->save();
     $uuid = $image->uuid();
 
@@ -55,7 +56,7 @@ class CdnIntegrationTest extends BrowserTestBase {
       'type' => 'article',
       'body' => [
         0 => [
-          'value' => '<p>Do you also love Drupal?</p><img src="druplicon.png" data-caption="Druplicon" data-entity-type="file" data-entity-uuid="' . $uuid . '" />',
+          'value' => '<p>Do you also love Drupal?</p><img src="druplicon ❤️.png" data-caption="Druplicon" data-entity-type="file" data-entity-uuid="' . $uuid . '" />',
           'format' => $format,
         ],
       ],
@@ -140,7 +141,7 @@ class CdnIntegrationTest extends BrowserTestBase {
 
     $this->drupalGet('/node/1');
     $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'));
-    $this->assertSession()->responseContains('src="//cdn.example.com' . base_path() . $this->siteDirectory . '/files/druplicon.png"');
+    $this->assertSession()->responseContains('src="//cdn.example.com' . base_path() . $this->siteDirectory . '/files/' . UrlHelper::encodePath('druplicon ❤️.png') . '"');
     $this->drupalGet('/node/1');
     $this->assertSame('HIT', $session->getResponseHeader('X-Drupal-Cache'));
 
@@ -149,17 +150,17 @@ class CdnIntegrationTest extends BrowserTestBase {
 
     $this->drupalGet('/node/1');
     $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'));
-    $this->assertSession()->responseContains('src="' . base_path() . $this->siteDirectory . '/files/druplicon.png"');
+    $this->assertSession()->responseContains('src="' . base_path() . $this->siteDirectory . '/files/' . UrlHelper::encodePath('druplicon ❤️.png') . '"');
   }
 
   /**
    * Tests that the cdn.farfuture.download route/controller work as expected.
    */
   public function testFarfuture() {
-    $drupal_js_mtime = filemtime(DRUPAL_ROOT . '/core/misc/drupal.js');
-    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', \Drupal::service('private_key')->get() . Settings::getHashSalt());
+    $druplicon_png_mtime = filemtime('public://druplicon ❤️.png');
+    $druplicon_png_security_token = Crypt::hmacBase64($druplicon_png_mtime . '/' . $this->siteDirectory . '/files/' . UrlHelper::encodePath('druplicon ❤️.png'), \Drupal::service('private_key')->get() . Settings::getHashSalt());
 
-    $this->drupalGet('/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js');
+    $this->drupalGet('/cdn/farfuture/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/' . $this->siteDirectory . '/files/druplicon ❤️.png');
     $this->assertSession()->statusCodeEquals(200);
     // Assert presence of headers that \Drupal\cdn\CdnFarfutureController sets.
     $this->assertSame('Wed, 20 Jan 1988 04:20:42 GMT', $this->getSession()->getResponseHeader('Last-Modified'));
@@ -167,7 +168,7 @@ class CdnIntegrationTest extends BrowserTestBase {
     $this->assertSame('bytes', $this->getSession()->getResponseHeader('Accept-Ranges'));
 
     // Any chance to the security token should cause a 403.
-    $this->drupalGet('/cdn/farfuture/' . substr($drupal_js_security_token, 1) . '/' . $drupal_js_mtime . '/core/misc/drupal.js');
+    $this->drupalGet('/cdn/farfuture/' . substr($druplicon_png_security_token, 1) . '/' . $druplicon_png_mtime . '/sites/default/files/druplicon ❤️.png');
     $this->assertSession()->statusCodeEquals(403);
   }
 

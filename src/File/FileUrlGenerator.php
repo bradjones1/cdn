@@ -123,18 +123,23 @@ class FileUrlGenerator {
 
     // When farfuture is enabled, rewrite the file URL to let Drupal serve the
     // file with optimal headers. Only possible if the file exists.
-    $absolute_file_path = $this->root . $relative_url;
-    if ($this->settings->farfutureIsEnabled() && file_exists($absolute_file_path)) {
-      // We do the filemtime() call separately, because a failed filemtime()
-      // will cause a PHP warning to be written to the log, which would remove
-      // any performance gain achieved by removing the file_exists() call.
-      $mtime = filemtime($absolute_file_path);
+    if ($this->settings->farfutureIsEnabled()) {
+      // A relative URL for a file contains '%20' instead of spaces. A relative
+      // file path contains spaces.
+      $relative_file_path = rawurldecode($relative_url);
+      $absolute_file_path = $this->root . $relative_file_path;
+      if (file_exists($absolute_file_path)) {
+        // We do the filemtime() call separately, because a failed filemtime()
+        // will cause a PHP warning to be written to the log, which would remove
+        // any performance gain achieved by removing the file_exists() call.
+        $mtime = filemtime($absolute_file_path);
 
-      // Generate a security token. Ensures that users can not request any file
-      // they want by manipulating the URL (they could otherwise request
-      // settings.php for example). See https://www.drupal.org/node/1441502.
-      $calculated_token = Crypt::hmacBase64($mtime . $relative_url, $this->privateKey->get() . Settings::getHashSalt());
-      return '//' . $cdn_domain . $this->getBasePath() . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $relative_url;
+        // Generate a security token. Ensures that users can not request any
+        // file they want by manipulating the URL (they could otherwise request
+        // settings.php for example). See https://www.drupal.org/node/1441502.
+        $calculated_token = Crypt::hmacBase64($mtime . $relative_url, $this->privateKey->get() . Settings::getHashSalt());
+        return '//' . $cdn_domain . $this->getBasePath() . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $relative_url;
+      }
     }
 
     return '//' . $cdn_domain . $this->getBasePath() . $relative_url;

@@ -6,6 +6,7 @@ use Drupal\cdn\CdnSettings;
 use Drupal\cdn\File\FileUrlGenerator;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
@@ -92,7 +93,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'managed public public file (spublic public imple)' => ['public://simple.css', '//static.example.com/sites/default/files/simple.css'],
       'managed public public file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/sites/default/files/auto-balanced.png'],
       'managed private file (fallback)' => ['private://something.else', FALSE],
-      'unicode' => ['public://újjáépítésérol — 100% in B&W.jpg', '//img1.example.com/sites/default/files/újjáépítésérol — 100% in B&W.jpg'],
+      'unicode' => ['public://újjáépítésérol — 100% in B&W.jpg', '//img1.example.com/sites/default/files/%C3%BAjj%C3%A1%C3%A9p%C3%ADt%C3%A9s%C3%A9rol%20%E2%80%94%20100%25%20in%20B%26W.jpg'],
     ];
 
     $cases_subdir = [
@@ -108,7 +109,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'managed public file (simple)' => ['public://simple.css', '//static.example.com/subdir/sites/default/files/simple.css'],
       'managed public file (auto-balanced)' => ['public://auto-balanced.png', '//img2.example.com/subdir/sites/default/files/auto-balanced.png'],
       'managed private file (fallback)' => ['private://something.else', FALSE],
-      'unicode' => ['public://újjáépítésérol — 100% in B&W.jpg', '//img1.example.com/subdir/sites/default/files/újjáépítésérol — 100% in B&W.jpg'],
+      'unicode' => ['public://újjáépítésérol — 100% in B&W.jpg', '//img1.example.com/subdir/sites/default/files/%C3%BAjj%C3%A1%C3%A9p%C3%ADt%C3%A9s%C3%A9rol%20%E2%80%94%20100%25%20in%20B%26W.jpg'],
     ];
 
     $cases = [];
@@ -138,19 +139,29 @@ class FileUrlGeneratorTest extends UnitTestCase {
       ],
     ];
 
-    // In root.
+    // Generate file for testing managed file.
+    $llama_jpg_filename = 'llama (' . $this->randomMachineName() . ').jpg';
+    $llama_jpg_filepath = $this->root . '/sites/default/files/' . $llama_jpg_filename;
+    file_put_contents($llama_jpg_filepath, $this->randomMachineName());
+    $llama_jpg_mtime = filemtime($llama_jpg_filepath);
+    $this->assertTrue(file_exists($llama_jpg_filepath));
+
+    // In root: 1) non-existing file, 2) shipped file, 3) managed file.
     $gen = $this->createFileUrlGenerator('', $config);
     $this->assertSame('//cdn.example.com/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
     $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
     $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
     $this->assertSame('//cdn.example.com/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
+    $llama_jpg_security_token = Crypt::hmacBase64($llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), static::$privateKey . Settings::getHashSalt());
+    $this->assertSame('//cdn.example.com/cdn/farfuture/' . $llama_jpg_security_token . '/' . $llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), $gen->generate('public://' . $llama_jpg_filename));
 
-    // In subdir.
+    // In subdir: 1) non-existing file, 2) shipped file, 3) managed file.
     $gen = $this->createFileUrlGenerator('/subdir', $config);
     $this->assertSame('//cdn.example.com/subdir/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
-    $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
-    $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
     $this->assertSame('//cdn.example.com/subdir/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
+    $this->assertSame('//cdn.example.com/subdir/cdn/farfuture/' . $llama_jpg_security_token . '/' . $llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), $gen->generate('public://' . $llama_jpg_filename));
+
+    unlink($llama_jpg_filepath);
   }
 
   /**
@@ -182,7 +193,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
     $public_stream_wrapper = $this->prophesize(PublicStream::class);
     $public_stream_wrapper->getExternalUrl()
       ->will(function () use ($base_path, &$current_uri) {
-        return 'http://example.com' . $base_path . '/sites/default/files/' . substr($current_uri, 9);
+        return 'http://example.com' . $base_path . '/sites/default/files/' . UrlHelper::encodePath(substr($current_uri, 9));
       });
     $stream_wrapper_manager = $this->prophesize(StreamWrapperManagerInterface::class);
     $stream_wrapper_manager->getWrappers(StreamWrapperInterface::LOCAL)
