@@ -3,10 +3,8 @@
 namespace Drupal\cdn;
 
 use Drupal\Component\Utility\Crypt;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
