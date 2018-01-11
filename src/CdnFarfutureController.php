@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-class CdnFarfutureController implements ContainerInjectionInterface {
+class CdnFarfutureController {
 
   /**
    * The private key service.
@@ -27,15 +27,6 @@ class CdnFarfutureController implements ContainerInjectionInterface {
    */
   public function __construct(PrivateKey $private_key) {
     $this->privateKey = $private_key;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('private_key')
-    );
   }
 
   /**

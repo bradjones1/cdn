@@ -19,6 +19,11 @@ services:
     tags:
       - { name: event_subscriber }
 
+  # Controllers.
+  cdn.controller.farfuture:
+    class: \Drupal\cdn\CdnFarfutureController
+    arguments: ['@private_key']
+
   # Inbound path processor for the cdn.farfuture.download route, since the
   # Drupal 8/Symfony routing system does not support "menu tail" or "slash in
   # route parameter". See:
