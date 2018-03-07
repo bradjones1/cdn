@@ -5,11 +5,7 @@ namespace Drupal\Tests\cdn\Unit\File;
 use Drupal\cdn\CdnSettings;
 use Drupal\cdn\File\FileUrlGenerator;
 use Drupal\Component\Utility\Crypt;
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Config\Config;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
@@ -222,57 +218,6 @@ class FileUrlGeneratorTest extends UnitTestCase {
       $private_key->reveal(),
       new CdnSettings($this->getConfigFactoryStub(['cdn.settings' => $raw_config]))
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Overridden, because the way ImmutableConfig::get() is mocked, does not
-   * match the actual implementation, which then causes tests to fail.
-   */
-  public function getConfigFactoryStub(array $configs = []) {
-    $config_get_map = [];
-    $config_editable_map = [];
-    // Construct the desired configuration object stubs, each with its own
-    // desired return map.
-    foreach ($configs as $config_name => $map) {
-      $get = function ($key) use ($map) {
-        $parts = explode('.', $key);
-        if (count($parts) == 1) {
-          return isset($map[$key]) ? $map[$key] : NULL;
-        }
-        else {
-          $value = NestedArray::getValue($map, $parts, $key_exists);
-          return $key_exists ? $value : NULL;
-        }
-      };
-
-      $immutable_config_object = $this->getMockBuilder(ImmutableConfig::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-      $immutable_config_object->expects($this->any())
-        ->method('get')
-        ->willReturnCallback($get);
-      $config_get_map[] = [$config_name, $immutable_config_object];
-
-      $mutable_config_object = $this->getMockBuilder(Config::class)
-        ->disableOriginalConstructor()
-        ->getMock();
-      $mutable_config_object->expects($this->any())
-        ->method('get')
-        ->willReturnCallback($get);
-      $config_editable_map[] = [$config_name, $mutable_config_object];
-    }
-    // Construct a config factory with the array of configuration object stubs
-    // as its return map.
-    $config_factory = $this->getMock(ConfigFactoryInterface::class);
-    $config_factory->expects($this->any())
-      ->method('get')
-      ->will($this->returnValueMap($config_get_map));
-    $config_factory->expects($this->any())
-      ->method('getEditable')
-      ->will($this->returnValueMap($config_editable_map));
-    return $config_factory;
   }
 
 }
