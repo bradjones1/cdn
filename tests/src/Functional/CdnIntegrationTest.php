@@ -116,7 +116,7 @@ class CdnIntegrationTest extends BrowserTestBase {
     $this->drupalGet('<front>');
     $this->assertSame('MISS', $session->getResponseHeader('X-Drupal-Cache'), 'Changing CDN settings causes Page Cache miss: setting changes have immediate effect.');
     $href = $this->cssSelect('link[rel=stylesheet]')[0]->getAttribute('href');
-    $regexp = '#//cdn.example.com' . base_path() . 'cdn/farfuture/[a-zA-Z0-9_-]{43}/[0-9]{10}/' . $this->siteDirectory . '/files/css/css_[a-zA-Z0-9_-]{43}\.css\?[a-z0-9]{6}#';
+    $regexp = '#//cdn.example.com' . base_path() . 'cdn/ff/[a-zA-Z0-9_-]{43}/[0-9]{10}/public/css/css_[a-zA-Z0-9_-]{43}\.css\?[a-z0-9]{6}#';
     $this->assertSame(1, preg_match($regexp, $href));
     $this->assertCssFileUsesRootRelativeUrl($this->baseUrl . str_replace('//cdn.example.com', '', $href));
   }
@@ -160,6 +160,9 @@ class CdnIntegrationTest extends BrowserTestBase {
     $druplicon_png_mtime = filemtime('public://druplicon ❤️.png');
     $druplicon_png_security_token = Crypt::hmacBase64($druplicon_png_mtime . '/' . $this->siteDirectory . '/files/' . UrlHelper::encodePath('druplicon ❤️.png'), \Drupal::service('private_key')->get() . Settings::getHashSalt());
 
+    $this->drupalGet('/cdn/ff/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/:relative:/core/misc/drupal.js');
+    $this->assertSession()->statusCodeEquals(200);
+    // Test backwards-compatible path for relative assets.
     $this->drupalGet('/cdn/farfuture/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/' . $this->siteDirectory . '/files/druplicon ❤️.png');
     $this->assertSession()->statusCodeEquals(200);
     // Assert presence of headers that \Drupal\cdn\CdnFarfutureController sets.
@@ -168,7 +171,7 @@ class CdnIntegrationTest extends BrowserTestBase {
     $this->assertSame('bytes', $this->getSession()->getResponseHeader('Accept-Ranges'));
 
     // Any chance to the security token should cause a 403.
-    $this->drupalGet('/cdn/farfuture/' . substr($druplicon_png_security_token, 1) . '/' . $druplicon_png_mtime . '/sites/default/files/druplicon ❤️.png');
+    $this->drupalGet('/cdn/ff/' . substr($druplicon_png_security_token, 1) . '/' . $druplicon_png_mtime . '/:relative:/core/misc/drupal.js');
     $this->assertSession()->statusCodeEquals(403);
   }
 

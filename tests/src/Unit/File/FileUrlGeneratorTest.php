@@ -67,10 +67,11 @@ class FileUrlGeneratorTest extends UnitTestCase {
             ],
           ],
         ],
-        'farfuture' => [
-          'status' => FALSE,
-        ],
       ],
+      'farfuture' => [
+        'status' => FALSE,
+      ],
+      'stream_wrappers' => [],
     ]);
     $this->assertSame($expected_result, $gen->generate($uri));
   }
@@ -133,6 +134,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'farfuture' => [
         'status' => TRUE,
       ],
+      'stream_wrappers' => [],
     ];
 
     // Generate file for testing managed file.
@@ -147,15 +149,15 @@ class FileUrlGeneratorTest extends UnitTestCase {
     $this->assertSame('//cdn.example.com/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
     $drupal_js_mtime = filemtime($this->root . '/core/misc/drupal.js');
     $drupal_js_security_token = Crypt::hmacBase64($drupal_js_mtime . '/core/misc/drupal.js', static::$privateKey . Settings::getHashSalt());
-    $this->assertSame('//cdn.example.com/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
+    $this->assertSame('//cdn.example.com/cdn/ff/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/:relative:/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
     $llama_jpg_security_token = Crypt::hmacBase64($llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), static::$privateKey . Settings::getHashSalt());
-    $this->assertSame('//cdn.example.com/cdn/farfuture/' . $llama_jpg_security_token . '/' . $llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), $gen->generate('public://' . $llama_jpg_filename));
+    $this->assertSame('//cdn.example.com/cdn/ff/' . $llama_jpg_security_token . '/' . $llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), $gen->generate('public://' . $llama_jpg_filename));
 
     // In subdir: 1) non-existing file, 2) shipped file, 3) managed file.
     $gen = $this->createFileUrlGenerator('/subdir', $config);
     $this->assertSame('//cdn.example.com/subdir/core/misc/does-not-exist.js', $gen->generate('core/misc/does-not-exist.js'));
-    $this->assertSame('//cdn.example.com/subdir/cdn/farfuture/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
-    $this->assertSame('//cdn.example.com/subdir/cdn/farfuture/' . $llama_jpg_security_token . '/' . $llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), $gen->generate('public://' . $llama_jpg_filename));
+    $this->assertSame('//cdn.example.com/subdir/cdn/ff/' . $drupal_js_security_token . '/' . $drupal_js_mtime . '/:relative:/core/misc/drupal.js', $gen->generate('core/misc/drupal.js'));
+    $this->assertSame('//cdn.example.com/subdir/cdn/ff/' . $llama_jpg_security_token . '/' . $llama_jpg_mtime . '/sites/default/files/' . UrlHelper::encodePath($llama_jpg_filename), $gen->generate('public://' . $llama_jpg_filename));
 
     unlink($llama_jpg_filepath);
   }
@@ -192,8 +194,8 @@ class FileUrlGeneratorTest extends UnitTestCase {
         return 'http://example.com' . $base_path . '/sites/default/files/' . UrlHelper::encodePath(substr($current_uri, 9));
       });
     $stream_wrapper_manager = $this->prophesize(StreamWrapperManagerInterface::class);
-    $stream_wrapper_manager->getWrappers(StreamWrapperInterface::LOCAL)
-      ->willReturn(['public' => TRUE, 'private' => TRUE]);
+    $stream_wrapper_manager->getWrappers(StreamWrapperInterface::LOCAL_NORMAL)
+      ->willReturn(['public' => TRUE]);
     $stream_wrapper_manager->getViaUri(Argument::that(function ($uri) {
       return substr($uri, 0, 9) === 'public://';
     }))
@@ -216,7 +218,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       $stream_wrapper_manager->reveal(),
       $request_stack->reveal(),
       $private_key->reveal(),
-      new CdnSettings($this->getConfigFactoryStub(['cdn.settings' => $raw_config]))
+      new CdnSettings($this->getConfigFactoryStub(['cdn.settings' => $raw_config]), $stream_wrapper_manager->reveal())
     );
   }
 

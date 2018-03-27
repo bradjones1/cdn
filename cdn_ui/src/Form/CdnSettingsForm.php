@@ -3,13 +3,42 @@
 namespace Drupal\cdn_ui\Form;
 
 use Drupal\cdn\CdnSettings;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure CDN settings for this site.
  */
 class CdnSettingsForm extends ConfigFormBase {
+
+  /**
+   * The stream wrapper manager.
+   *
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   */
+  protected $streamWrapperManager;
+
+  /**
+   * @inheritDoc
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $streamWrapperManager) {
+    parent::__construct($config_factory);
+    $this->streamWrapperManager = $streamWrapperManager;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('stream_wrapper_manager')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -74,7 +103,6 @@ class CdnSettingsForm extends ConfigFormBase {
       '#wrapper_attributes' => ['class' => ['container-inline']],
       '#attributes' => ['class' => ['container-inline']],
       '#default_value' => $config->get('mapping.type') === 'simple' ?: 'advanced',
-      '#attributes' => ['class' => ['container-inline']],
     ];
     $form['mapping']['simple'] = [
       '#type' => 'container',
@@ -143,6 +171,27 @@ class CdnSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('farfuture.status'),
     ];
 
+    $visibleWrappers = array_keys($this->streamWrapperManager
+      ->getWrappers(StreamWrapperInterface::VISIBLE));
+    $localWrappers = array_keys($this->streamWrapperManager
+      ->getWrappers(StreamWrapperInterface::LOCAL_NORMAL));
+    $wrappers = array_unique(array_merge($localWrappers, $visibleWrappers));
+    $existingWrappers = $config->get('stream_wrappers');
+    $form['wrappers'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Stream wrappers'),
+      '#group' => 'cdn_settings',
+      '#tree' => TRUE,
+    ];
+    $form['wrappers']['stream_wrappers'] = [
+      '#type' => 'checkboxes',
+      '#options' => array_combine($wrappers, $wrappers),
+      '#default_value' => array_merge($localWrappers, $existingWrappers),
+      '#description' => $this->t('Stream wrappers to rewrite for CDN. "Local" stream wrappers are always enabled.')
+    ];
+    foreach ($localWrappers as $localWrapper) {
+      $form['wrappers']['stream_wrappers'][$localWrapper]['#disabled'] = TRUE;
+    }
     return parent::buildForm($form, $form_state);
   }
 
@@ -168,6 +217,9 @@ class CdnSettingsForm extends ConfigFormBase {
 
     // Vertical tab: 'Status'.
     $config->set('status', (bool) $form_state->getValue('status'));
+
+    // Vertical tab: 'Additional stream wrappers'
+    $config->set('stream_wrappers', array_values(array_filter($form_state->getValue(['wrappers', 'stream_wrappers']))));
 
     // Vertical tab: 'Mapping'.
     if ($form_state->getValue(['mapping', 'type']) === 'simple') {

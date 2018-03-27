@@ -2,15 +2,26 @@
 
 namespace Drupal\cdn;
 
+use Drupal\cdn\File\FileUrlGenerator;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class CdnFarfutureController {
+
+  /**
+   * The app root.
+   *
+   * @var string
+   */
+  protected $root;
 
   /**
    * The private key service.
@@ -20,11 +31,20 @@ class CdnFarfutureController {
   protected $privateKey;
 
   /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * @param \Drupal\Core\PrivateKey $private_key
    *   The private key service.
    */
-  public function __construct(PrivateKey $private_key) {
+  public function __construct(PrivateKey $private_key, $root, FileSystemInterface $fileSystem) {
+    $this->root = $root;
     $this->privateKey = $private_key;
+    $this->fileSystem = $fileSystem;
   }
 
   /**
@@ -39,6 +59,10 @@ class CdnFarfutureController {
    *   example). See https://www.drupal.org/node/1441502.
    * @param int $mtime
    *   The file's mtime.
+   * @param string $scheme
+   *   The file's scheme.
+   * @param string $root_relative_file_url
+   *   The relative path from FileUrlGenerator::generate
    *
    * @returns \Symfony\Component\HttpFoundation\BinaryFileResponse
    *   The response that will efficiently send the requested file.
@@ -50,15 +74,18 @@ class CdnFarfutureController {
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   Thrown when an invalid security token is provided.
    */
-  public function download(Request $request, $security_token, $mtime) {
-    // Ensure \Drupal\cdn\PathProcessor\CdnFarfuturePathProcessor did its job.
-    if (!$request->query->has('root_relative_file_url')) {
+  public function download(Request $request, $security_token, $mtime, $scheme) {
+    // Validate the scheme early.
+    if ($scheme != FileUrlGenerator::RELATIVE && !$this->fileSystem->validScheme($scheme)) {
       throw new BadRequestHttpException();
     }
 
+    $path = $request->query->get('root_relative_file_url');
     // Validate security token.
-    $root_relative_file_url = $request->query->get('root_relative_file_url');
-    $calculated_token = Crypt::hmacBase64($mtime . $root_relative_file_url, $this->privateKey->get() . Settings::getHashSalt());
+    $uri = $scheme == FileUrlGenerator::RELATIVE
+      ? $path
+      : $scheme . ':/' . $path; // Path comes with a leading slash from the URL.
+    $calculated_token = Crypt::hmacBase64($mtime . $uri, $this->privateKey->get() . Settings::getHashSalt());
     if ($security_token !== $calculated_token) {
       throw new AccessDeniedHttpException('Invalid security token.');
     }
@@ -102,7 +129,10 @@ class CdnFarfutureController {
     // file path contains spaces.
     $relative_file_path = rawurldecode($root_relative_file_url);
 
-    $response = new BinaryFileResponse(substr($relative_file_path, 1), 200, $farfuture_headers, TRUE, NULL, FALSE, FALSE);
+    if ($scheme == FileUrlGenerator::RELATIVE) {
+      $uri = $this->root . $uri;
+    }
+    $response = new BinaryFileResponse($uri, 200, $farfuture_headers, TRUE, NULL, FALSE, FALSE);
     $response->isNotModified($request);
     return $response;
   }

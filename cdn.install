@@ -20,3 +20,14 @@ function cdn_update_8001() {
     $cdn_settings->save();
   }
 }
+
+/**
+ * Update the default settings to include the stream_wrappers schema.
+ */
+function cdn_update_8002() {
+  $cdn_settings = \Drupal::configFactory()->getEditable('cdn.settings');
+  if (is_null($cdn_settings->get('stream_wrappers'))) {
+    $cdn_settings->set('stream_wrappers', []);
+    $cdn_settings->save();
+  }
+}

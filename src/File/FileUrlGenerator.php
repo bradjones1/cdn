@@ -8,7 +8,6 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -18,6 +17,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * @see https://www.drupal.org/node/2669074
  */
 class FileUrlGenerator {
+
+  const RELATIVE = ':relative:';
 
   /**
    * The app root.
@@ -111,14 +112,26 @@ class FileUrlGenerator {
       return FALSE;
     }
 
-    $relative_url = $this->getRelativeUrl($uri);
-    if ($relative_url === FALSE) {
+    if (!$this->canServe($uri)) {
       return FALSE;
     }
 
     $cdn_domain = $this->getCdnDomain($uri);
     if ($cdn_domain === FALSE) {
       return FALSE;
+    }
+
+    // When farfuture is enabled, rewrite the file URL to let Drupal serve the
+    // file with optimal headers. Only possible if the file exists.
+    if (!$scheme = $this->fileSystem->uriScheme($uri)) {
+      $scheme = self::RELATIVE;
+      $fileUri = $filePath = $relative = '/' . $uri;
+      $realFile = $this->root . $fileUri;
+    }
+    else {
+      $fileUri = $realFile = $uri;
+      $filePath = substr($fileUri, strlen($scheme . ':/')); // Leading slash.
+      $relative_url = str_replace($this->requestStack->getCurrentRequest()->getSchemeAndHttpHost() . $this->getBasePath(), '', $this->streamWrapperManager->getViaUri($uri)->getExternalUrl());
     }
 
     // When farfuture is enabled, rewrite the file URL to let Drupal serve the
@@ -132,13 +145,13 @@ class FileUrlGenerator {
         // We do the filemtime() call separately, because a failed filemtime()
         // will cause a PHP warning to be written to the log, which would remove
         // any performance gain achieved by removing the file_exists() call.
-        $mtime = filemtime($absolute_file_path);
+        $mtime = filemtime($realFile);
 
         // Generate a security token. Ensures that users can not request any
         // file they want by manipulating the URL (they could otherwise request
         // settings.php for example). See https://www.drupal.org/node/1441502.
-        $calculated_token = Crypt::hmacBase64($mtime . $relative_url, $this->privateKey->get() . Settings::getHashSalt());
-        return '//' . $cdn_domain . $this->getBasePath() . '/cdn/farfuture/' . $calculated_token . '/' . $mtime . $relative_url;
+        $calculated_token = Crypt::hmacBase64($mtime . $fileUri, $this->privateKey->get() . Settings::getHashSalt());
+        return '//' . $cdn_domain . $this->getBasePath() . '/cdn/ff/' . $calculated_token . '/' . $mtime . '/' . $scheme . $filePath;
       }
     }
 
@@ -190,22 +203,24 @@ class FileUrlGenerator {
   }
 
   /**
-   * Gets the relative URL for files that are shipped or in a local stream.
+   * Determines if a URI can/should be served by CDN.
    *
    * @param string $uri
    *   The URI to a file for which we need a CDN URL, or the path to a shipped
    *   file.
    *
-   * @return bool|string
-   *   Returns FALSE if the URI is not for a shipped file or in a local stream.
-   *   Otherwise, returns the relative URL.
+   * @return bool
+   *   Returns FALSE if the URI is not for a shipped file or in an eligible
+   *   stream. TRUE otherwise.
    */
-  protected function getRelativeUrl($uri) {
+  protected function canServe($uri) {
     $scheme = $this->fileSystem->uriScheme($uri);
 
+    // Allow additional stream wrappers to be served via CDN.
+    $streamWrapperTypes = $this->settings->streamWrappers();
     // If the URI is absolute — HTTP(S) or otherwise — return early, except if
-    // it's an absolute URI using a local stream wrapper scheme.
-    if ($scheme && !isset($this->streamWrapperManager->getWrappers(StreamWrapperInterface::LOCAL)[$scheme])) {
+    // it's an absolute URI using an approved stream wrapper type.
+    if ($scheme && !in_array($scheme, $streamWrapperTypes)) {
       return FALSE;
     }
     // If the URI is protocol-relative, return early.
@@ -216,14 +231,7 @@ class FileUrlGenerator {
     elseif ($scheme === 'private') {
       return FALSE;
     }
-
-    $request = $this->requestStack->getCurrentRequest();
-
-    return $scheme
-      // Local stream wrapper.
-      ? str_replace($request->getSchemeAndHttpHost() . $this->getBasePath(), '', $this->streamWrapperManager->getViaUri($uri)->getExternalUrl())
-      // Shipped file.
-      : '/' . $uri;
+    return TRUE;
   }
 
   /**

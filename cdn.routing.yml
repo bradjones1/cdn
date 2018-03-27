@@ -1,3 +1,5 @@
+# The /cdn/farfuture route has been deprecated and is rewritten
+# in CdnFarfuturePathProcessor.
 cdn.farfuture.download:
   path: '/cdn/farfuture/{security_token}/{mtime}'
   defaults:
@@ -9,3 +11,11 @@ cdn.farfuture.download:
   requirements:
     _access: 'TRUE'
     mtime: \d+
+cdn.farfuture_scheme.download:
+  path: '/cdn/ff/{security_token}/{mtime}/{scheme}'
+  defaults:
+    _controller: '\Drupal\cdn\CdnFarfutureController::download'
+  requirements:
+    _access: 'TRUE'
+    mtime: \d+
+    scheme: '(:\w+:)|([a-zA-Z0-9+.-]+)'
