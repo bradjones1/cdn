@@ -89,15 +89,16 @@ class CdnSettings {
   }
 
   /**
-   * Returns configured stream wrappers to apply CDN to.
+   * Returns CDN-eligible stream wrappers.
    *
-   * @return array
+   * @return string[] The allowed stream wrapper scheme names.
    */
   public function streamWrappers() {
     $configured = $this->rawSettings->get('stream_wrappers');
-    // LOCAL_NORMAL stream wrappers are always served.
-    return array_merge(array_keys($this->streamWrapperManager
+    $wrappers = array_merge(array_keys($this->streamWrapperManager
       ->getWrappers(StreamWrapperInterface::LOCAL_NORMAL)), $configured);
+    // Private scheme is always excluded.
+    return array_diff($wrappers, ['private']);
   }
 
   /**

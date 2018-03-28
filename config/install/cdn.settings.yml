@@ -69,6 +69,6 @@ mapping:
 
 farfuture:
   status: true
-# All LOCAL_NORMAL wrappers are enabled by rule,
-# additional wrappers can be added.
-stream_wrappers: []
+# Public is enabled by rule, additional wrappers can be added.
+stream_wrappers:
+  - public

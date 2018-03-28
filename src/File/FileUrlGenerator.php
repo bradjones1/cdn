@@ -125,7 +125,7 @@ class FileUrlGenerator {
     // file with optimal headers. Only possible if the file exists.
     if (!$scheme = $this->fileSystem->uriScheme($uri)) {
       $scheme = self::RELATIVE;
-      $fileUri = $filePath = $relative = '/' . $uri;
+      $fileUri = $filePath = $relative_url = '/' . $uri;
       $realFile = $this->root . $fileUri;
     }
     else {
@@ -225,10 +225,6 @@ class FileUrlGenerator {
     }
     // If the URI is protocol-relative, return early.
     elseif (Unicode::substr($uri, 0, 2) === '//') {
-      return FALSE;
-    }
-    // The private:// stream wrapper is explicitly not supported.
-    elseif ($scheme === 'private') {
       return FALSE;
     }
     return TRUE;

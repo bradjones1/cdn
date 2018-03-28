@@ -24,30 +24,49 @@ class CdnFarfuturePathProcessor implements InboundPathProcessorInterface {
    * {@inheritdoc}
    */
   public function processInbound($path, Request $request) {
-    if (!preg_match('/^\/cdn\/(ff|farfuture)\/.*/', $path, $matches)) {
-      return $path;
+    if (strpos($path, '/cdn/farfuture/') === 0) {
+      return $this->processDeprecatedFarFuture($path, $request);
     }
+    if (strpos($path, '/cdn/ff/') === 0) {
+      return $this->processFarFuture($path, $request);
+    }
+    return $path;
+  }
 
-    // Parse the security token, mtime and root-relative file URL.
-    // Backwards compatibility for non-scheme aware farfuture paths.
-    if ($matches[1] == 'farfuture') {
-      // Normalize legacy path.
-      // Parse the security token, mtime and root-relative file URL.
-      $tail = substr($path, strlen('/cdn/farfuture/'));
-      list($security_token, $mtime, $root_relative_file_url) = explode('/', $tail, 3);
-      $returnPath = "/cdn/ff/$security_token/$mtime/" . FileUrlGenerator::RELATIVE;
-    }
-    else {
-      // Parse the security token, mtime, scheme and root-relative file URL.
-      $tail = substr($path, strlen('/cdn/ff/'));
-      list($security_token, $mtime, $scheme, $root_relative_file_url) = explode('/', $tail, 4);
-      $returnPath = "/cdn/ff/$security_token/$mtime/$scheme";
-    }
+  /**
+   * Process the path for the far future controller.
+   *
+   * @param $path
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *
+   * @return string The processed path.
+   */
+  protected function processFarFuture($path, Request $request) {
+    // Parse the security token, mtime, scheme and root-relative file URL.
+    $tail = substr($path, strlen('/cdn/ff/'));
+    list($security_token, $mtime, $scheme, $root_relative_file_url) = explode('/', $tail, 4);
+    $returnPath = "/cdn/ff/$security_token/$mtime/$scheme";
     // Set the root-relative file URL as query parameter.
     $request->query->set('root_relative_file_url', '/' . UrlHelper::encodePath($root_relative_file_url));
-
     // Return the same path, but without the trailing file.
     return $returnPath;
   }
 
+  /**
+   * Process the path for the deprecated far future controller.
+   *
+   * @param $path
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *
+   * @return string The processed path.
+   */
+  protected function processDeprecatedFarFuture($path, Request $request) {
+    $tail = substr($path, strlen('/cdn/farfuture/'));
+    list($security_token, $mtime, $root_relative_file_url) = explode('/', $tail, 3);
+    $returnPath = "/cdn/ff/$security_token/$mtime/" . FileUrlGenerator::RELATIVE;
+    // Set the root-relative file URL as query parameter.
+    $request->query->set('root_relative_file_url', '/' . UrlHelper::encodePath($root_relative_file_url));
+    // Return the same path, but without the trailing file.
+    return $returnPath;
+  }
 }

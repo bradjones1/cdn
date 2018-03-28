@@ -182,12 +182,16 @@ class CdnSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Stream wrappers'),
       '#group' => 'cdn_settings',
       '#tree' => TRUE,
+      '#access' => count($wrappers) > count($localWrappers),
     ];
     $form['wrappers']['stream_wrappers'] = [
       '#type' => 'checkboxes',
       '#options' => array_combine($wrappers, $wrappers),
-      '#default_value' => array_merge($localWrappers, $existingWrappers),
-      '#description' => $this->t('Stream wrappers to rewrite for CDN. "Local" stream wrappers are always enabled.')
+      '#default_value' => array_diff(
+        array_merge($localWrappers, $existingWrappers),
+        ['private']
+      ),
+      '#description' => $this->t('Stream wrappers to rewrite for CDN. Non-private "local" stream wrappers are always enabled.')
     ];
     foreach ($localWrappers as $localWrapper) {
       $form['wrappers']['stream_wrappers'][$localWrapper]['#disabled'] = TRUE;

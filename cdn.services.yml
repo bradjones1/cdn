@@ -22,7 +22,7 @@ services:
   # Controllers.
   cdn.controller.farfuture:
     class: \Drupal\cdn\CdnFarfutureController
-    arguments: ['@private_key', '@app.root', '@file_system']
+    arguments: ['@private_key', '@file_system']
 
   # Inbound path processor for the cdn.farfuture.download route, since the
   # Drupal 8/Symfony routing system does not support "menu tail" or "slash in
