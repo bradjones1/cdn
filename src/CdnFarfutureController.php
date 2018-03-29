@@ -69,20 +69,20 @@ class CdnFarfutureController {
     }
 
     $path = $request->query->get('root_relative_file_url');
-    // Validate security token.
+    // A relative URL for a file contains '%20' instead of spaces. A relative
+    // file path contains spaces.
+    $relative_file_path = rawurldecode($path);
     $uri = $scheme == FileUrlGenerator::RELATIVE
       ? $path
-      : $scheme . ':/' . $path; // Path comes with a leading slash from the URL.
-    $calculated_token = Crypt::hmacBase64($mtime . $uri, $this->privateKey->get() . Settings::getHashSalt());
+      : $scheme . ':/' . $relative_file_path; // Path comes with a leading slash from the URL.
+    // Validate security token.
+    $calculated_token = Crypt::hmacBase64($mtime . $relative_file_path, $this->privateKey->get() . Settings::getHashSalt());
     if ($security_token !== $calculated_token) {
       throw new AccessDeniedHttpException('Invalid security token.');
     }
 
     // Strip the leading slash for truly relative paths.
     if ($scheme == FileUrlGenerator::RELATIVE) {
-      // A relative URL for a file contains '%20' instead of spaces. A relative
-      // file path contains spaces.
-      $relative_file_path = rawurldecode($path);
       $uri = substr($relative_file_path, 1);
     }
 

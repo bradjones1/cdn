@@ -125,8 +125,10 @@ class FileUrlGenerator {
     // file with optimal headers. Only possible if the file exists.
     if (!$scheme = $this->fileSystem->uriScheme($uri)) {
       $scheme = self::RELATIVE;
-      $fileUri = $filePath = $relative_url = '/' . $uri;
-      $realFile = $this->root . $fileUri;
+      // A relative URL for a file contains '%20' instead of spaces. A relative
+      // file path contains spaces.
+      $filePath = $relative_url = '/' . $uri;
+      $realFile = $this->root . rawurldecode($relative_url);;
     }
     else {
       $fileUri = $realFile = $uri;
@@ -136,23 +138,17 @@ class FileUrlGenerator {
 
     // When farfuture is enabled, rewrite the file URL to let Drupal serve the
     // file with optimal headers. Only possible if the file exists.
-    if ($this->settings->farfutureIsEnabled()) {
-      // A relative URL for a file contains '%20' instead of spaces. A relative
-      // file path contains spaces.
-      $relative_file_path = rawurldecode($relative_url);
-      $absolute_file_path = $this->root . $relative_file_path;
-      if (file_exists($absolute_file_path)) {
-        // We do the filemtime() call separately, because a failed filemtime()
-        // will cause a PHP warning to be written to the log, which would remove
-        // any performance gain achieved by removing the file_exists() call.
-        $mtime = filemtime($realFile);
+    if ($this->settings->farfutureIsEnabled() && file_exists($realFile)) {
+      // We do the filemtime() call separately, because a failed filemtime()
+      // will cause a PHP warning to be written to the log, which would remove
+      // any performance gain achieved by removing the file_exists() call.
+      $mtime = filemtime($realFile);
 
-        // Generate a security token. Ensures that users can not request any
-        // file they want by manipulating the URL (they could otherwise request
-        // settings.php for example). See https://www.drupal.org/node/1441502.
-        $calculated_token = Crypt::hmacBase64($mtime . $fileUri, $this->privateKey->get() . Settings::getHashSalt());
-        return '//' . $cdn_domain . $this->getBasePath() . '/cdn/ff/' . $calculated_token . '/' . $mtime . '/' . $scheme . $filePath;
-      }
+      // Generate a security token. Ensures that users can not request any
+      // file they want by manipulating the URL (they could otherwise request
+      // settings.php for example). See https://www.drupal.org/node/1441502.
+      $calculated_token = Crypt::hmacBase64($mtime . $filePath, $this->privateKey->get() . Settings::getHashSalt());
+      return '//' . $cdn_domain . $this->getBasePath() . '/cdn/ff/' . $calculated_token . '/' . $mtime . '/' . $scheme . $filePath;
     }
 
     return '//' . $cdn_domain . $this->getBasePath() . $relative_url;
