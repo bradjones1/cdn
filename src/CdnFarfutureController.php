@@ -64,7 +64,7 @@ class CdnFarfutureController {
    */
   public function downloadByScheme(Request $request, $security_token, $mtime, $scheme) {
     // Validate the scheme early.
-    if (!$request->query->has('relative_file_url') || !$this->fileSystem->validScheme($scheme)) {
+    if (!$request->query->has('relative_file_url') || ($scheme != FileUrlGenerator::RELATIVE && !$this->fileSystem->validScheme($scheme))) {
       throw new BadRequestHttpException();
     }
 

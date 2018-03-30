@@ -72,7 +72,7 @@ class FileUrlGeneratorTest extends UnitTestCase {
       'farfuture' => [
         'status' => FALSE,
       ],
-      'stream_wrappers' => [],
+      'stream_wrappers' => ['public'],
     ]);
     $this->assertSame($expected_result, $gen->generate($uri));
   }

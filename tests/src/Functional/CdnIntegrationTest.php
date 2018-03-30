@@ -178,8 +178,10 @@ class CdnIntegrationTest extends BrowserTestBase {
   public function testFarfuture() {
     $druplicon_png_mtime = filemtime('public://druplicon ❤️.png');
     $druplicon_png_security_token = Crypt::hmacBase64($druplicon_png_mtime . 'public' . UrlHelper::encodePath('/druplicon ❤️.png'), \Drupal::service('private_key')->get() . Settings::getHashSalt());
-
+    $druplicon_png_relative_security_token = Crypt::hmacBase64($druplicon_png_mtime . ':relative:' . UrlHelper::encodePath('/' . $this->siteDirectory . '/files/druplicon ❤️.png'), \Drupal::service('private_key')->get() . Settings::getHashSalt());
     $this->drupalGet('/cdn/ff/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/public/druplicon ❤️.png');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->drupalGet('/cdn/ff/' . $druplicon_png_relative_security_token . '/' . $druplicon_png_mtime . '/:relative:/' . $this->siteDirectory . '/files/druplicon ❤️.png');
     $this->assertSession()->statusCodeEquals(200);
     // Assert presence of headers that \Drupal\cdn\CdnFarfutureController sets.
     $this->assertSame('Wed, 20 Jan 1988 04:20:42 GMT', $this->getSession()->getResponseHeader('Last-Modified'));
