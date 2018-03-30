@@ -133,7 +133,7 @@ class FileUrlGenerator {
     }
     else {
       $fileUri = $realFile = $uri;
-      $filePath = substr($fileUri, strlen($scheme . ':/')); // Leading slash.
+      $filePath = '/' . substr($fileUri, strlen($scheme . '://'));
       $relative_url = str_replace($this->requestStack->getCurrentRequest()->getSchemeAndHttpHost() . $this->getBasePath(), '', $this->streamWrapperManager->getViaUri($uri)->getExternalUrl());
     }
 

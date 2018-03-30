@@ -64,11 +64,11 @@ class CdnFarfutureController {
    */
   public function downloadByScheme(Request $request, $security_token, $mtime, $scheme) {
     // Validate the scheme early.
-    if ($scheme != FileUrlGenerator::RELATIVE && !$this->fileSystem->validScheme($scheme)) {
+    if (!$request->query->has('relative_file_url') || !$this->fileSystem->validScheme($scheme)) {
       throw new BadRequestHttpException();
     }
 
-    $path = $request->query->get('root_relative_file_url');
+    $path = $request->query->get('relative_file_url');
     // A relative URL for a file contains '%20' instead of spaces. A relative
     // file path contains spaces.
     $uri = $scheme == FileUrlGenerator::RELATIVE

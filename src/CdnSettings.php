@@ -41,6 +41,8 @@ class CdnSettings {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
+   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
+   *   The stream wrapper manager.
    */
   public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $streamWrapperManager) {
     $this->rawSettings = $config_factory->get('cdn.settings');
@@ -241,4 +243,5 @@ class CdnSettings {
     }
     return $cdn_domain;
   }
+
 }

@@ -191,7 +191,7 @@ class CdnSettingsForm extends ConfigFormBase {
         array_merge($localWrappers, $existingWrappers),
         ['private']
       ),
-      '#description' => $this->t('Stream wrappers to rewrite for CDN. Non-private "local" stream wrappers are always enabled.')
+      '#description' => $this->t('Stream wrappers to rewrite for CDN. Non-private "local" stream wrappers are always enabled.'),
     ];
     foreach ($localWrappers as $localWrapper) {
       $form['wrappers']['stream_wrappers'][$localWrapper]['#disabled'] = TRUE;
@@ -222,7 +222,7 @@ class CdnSettingsForm extends ConfigFormBase {
     // Vertical tab: 'Status'.
     $config->set('status', (bool) $form_state->getValue('status'));
 
-    // Vertical tab: 'Additional stream wrappers'
+    // Vertical tab: 'Additional stream wrappers'.
     $config->set('stream_wrappers', array_values(array_filter($form_state->getValue(['wrappers', 'stream_wrappers']))));
 
     // Vertical tab: 'Mapping'.
