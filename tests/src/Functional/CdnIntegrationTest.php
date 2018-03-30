@@ -154,15 +154,12 @@ class CdnIntegrationTest extends BrowserTestBase {
   }
 
   /**
-   * Tests that the cdn.farfuture.download route/controller work as expected.
+   * Tests the legacy far future path.
    */
-  public function testFarfuture() {
+  public function testLegacyFarfuture() {
     $druplicon_png_mtime = filemtime('public://druplicon ❤️.png');
     $druplicon_png_security_token = Crypt::hmacBase64($druplicon_png_mtime . '/' . $this->siteDirectory . '/files/' . UrlHelper::encodePath('druplicon ❤️.png'), \Drupal::service('private_key')->get() . Settings::getHashSalt());
 
-    $this->drupalGet('/cdn/ff/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/:relative:/core/misc/drupal.js');
-    $this->assertSession()->statusCodeEquals(200);
-    // Test backwards-compatible path for relative assets.
     $this->drupalGet('/cdn/farfuture/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/' . $this->siteDirectory . '/files/druplicon ❤️.png');
     $this->assertSession()->statusCodeEquals(200);
     // Assert presence of headers that \Drupal\cdn\CdnFarfutureController sets.
@@ -171,7 +168,27 @@ class CdnIntegrationTest extends BrowserTestBase {
     $this->assertSame('bytes', $this->getSession()->getResponseHeader('Accept-Ranges'));
 
     // Any chance to the security token should cause a 403.
-    $this->drupalGet('/cdn/ff/' . substr($druplicon_png_security_token, 1) . '/' . $druplicon_png_mtime . '/:relative:/core/misc/drupal.js');
+    $this->drupalGet('/cdn/farfuture/' . substr($druplicon_png_security_token, 1) . '/' . $druplicon_png_mtime . '/sites/default/files/druplicon ❤️.png');
+    $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Tests that the cdn.farfuture.download route/controller work as expected.
+   */
+  public function testFarfuture() {
+    $druplicon_png_mtime = filemtime('public://druplicon ❤️.png');
+    $druplicon_png_mtime_encoded = UrlHelper::encodePath('druplicon ❤️.png');
+    $druplicon_png_security_token = Crypt::hmacBase64($druplicon_png_mtime . '/' . $this->siteDirectory . '/files/' . $druplicon_png_mtime_encoded, \Drupal::service('private_key')->get() . Settings::getHashSalt());
+
+    $this->drupalGet('/cdn/ff/' . $druplicon_png_security_token . '/' . $druplicon_png_mtime . '/public/' . $druplicon_png_mtime_encoded);
+    $this->assertSession()->statusCodeEquals(200);
+    // Assert presence of headers that \Drupal\cdn\CdnFarfutureController sets.
+    $this->assertSame('Wed, 20 Jan 1988 04:20:42 GMT', $this->getSession()->getResponseHeader('Last-Modified'));
+    // Assert presence of headers that Symfony's BinaryFileResponse sets.
+    $this->assertSame('bytes', $this->getSession()->getResponseHeader('Accept-Ranges'));
+
+    // Any chance to the security token should cause a 403.
+    $this->drupalGet('/cdn/ff/' . substr($druplicon_png_security_token, 1) . '/' . $druplicon_png_mtime . '/public/' . $druplicon_png_mtime_encoded);
     $this->assertSession()->statusCodeEquals(403);
   }
 
