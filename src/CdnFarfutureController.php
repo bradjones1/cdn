@@ -2,7 +2,9 @@
 
 namespace Drupal\cdn;
 
+use Drupal\cdn\File\FileUrlGenerator;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -20,11 +22,72 @@ class CdnFarfutureController {
   protected $privateKey;
 
   /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * @param \Drupal\Core\PrivateKey $private_key
    *   The private key service.
    */
-  public function __construct(PrivateKey $private_key) {
+  public function __construct(PrivateKey $private_key, FileSystemInterface $fileSystem) {
     $this->privateKey = $private_key;
+    $this->fileSystem = $fileSystem;
+  }
+
+  /**
+   * Serves the requested file with optimal far future expiration headers.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request. $request->query must have root_relative_file_url,
+   *   set by \Drupal\cdn\PathProcessor\CdnFarfuturePathProcessor.
+   * @param string $security_token
+   *   The security token. Ensures that users can not request any file they want
+   *   by manipulating the URL (they could otherwise request settings.php for
+   *   example). See https://www.drupal.org/node/1441502.
+   * @param int $mtime
+   *   The file's mtime.
+   * @param string $scheme
+   *   The file's scheme.
+   *
+   * @returns \Symfony\Component\HttpFoundation\BinaryFileResponse
+   *   The response that will efficiently send the requested file.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
+   *   Thrown when the 'root_relative_file_url' query argument is not set, which
+   *   can only happen in case of malicious requests or in case of a malfunction
+   *   in \Drupal\cdn\PathProcessor\CdnFarfuturePathProcessor.
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   Thrown when an invalid security token is provided.
+   */
+  public function downloadByScheme(Request $request, $security_token, $mtime, $scheme) {
+    // Validate the scheme early.
+    if (!$request->query->has('relative_file_url') || ($scheme != FileUrlGenerator::RELATIVE && !$this->fileSystem->validScheme($scheme))) {
+      throw new BadRequestHttpException();
+    }
+
+    $path = $request->query->get('relative_file_url');
+    // A relative URL for a file contains '%20' instead of spaces. A relative
+    // file path contains spaces.
+    $uri = $scheme == FileUrlGenerator::RELATIVE
+      ? $path
+      : $scheme . ':/' . $path; // Path comes with a leading slash from the URL.
+    // Validate security token.
+    $calculated_token = Crypt::hmacBase64($mtime . $scheme . $path, $this->privateKey->get() . Settings::getHashSalt());
+    if ($security_token !== $calculated_token) {
+      throw new AccessDeniedHttpException('Invalid security token.');
+    }
+
+    // Strip the leading slash for truly relative paths.
+    if ($scheme == FileUrlGenerator::RELATIVE) {
+      $uri = substr($path, 1);
+    }
+
+    $response = new BinaryFileResponse(rawurldecode($uri), 200, $this->getFarfutureHeaders(), TRUE, NULL, FALSE, FALSE);
+    $response->isNotModified($request);
+    return $response;
   }
 
   /**
@@ -49,6 +112,8 @@ class CdnFarfutureController {
    *   in \Drupal\cdn\PathProcessor\CdnFarfuturePathProcessor.
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   Thrown when an invalid security token is provided.
+   *
+   * @deprecated This method is deprecated in favor of ::downloadByScheme
    */
   public function download(Request $request, $security_token, $mtime) {
     // Ensure \Drupal\cdn\PathProcessor\CdnFarfuturePathProcessor did its job.
@@ -63,7 +128,22 @@ class CdnFarfutureController {
       throw new AccessDeniedHttpException('Invalid security token.');
     }
 
-    $farfuture_headers = [
+    // A relative URL for a file contains '%20' instead of spaces. A relative
+    // file path contains spaces.
+    $relative_file_path = rawurldecode($root_relative_file_url);
+
+    $response = new BinaryFileResponse(substr($relative_file_path, 1), 200, $this->getFarfutureHeaders(), TRUE, NULL, FALSE, FALSE);
+    $response->isNotModified($request);
+    return $response;
+  }
+
+  /**
+   * Return the headers to serve with far future responses.
+   *
+   * @return string[]
+   */
+  protected function getFarfutureHeaders() {
+    return [
       // Instead of being powered by PHP, tell the world this resource was
       // powered by the CDN module!
       'X-Powered-By' => 'Drupal CDN module (https://www.drupal.org/project/cdn)',
@@ -97,14 +177,6 @@ class CdnFarfutureController {
       // Also see http://code.google.com/speed/page-speed/docs/caching.html.
       'Last-Modified' => 'Wed, 20 Jan 1988 04:20:42 GMT',
     ];
-
-    // A relative URL for a file contains '%20' instead of spaces. A relative
-    // file path contains spaces.
-    $relative_file_path = rawurldecode($root_relative_file_url);
-
-    $response = new BinaryFileResponse(substr($relative_file_path, 1), 200, $farfuture_headers, TRUE, NULL, FALSE, FALSE);
-    $response->isNotModified($request);
-    return $response;
   }
 
 }

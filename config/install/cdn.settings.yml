@@ -69,3 +69,6 @@ mapping:
 
 farfuture:
   status: true
+# Public is enabled by rule, additional wrappers can be added.
+stream_wrappers:
+  - public

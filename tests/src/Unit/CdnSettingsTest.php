@@ -4,6 +4,7 @@ namespace Drupal\Tests\cdn\Unit;
 
 use Drupal\cdn\CdnSettings;
 use Drupal\Core\Config\ConfigValueException;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -444,7 +445,8 @@ class CdnSettingsTest extends UnitTestCase {
    *   The CdnSettings object to test.
    */
   protected function createCdnSettings(array $raw_config) {
-    return new CdnSettings($this->getConfigFactoryStub(['cdn.settings' => $raw_config]));
+    $stream_wrapper_manager = $this->prophesize(StreamWrapperManagerInterface::class);
+    return new CdnSettings($this->getConfigFactoryStub(['cdn.settings' => $raw_config]), $stream_wrapper_manager->reveal());
   }
 
 }

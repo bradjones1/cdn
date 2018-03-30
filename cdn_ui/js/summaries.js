@@ -15,6 +15,15 @@
         return document.querySelector('input[name="status"]').checked ? Drupal.t('Enabled') : Drupal.t('Disabled');
       });
 
+      $('[data-drupal-selector="edit-wrappers"]').drupalSetSummary(function () {
+        var additional = $('[data-drupal-selector="edit-wrappers-stream-wrappers"] input:checked');
+        var wrappers = [];
+        additional.each(function(index) {
+          wrappers.push(this.getAttribute('value'));
+        });
+        return wrappers.join(', ');
+      });
+
       $('[data-drupal-selector="edit-mapping"]').drupalSetSummary(function () {
         if (document.querySelector('select[name="mapping[type]"]').value === 'simple') {
           var domain = document.querySelector('input[name="mapping[simple][domain]"]').value;

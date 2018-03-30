@@ -2,8 +2,11 @@
 
 namespace Drupal\cdn;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigValueException;
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 
 /**
  * Wraps the CDN settings configuration, contains all parsing.
@@ -27,14 +30,24 @@ class CdnSettings {
   protected $lookupTable;
 
   /**
+   * The stream wrapper manager.
+   *
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   */
+  protected $streamWrapperManager;
+
+  /**
    * Constructs a new CdnSettings object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
+   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
+   *   The stream wrapper manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $streamWrapperManager) {
     $this->rawSettings = $config_factory->get('cdn.settings');
     $this->lookupTable = NULL;
+    $this->streamWrapperManager = $streamWrapperManager;
   }
 
   /**
@@ -75,6 +88,19 @@ class CdnSettings {
     $flattened = iterator_to_array(new \RecursiveIteratorIterator(new \RecursiveArrayIterator($this->getLookupTable())), FALSE);
     $unique_domains = array_unique(array_filter($flattened));
     return $unique_domains;
+  }
+
+  /**
+   * Returns CDN-eligible stream wrappers.
+   *
+   * @return string[] The allowed stream wrapper scheme names.
+   */
+  public function streamWrappers() {
+    $configured = $this->rawSettings->get('stream_wrappers');
+    $wrappers = array_merge(array_keys($this->streamWrapperManager
+      ->getWrappers(StreamWrapperInterface::LOCAL_NORMAL)), $configured);
+    // Private scheme is always excluded.
+    return array_diff($wrappers, ['private']);
   }
 
   /**
@@ -173,6 +199,49 @@ class CdnSettings {
 
     $forbidden_components = ['path', 'query', 'fragment'];
     return $components === FALSE ? FALSE : empty(array_intersect($forbidden_components, array_keys($components)));
+  }
+
+  /**
+   * Maps a URI to a CDN domain.
+   *
+   * @param string $uri
+   *   The URI to map.
+   *
+   * @return string|bool
+   *   The mapped domain, or FALSE if it could not be matched.
+   */
+  public function getCdnDomain($uri) {
+    // Extension-specific mapping.
+    $file_extension = Unicode::strtolower(pathinfo($uri, PATHINFO_EXTENSION));
+    $lookup_table = $this->getLookupTable();
+    if (isset($lookup_table[$file_extension])) {
+      $key = $file_extension;
+    }
+    // Generic or fallback mapping.
+    elseif (isset($lookup_table['*'])) {
+      $key = '*';
+    }
+    // No mapping.
+    else {
+      return FALSE;
+    }
+
+    $result = $lookup_table[$key];
+
+    if ($result === FALSE) {
+      return FALSE;
+    }
+    // If there are multiple results, pick one using consistent hashing: ensure
+    // the same file is always served from the same CDN domain.
+    elseif (is_array($result)) {
+      $filename = basename($uri);
+      $hash = hexdec(substr(md5($filename), 0, 5));
+      $cdn_domain = $result[$hash % count($result)];
+    }
+    else {
+      $cdn_domain = $result;
+    }
+    return $cdn_domain;
   }
 
 }
