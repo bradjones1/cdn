@@ -5,6 +5,7 @@ namespace Drupal\cdn\File;
 use Drupal\cdn\CdnSettings;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\PrivateKey;
 use Drupal\Core\Site\Settings;
@@ -147,7 +148,7 @@ class FileUrlGenerator {
       // Generate a security token. Ensures that users can not request any
       // file they want by manipulating the URL (they could otherwise request
       // settings.php for example). See https://www.drupal.org/node/1441502.
-      $calculated_token = Crypt::hmacBase64($mtime . $filePath, $this->privateKey->get() . Settings::getHashSalt());
+      $calculated_token = Crypt::hmacBase64($mtime . $scheme . UrlHelper::encodePath($filePath), $this->privateKey->get() . Settings::getHashSalt());
       return '//' . $cdn_domain . $this->getBasePath() . '/cdn/ff/' . $calculated_token . '/' . $mtime . '/' . $scheme . $filePath;
     }
 
